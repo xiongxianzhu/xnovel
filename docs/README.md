@@ -13,12 +13,6 @@
 7. [`deployment.md`](deployment.md)：了解本地运行、发布和回滚要求。
 8. [`tasks.md`](tasks.md)：按阶段选择下一项可验证任务。
 
-## 设计记录
-
-- [`superpowers/specs/2026-08-15-github-collaboration-design.md`](superpowers/specs/2026-08-15-github-collaboration-design.md)：GitHub 贡献、Issue、PR 与持续集成设计。
-- [`superpowers/specs/2026-08-15-web-design-system-merge-design.md`](superpowers/specs/2026-08-15-web-design-system-merge-design.md)：Web 设计规范融合、扁平化与工作台布局决策。
-- [`superpowers/specs/2026-08-15-auth-profile-i18n-theme-design.md`](superpowers/specs/2026-08-15-auth-profile-i18n-theme-design.md)：Web 账户、动态注册、国际化、跨端主题与 Skill 管理设计。
-
 ## 文档维护规则
 
 - 产品范围变化时更新 `prd.md`。
@@ -28,3 +22,4 @@
 - FastAPI 路径、字段或错误格式变化时更新 `api.md`。
 - 模型供应商、密钥、上下文或审计策略变化时更新 `ai-integration.md`。
 - 发布目标、环境变量或回滚方式变化时更新 `deployment.md`。
+- 任务状态或完成条件变化时更新 `tasks.md`。
