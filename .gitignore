@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Build and test outputs
+dist/
+build/
+out/
+release/
+coverage/
+htmlcov/
+playwright-report/
+test-results/
+.vite/
+
+# Electron Desktop generated files
+apps/desktop/.electron-vite/
+apps/desktop/dist-electron/
+apps/desktop/*-unpacked/
+apps/desktop/*.app/
+apps/desktop/*.dmg
+apps/desktop/*.exe
+apps/desktop/*.msi
+apps/desktop/*.pkg
+apps/desktop/*.AppImage
+apps/desktop/*.deb
+apps/desktop/*.rpm
+apps/desktop/*.snap
+apps/desktop/*.blockmap
+apps/desktop/latest*.yml
+apps/desktop/builder-debug.yml
+apps/desktop/builder-effective-config.yaml
+apps/desktop/dev-app-update.yml
+apps/desktop/.electron-cache/
+apps/desktop/.electron-builder-cache/
+apps/desktop/.user-data/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.eslintcache
+*.tsbuildinfo
+.cache/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.npmrc
+*.pem
+*.key
+
+# Local data and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/*
+!logs/.gitkeep
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local design and planning artifacts
+docs/superpowers/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo

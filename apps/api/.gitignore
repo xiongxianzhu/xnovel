@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# venv / uv
+.venv/
+
+# 缓存
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 环境与本地数据库
+.env
+*.db
+*.sqlite3
+
+# 日志
+logs/*.log
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/

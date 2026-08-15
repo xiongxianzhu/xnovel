@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:18.6
+        env:
+          POSTGRES_DB: xnovel_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d xnovel_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: testing
+      SECRET_KEY: github-actions-testing-secret
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/xnovel_test
+      TEST_POSTGRES_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/xnovel_test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.26"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Install API dependencies
+        run: uv sync --frozen
+
+      - name: Lint API
+        run: uv run ruff check .
+
+      - name: Check API formatting
+        run: uv run ruff format --check .
+
+      - name: Type-check API
+        run: uv run mypy
+
+      - name: Migrate PostgreSQL test database
+        run: uv run alembic upgrade head
+
+      - name: Test API
+        run: uv run pytest
+
+      - name: Check OpenAPI schema
+        run: uv run python -m scripts.export_openapi ../web/openapi/openapi.json --check
+
+  web:
+    name: Web checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          package_json_file: apps/web/package.json
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install Web dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check generated API client
+        run: pnpm api:client-check
+
+      - name: Check Web
+        run: pnpm check
+
+      - name: Build Web
+        run: pnpm build

@@ -1,0 +1,774 @@
+{
+  "components": {
+    "schemas": {
+      "AccountIdentifierUnavailableErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11002,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "ACCOUNT_IDENTIFIER_UNAVAILABLE",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "AccountIdentifierUnavailableErrorResponse",
+        "type": "object"
+      },
+      "ConflictErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10005,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "CONFLICT",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "ConflictErrorResponse",
+        "type": "object"
+      },
+      "ForbiddenErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10003,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "FORBIDDEN",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "ForbiddenErrorResponse",
+        "type": "object"
+      },
+      "HTTPErrorResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/InternalErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ValidationErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ForbiddenErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/NotFoundErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ConflictErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/RateLimitedErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/RegistrationDisabledErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/AccountIdentifierUnavailableErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/RegistrationRateLimitedErrorResponse"
+          }
+        ],
+        "description": "所有稳定错误响应的联合类型，用于未预见状态的兜底契约。",
+        "title": "HTTPErrorResponse"
+      },
+      "HealthData": {
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthData",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/HealthData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "InternalErrorResponse": {
+        "properties": {
+          "code": {
+            "const": -1,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "INTERNAL_ERROR",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "InternalErrorResponse",
+        "type": "object"
+      },
+      "NotFoundErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10004,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "NOT_FOUND",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "NotFoundErrorResponse",
+        "type": "object"
+      },
+      "RateLimitedErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10006,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "RATE_LIMITED",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "RateLimitedErrorResponse",
+        "type": "object"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone E164"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password",
+          "nickname"
+        ],
+        "title": "RegisterRequest",
+        "type": "object"
+      },
+      "RegisterUserResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RegisteredUserData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "RegisterUserResponse",
+        "type": "object"
+      },
+      "RegisteredUserData": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone E164"
+          },
+          "role": {
+            "const": "user",
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "const": "active",
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "phone_e164",
+          "nickname",
+          "role",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RegisteredUserData",
+        "type": "object"
+      },
+      "RegistrationDisabledErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11001,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "REGISTRATION_DISABLED",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "RegistrationDisabledErrorResponse",
+        "type": "object"
+      },
+      "RegistrationRateLimitedErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11003,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "REGISTRATION_RATE_LIMITED",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "RegistrationRateLimitedErrorResponse",
+        "type": "object"
+      },
+      "ServiceUnavailableErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10007,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "SERVICE_UNAVAILABLE",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "ServiceUnavailableErrorResponse",
+        "type": "object"
+      },
+      "SiteConfigData": {
+        "properties": {
+          "registration_enabled": {
+            "title": "Registration Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "registration_enabled"
+        ],
+        "title": "SiteConfigData",
+        "type": "object"
+      },
+      "SiteConfigResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SiteConfigData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "SiteConfigResponse",
+        "type": "object"
+      },
+      "UnauthorizedErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10002,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "UNAUTHORIZED",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "UnauthorizedErrorResponse",
+        "type": "object"
+      },
+      "ValidationErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 10001,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "VALIDATION_ERROR",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "ValidationErrorResponse",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "api",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/admin/v1/health": {
+      "get": {
+        "operationId": "getAdminHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                }
+              }
+            },
+            "description": "缺少或无效的 Bearer 访问令牌",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Health",
+        "tags": [
+          "admin-health"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationDisabledErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountIdentifierUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationRateLimitedErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "Retry-After": {
+                "description": "当前固定窗口剩余秒数。",
+                "schema": {
+                  "minimum": 1.0,
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/site-config": {
+      "get": {
+        "operationId": "getSiteConfig",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Get Site Config",
+        "tags": [
+          "auth"
+        ]
+      }
+    }
+  }
+}
