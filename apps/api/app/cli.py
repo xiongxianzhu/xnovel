@@ -32,9 +32,9 @@ def _parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     create_admin = subparsers.add_parser("create-admin", help="创建首个管理员")
-    create_admin.add_argument("--username", required=True)
-    create_admin.add_argument("--email", required=True)
-    create_admin.add_argument("--nickname", required=True)
+    create_admin.add_argument("--username", default="admin")
+    create_admin.add_argument("--email")
+    create_admin.add_argument("--nickname", default="管理员")
     create_admin.add_argument("--password", action=_RejectPasswordArgument, help=argparse.SUPPRESS)
 
     set_registration = subparsers.add_parser("set-registration", help="修改公开注册开关")
@@ -49,18 +49,15 @@ def _parser() -> argparse.ArgumentParser:
 async def _run(args: argparse.Namespace) -> str:
     async with async_session_factory() as session:
         if args.command == "create-admin":
-            password = getpass.getpass("Password: ")
-            confirmation = getpass.getpass("Confirm password: ")
-            if password != confirmation:
-                raise AdministrationError(2, "password confirmation does not match")
             await create_first_admin(
                 session,
                 username_input=args.username,
                 email_input=args.email,
                 nickname_input=args.nickname,
-                password_input=password,
+                password_input="123456",
+                bootstrap=True,
             )
-            return "Administrator created."
+            return "Administrator created. Change the password after the first login."
 
         password = getpass.getpass("Administrator password: ")
         changed = await set_registration_enabled(

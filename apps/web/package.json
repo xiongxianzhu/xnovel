@@ -25,10 +25,15 @@
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test"
   },
   "dependencies": {
+    "lucide-react": "1.33.0",
     "@tanstack/react-query": "5.101.4",
+    "antd": "6.6.0",
     "axios": "1.19.0",
+    "i18next": "^26.4.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-i18next": "^17.0.12",
+    "react-router-dom": "^7.18.2",
     "zod": "4.4.3"
   },
   "devDependencies": {

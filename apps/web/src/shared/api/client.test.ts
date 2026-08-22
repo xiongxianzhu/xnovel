@@ -1,7 +1,12 @@
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { apiClient, configureApiClient, setAccessToken } from "./client";
+import {
+  apiClient,
+  configureApiClient,
+  setAccessToken,
+  setRefreshAccessTokenHandler,
+} from "./client";
 import { getAdminHealth, getHealth } from "./generated/sdk.gen";
 
 const originalAdapter = apiClient.instance.defaults.adapter;
@@ -26,6 +31,7 @@ function useRecordingAdapter() {
 afterEach(() => {
   apiClient.instance.defaults.adapter = originalAdapter;
   setAccessToken(undefined);
+  setRefreshAccessTokenHandler(undefined);
   vi.unstubAllGlobals();
 });
 
@@ -71,5 +77,45 @@ describe("configureApiClient", () => {
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(authorization).toBe("Bearer test-access-token");
+  });
+
+  it("refreshes once and retries a protected request with the new token", async () => {
+    let attempts = 0;
+    let retriedAuthorization: string | undefined;
+    const refresh = vi.fn().mockResolvedValue("renewed-token");
+    setAccessToken("expired-token");
+    setRefreshAccessTokenHandler(refresh);
+    apiClient.instance.defaults.adapter = async (config) => {
+      attempts += 1;
+      if (attempts === 1) {
+        throw new AxiosError(
+          "unauthorized",
+          "ERR_BAD_REQUEST",
+          config,
+          undefined,
+          {
+            config,
+            data: { code: 11006, data: {}, msg: "SESSION_INVALID" },
+            headers: {},
+            status: 401,
+            statusText: "Unauthorized",
+          },
+        );
+      }
+      retriedAuthorization = config.headers.get("Authorization")?.toString();
+      return {
+        config,
+        data: { code: 0, data: { status: "ok" }, msg: "SUCCESS" },
+        headers: {},
+        status: 200,
+        statusText: "OK",
+      } as AxiosResponse;
+    };
+
+    await getAdminHealth({ client: apiClient });
+
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(attempts).toBe(2);
+    expect(retriedAuthorization).toBe("Bearer renewed-token");
   });
 });

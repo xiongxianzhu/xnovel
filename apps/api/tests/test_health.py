@@ -24,6 +24,34 @@ def test_health_ok(client: TestClient) -> None:
     }
 
 
+def test_cors_allows_configured_web_origin_with_credentials(client: TestClient) -> None:
+    response = client.options(
+        "/api/v1/auth/login",
+        headers={
+            "Access-Control-Request-Headers": "content-type",
+            "Access-Control-Request-Method": "POST",
+            "Origin": "http://127.0.0.1:5173",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["Access-Control-Allow-Origin"] == "http://127.0.0.1:5173"
+    assert response.headers["Access-Control-Allow-Credentials"] == "true"
+
+
+def test_cors_rejects_unconfigured_origin(client: TestClient) -> None:
+    response = client.options(
+        "/api/v1/auth/login",
+        headers={
+            "Access-Control-Request-Method": "POST",
+            "Origin": "https://attacker.example",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
 def test_admin_health_requires_token(client: TestClient) -> None:
     resp = client.get("/api/admin/v1/health")
     assert resp.status_code == 401
@@ -43,13 +71,20 @@ def test_admin_health_rejects_empty_bearer_token(client: TestClient) -> None:
 
 
 def test_admin_health_ok(client: TestClient) -> None:
-    resp = client.get("/api/admin/v1/health", headers={"Authorization": "Bearer test-token"})
-    assert resp.status_code == 200
-    assert resp.json() == {
-        "code": 0,
-        "msg": "SUCCESS",
-        "data": {"status": "ok"},
-    }
+    from app.core.security import admin_required
+    from app.main import app
+
+    app.dependency_overrides[admin_required] = lambda: None
+    try:
+        resp = client.get("/api/admin/v1/health", headers={"Authorization": "Bearer test-token"})
+        assert resp.status_code == 200
+        assert resp.json() == {
+            "code": 0,
+            "msg": "SUCCESS",
+            "data": {"status": "ok"},
+        }
+    finally:
+        app.dependency_overrides.pop(admin_required, None)
 
 
 def test_unknown_route_uses_unified_not_found_response(client: TestClient) -> None:

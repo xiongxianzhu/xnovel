@@ -9,7 +9,7 @@ xnovel 的 React 网页端，通过 FastAPI OpenAPI 生成类型安全的 Axios 
 
 </div>
 
-当前工程提供 Vite、TypeScript、TanStack Query、Zod、ESLint、Prettier、Vitest 和 Testing Library 基线。
+当前工程已经实现 Web 登录与会话恢复、受保护路由、三语言、五套主题和用户偏好自动保存。技术基础包括 Ant Design、React Router、TanStack Query、i18next、Zod、Vitest 和 Testing Library。
 
 ## 启动
 

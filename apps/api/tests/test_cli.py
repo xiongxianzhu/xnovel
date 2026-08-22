@@ -25,8 +25,6 @@ def test_create_admin_parser_rejects_password_argument_without_echoing_it(capsys
                 "create-admin",
                 "--username",
                 "admin",
-                "--email",
-                "admin@example.com",
                 "--nickname",
                 "管理员",
                 "--password",
@@ -38,51 +36,48 @@ def test_create_admin_parser_rejects_password_argument_without_echoing_it(capsys
 
 
 @pytest.mark.anyio
-async def test_create_admin_reads_matching_hidden_password_twice(monkeypatch: pytest.MonkeyPatch) -> None:
-    passwords = iter(["correct horse battery staple", "correct horse battery staple"])
+async def test_create_admin_uses_bootstrap_password_without_prompting(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, Any] = {}
 
     async def fake_create_first_admin(_: object, **kwargs: Any) -> None:
         captured.update(kwargs)
 
     monkeypatch.setattr(cli, "async_session_factory", lambda: _SessionContext())
-    monkeypatch.setattr(cli.getpass, "getpass", lambda _: next(passwords))
     monkeypatch.setattr(cli, "create_first_admin", fake_create_first_admin)
     args = cli._parser().parse_args(
         [
             "create-admin",
             "--username",
             "admin",
-            "--email",
-            "admin@example.com",
-            "--nickname",
-            "管理员",
+                "--nickname",
+                "管理员",
         ]
     )
 
     message = await cli._run(args)
 
-    assert message == "Administrator created."
-    assert captured["password_input"] == "correct horse battery staple"
+    assert message == "Administrator created. Change the password after the first login."
+    assert captured["password_input"] == "123456"
+    assert captured["bootstrap"] is True
 
 
 @pytest.mark.anyio
-async def test_create_admin_rejects_mismatched_password_before_database(monkeypatch: pytest.MonkeyPatch) -> None:
-    passwords = iter(["correct horse battery staple", "different password"])
+async def test_create_admin_defaults_username_and_nickname(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, Any] = {}
+
+    async def fake_create_first_admin(_: object, **kwargs: Any) -> None:
+        captured.update(kwargs)
+
     monkeypatch.setattr(cli, "async_session_factory", lambda: _SessionContext())
-    monkeypatch.setattr(cli.getpass, "getpass", lambda _: next(passwords))
+    monkeypatch.setattr(cli, "create_first_admin", fake_create_first_admin)
     args = cli._parser().parse_args(
         [
             "create-admin",
-            "--username",
-            "admin",
-            "--email",
-            "admin@example.com",
-            "--nickname",
-            "管理员",
         ]
     )
 
-    with pytest.raises(cli.AdministrationError) as error:
-        await cli._run(args)
-    assert error.value.exit_code == 2
+    await cli._run(args)
+
+    assert captured["username_input"] == "admin"
+    assert captured["nickname_input"] == "管理员"
+    assert captured["email_input"] is None

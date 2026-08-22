@@ -1,8 +1,11 @@
 # xnovel 数据库与表设计
 
-> 文档状态：Draft  
-> 文档版本：0.3.0  
-> 最后更新：2026-08-16  
+> 文档状态：Draft
+>
+> 文档版本：0.4.0
+>
+> 最后更新：2026-08-21
+>
 > 适用范围：首版业务模型与后续演进边界
 
 本文定义 xnovel 的关系数据模型、表职责、约束和迁移规则。Web 使用 FastAPI 与 PostgreSQL；无需登录的 Desktop 使用 Electron 主进程与本地 SQLite。两端共享领域语义，但使用独立的物理 Schema 和迁移链。
@@ -14,10 +17,11 @@
 - PostgreSQL 与 `asyncpg` 生产连接配置。
 - SQLModel 与 SQLAlchemy 2.0 异步会话。
 - Alembic 异步迁移环境。
-- T-106 首个正式迁移已经创建 `users`、`user_preferences`、`site_settings`、`admin_audit_events` 和 `auth_rate_limit_buckets`。
+- T-106 创建账户、偏好、站点设置、管理员审计和认证限流表。
+- T-107 创建 `user_sessions`、`user_session_tokens`，并补充 Logo 元数据与登录限流范围。
 - API 单元测试使用内存 SQLite；它不是 Desktop 本地数据库实现。
 
-`apps/desktop` 当前仍是目录占位，尚未建立 SQLite 文件、驱动或迁移工具。除上述五张 T-106 表外，其余业务表仍是规划；第 3.4 节定义 Desktop 的本地映射规则。
+`apps/desktop` 当前仍是目录占位，尚未建立 SQLite 文件、驱动或迁移工具。除 T-106、T-107 已迁移的表外，其余业务表仍是规划；第 3.4 节定义 Desktop 的本地映射规则。
 
 业务表实现后，事实来源按以下顺序判断：
 
@@ -189,8 +193,9 @@ erDiagram
 | 表                        | 阶段 | 职责                              |
 | ------------------------- | ---- | --------------------------------- |
 | `users`                   | P0   | Web 本地登录身份、角色与个人资料  |
-| `user_sessions`           | P0   | 可撤销 Web 访问/刷新令牌哈希      |
-| `auth_tokens`             | P0   | 验证和密码找回的一次性令牌哈希    |
+| `user_sessions`           | P0   | 可撤销的 Web 多设备登录会话       |
+| `user_session_tokens`     | P0   | Refresh Token 哈希与轮换历史      |
+| `auth_tokens`             | 后续 | 验证和密码找回的一次性令牌哈希    |
 | `user_preferences`        | P0   | 用户语言与主题偏好                |
 | `site_settings`           | P0   | 动态注册开关与 Web 全局 Logo      |
 | `admin_audit_events`      | P0   | 管理员敏感操作审计                |
@@ -211,7 +216,7 @@ erDiagram
 
 ## 6. 表设计
 
-T-106 已实现 `users`、`user_preferences`、`site_settings`、`admin_audit_events` 和 `auth_rate_limit_buckets`。其余小节仍是后续任务的规划契约。
+T-201 已实现账户、会话、Refresh Token 历史、站点设置、管理员审计、认证限流、作品、文档和当前正文相关表。Skill 与 AI 小节仍是后续任务的规划契约。
 
 ### 6.1 `users`
 
@@ -221,12 +226,13 @@ Web 首版采用本地账号。第三方身份以后通过独立映射表扩展�
 | -------------------- | ----------- | ---- | -------- | --------------------------------------------------- |
 | `id`                 | uuid        | 是   | 应用生成 | UUID v7 主键                                        |
 | `username`           | text        | 是   | -        | NFKC 与 Unicode 大小写折叠后的用户名，长度 `3`–`32` |
-| `email`              | text        | 是   | -        | 去除首尾空格并转为小写的用户邮箱                    |
+| `email`              | text        | 否   | `null`   | 去除首尾空格并转为小写的可选唯一邮箱                |
 | `email_verified_at`  | timestamptz | 否   | `null`   | 邮箱验证时间                                        |
 | `phone_e164`         | text        | 否   | `null`   | 包含 `+` 和国家码的完整 E.164 手机号                |
 | `phone_verified_at`  | timestamptz | 否   | `null`   | 手机验证时间                                        |
 | `password_hash`      | text        | 是   | -        | Argon2 密码哈希                                     |
 | `nickname`           | text        | 是   | -        | 可重复展示昵称，长度 `1`–`100`                      |
+| `must_change_password` | boolean   | 是   | `false`  | 是否必须完成首次密码修改                            |
 | `role`               | text        | 是   | `user`   | `user` 或 `admin`                                   |
 | `avatar_source`      | text        | 是   | `none`   | `none`、`upload` 或 `url`                           |
 | `avatar_storage_key` | text        | 否   | `null`   | 上传头像随机存储键                                  |
@@ -243,7 +249,7 @@ Web 首版采用本地账号。第三方身份以后通过独立映射表扩展�
 
 约束与索引：
 
-- 唯一约束：`username`、`email`。
+- 唯一约束：`username`；`email` 的非空值唯一。
 - 部分唯一索引：`phone_e164 WHERE phone_e164 IS NOT NULL`。
 - 检查约束：`role IN ('user', 'admin')`、`status IN ('active', 'disabled')`、`avatar_source IN ('none', 'upload', 'url')`。
 - 检查约束保证头像来源与字段组合一致：`upload` 要求存储键、MIME、大小和更新时间存在且 URL 为空；`url` 要求 URL 与更新时间存在且上传元数据为空；`none` 要求全部头像字段为空。
@@ -251,24 +257,41 @@ Web 首版采用本地账号。第三方身份以后通过独立映射表扩展�
 
 服务层在校验长度和唯一性前，先对 `username` 执行 Unicode NFKC，再执行 Unicode 默认大小写折叠（Python `str.casefold()`），并将结果写入 `username`；对 `email` 去除首尾空格并转为小写，再将结果写入 `email`。注册、登录、修改邮箱、首个管理员命令和数据迁移必须复用同一套规范化函数，API 只返回数据库中的规范化值。`nickname` 承担保留用户展示形式的职责。
 
-邮箱和手机号未验证时仍占用唯一值，但不能用于登录或找回密码。修改邮箱或手机号时同时清除相应验证时间。`address` 与 `birthday` 只允许本人接口读取，管理员列表和详情均不返回。
+邮箱和手机号均可为空；非空值占用唯一值，首版可以用于登录，但不用于找回密码。修改邮箱或手机号时同时清除相应验证时间。`address` 与 `birthday` 只允许本人接口读取，管理员列表和详情均不返回。
+
+管理员初始化使用一次性引导密码 `123456`，并将 `must_change_password` 设为 `true`。首次改密前只允许读取本人资料、修改密码、刷新会话和退出登录；其他受保护业务请求由服务端拒绝。
 
 ### 6.2 `user_sessions`
 
-| 字段                 | 类型        | 必填 | 默认值   | 说明                           |
-| -------------------- | ----------- | ---- | -------- | ------------------------------ |
-| `id`                 | uuid        | 是   | 应用生成 | 主键                           |
-| `user_id`            | uuid        | 是   | -        | 外键 → `users.id`              |
-| `access_token_hash`  | text        | 是   | -        | 唯一短期访问令牌哈希，不存明文 |
-| `refresh_token_hash` | text        | 是   | -        | 唯一长期刷新令牌哈希，不存明文 |
-| `access_expires_at`  | timestamptz | 是   | -        | 访问令牌绝对过期时间           |
-| `refresh_expires_at` | timestamptz | 是   | -        | 刷新令牌绝对过期时间           |
-| `revoked_at`         | timestamptz | 否   | `null`   | 整个会话撤销时间               |
-| `last_seen_at`       | timestamptz | 是   | `now()`  | 最近成功认证或刷新时间         |
-| `created_at`         | timestamptz | 是   | `now()`  | 创建时间                       |
-| `updated_at`         | timestamptz | 是   | `now()`  | 令牌轮换或会话状态更新时间     |
+| 字段            | 类型        | 必填 | 默认值   | 说明                        |
+| --------------- | ----------- | ---- | -------- | --------------------------- |
+| `id`            | uuid        | 是   | 应用生成 | 主键                        |
+| `user_id`       | uuid        | 是   | -        | 外键 → `users.id`           |
+| `expires_at`    | timestamptz | 是   | -        | 会话绝对过期时间            |
+| `last_used_at`  | timestamptz | 是   | -        | 最近刷新或敏感操作时间      |
+| `revoked_at`    | timestamptz | 否   | `null`   | 会话撤销时间                |
+| `revoke_reason` | text        | 否   | `null`   | 不含敏感信息的撤销原因      |
+| `created_ip`    | text        | 是   | -        | 创建时规范化客户端 IP       |
+| `last_ip`       | text        | 是   | -        | 最近使用的规范化客户端 IP   |
+| `user_agent`    | text        | 是   | -        | 截断到 512 字符的客户端信息 |
+| `created_at`    | timestamptz | 是   | `now()`  | 创建时间                    |
+| `updated_at`    | timestamptz | 是   | `now()`  | 最后更新时间                |
 
-`user_id` 使用 `ON DELETE CASCADE` 并建立索引；两个令牌哈希分别唯一。登录在同一会话中签发短期访问令牌和长期刷新令牌；刷新事务校验 Cookie、可信来源与 CSRF 后，同时轮换两个哈希及对应过期时间，使旧令牌立即失效。页面重新加载只用刷新 Cookie 换取新访问令牌，访问令牌不进入浏览器持久化存储。登出、密码修改、用户禁用和管理员撤销会话后，整条会话记录立即失效。
+### 6.2.1 `user_session_tokens`
+
+| 字段             | 类型        | 必填 | 默认值   | 说明                      |
+| ---------------- | ----------- | ---- | -------- | ------------------------- |
+| `id`             | uuid        | 是   | 应用生成 | 主键                      |
+| `session_id`     | uuid        | 是   | -        | 外键 → `user_sessions.id` |
+| `token_hash`     | bytea       | 是   | -        | 唯一 HMAC-SHA-256 摘要    |
+| `expires_at`     | timestamptz | 是   | -        | 原定过期时间              |
+| `used_at`        | timestamptz | 否   | `null`   | 完成轮换的时间            |
+| `revoked_at`     | timestamptz | 否   | `null`   | 撤销时间                  |
+| `replaced_by_id` | uuid        | 否   | `null`   | 替代令牌记录              |
+| `created_at`     | timestamptz | 是   | `now()`  | 创建时间                  |
+| `updated_at`     | timestamptz | 是   | `now()`  | 最后更新时间              |
+
+Access Token 使用短期 JWT，不存数据库。Refresh Token 原文只存在 HttpOnly Cookie；历史哈希保留到原定过期时间，用于识别旧令牌重放并撤销会话。
 
 ### 6.3 `auth_tokens`
 
@@ -300,6 +323,8 @@ Web 首版采用本地账号。第三方身份以后通过独立映射表扩展�
 
 主题家族枚举为 `manuscript-brown`、`pine-green`、`harbor-blue`、`grape-purple` 和 `graphite`。注册与首个管理员事务都创建偏好记录，首版固定使用 `zh-CN`、`manuscript-brown` 和 `system`。
 
+T-108 已实现本人偏好读取与部分更新 API。更新事务只修改请求明确提交的字段；空请求、`null` 和未知枚举由 Schema 拒绝。
+
 ### 6.5 `site_settings`
 
 站点设置是固定单例。`id` 是主键并使用 `CHECK (id = 1)`；迁移幂等插入该行，缺行时注册接口按关闭处理。
@@ -309,13 +334,14 @@ Web 首版采用本地账号。第三方身份以后通过独立映射表扩展�
 | `id`                   | smallint    | 是   | `1`     | 固定单例键               |
 | `registration_enabled` | boolean     | 是   | `false` | 是否允许公开注册         |
 | `logo_storage_key`     | text        | 否   | `null`  | Web 全局 Logo 随机存储键 |
+| `logo_original_name`   | text        | 否   | `null`  | 清理后的原始文件名       |
 | `logo_mime_type`       | text        | 否   | `null`  | 解码确认后的 MIME        |
 | `logo_size_bytes`      | bigint      | 否   | `null`  | 文件大小                 |
 | `updated_by`           | uuid        | 否   | `null`  | 最近修改管理员           |
 | `created_at`           | timestamptz | 是   | `now()` | 单例创建时间             |
 | `updated_at`           | timestamptz | 是   | `now()` | 最近修改时间             |
 
-Logo 三个字段必须同时为空或同时有值；文件最大 5 MiB。管理员更新固定主键 `1` 并写审计事件，数据库不可用时不能回退为开放注册。
+Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。管理员更新固定主键 `1` 并写审计事件，数据库不可用时不能回退为开放注册。
 
 `updated_by` 外键使用 `ON DELETE SET NULL` 并建立索引；单例读取只允许主键查询或受控 upsert。
 
@@ -771,7 +797,7 @@ AI 生成和正文保存是两个事务。生成成功只写入 `ai_results`；�
 
 注册事务每次读取固定键 `site_settings.id = 1`；缺行按关闭处理，数据库异常返回服务不可用。注册开启时，在同一事务创建 `users` 和 `user_preferences`，普通请求中的角色固定为 `user`。用户名、邮箱或手机号唯一冲突时整个事务回滚。
 
-首个管理员通过部署命令创建。命令使用与注册相同的规范化和密码哈希规则，并在同一事务创建 `user_preferences`，幂等拒绝重复标识，不能临时开放公开注册。以后所有管理员创建用户或数据迁移也必须保持“一个用户恰有一条偏好记录”的初始化不变量。
+首个管理员通过部署命令创建。命令使用与注册相同的规范化规则，并在同一事务创建 `user_preferences`，设置 `must_change_password = true`，幂等拒绝重复标识，不能临时开放公开注册。以后所有管理员创建用户或数据迁移也必须保持“一个用户恰有一条偏好记录”的初始化不变量。
 
 ### 8.6 媒体引用切换
 

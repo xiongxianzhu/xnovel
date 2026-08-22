@@ -1,7 +1,8 @@
 # xnovel 技术栈
 
-> 状态：Active  
-> 版本核实日期：2026-08-16
+> 状态：Active
+>
+> 版本核实日期：2026-08-21
 
 本文分别记录 API、Web 和 Desktop 的技术栈。表中的“已锁定”以仓库锁文件为准；“规划基线”用于尚未创建的桌面工程，落地时必须重新核对稳定版和兼容性。
 
@@ -43,12 +44,13 @@
 | 环境文件     | python-dotenv     | 1.2.2    | 已锁定   | 本地环境变量加载             |
 | 异步桥接     | greenlet          | 3.5.5    | 已锁定   | SQLAlchemy 异步上下文支持    |
 | 密码哈希     | pwdlib[argon2]    | 0.3.1    | 已锁定   | Argon2id 密码哈希与校验      |
+| JWT          | PyJWT             | 2.13.0   | 已锁定   | Access Token 签发与验证      |
 | 邮箱校验     | email-validator   | 2.3.0    | 已锁定   | 邮箱语法与规范化校验         |
 | 手机号       | phonenumbers      | 9.0.37   | 已锁定   | 完整 E.164 解析与有效性校验  |
-| 图片处理     | Pillow            | 12.3.0   | 规划基线 | 头像与 Logo 类型和像素校验   |
+| 图片处理     | Pillow            | 12.3.0   | 已锁定   | 头像与 Logo 类型和像素校验   |
 | YAML         | PyYAML            | 6.0.3    | 规划基线 | 安全解析 Skill frontmatter   |
 
-Pillow 与 PyYAML 仍是规划依赖，尚未写入 `pyproject.toml` 或 `uv.lock`。实现媒体或 Skill 纵向切片时，重新核对 Python 3.14 兼容性并通过 `uv add` 锁定；Skill ZIP 使用 Python 标准库 `zipfile` 配合自定义路径、条目类型、累计大小和碰撞校验，不能直接信任 `extractall()`。
+PyJWT 与 Pillow 已写入 `pyproject.toml` 和 `uv.lock`。PyYAML 仍是规划依赖；实现 Skill 纵向切片时重新核对 Python 3.14 兼容性并通过 `uv add` 锁定。Skill ZIP 使用 Python 标准库 `zipfile` 配合自定义路径、条目类型、累计大小和碰撞校验，不能直接信任 `extractall()`。
 
 Web AI 已确定使用 AES-256-GCM 凭据加密和四种 Provider HTTP 协议，但运行时加密库与异步 HTTP 客户端尚未选择或写入锁文件。T-401 实施时必须重新核对 Python 3.14 兼容的最新稳定版，通过 `uv add` 锁定，并分别验证流式取消、连接目标校验、禁止重定向和 AES-GCM 测试向量。当前开发依赖中的 HTTPX 只承担 ASGI/API 测试，不能据此描述为已选定的 Provider 运行时客户端。
 
@@ -73,16 +75,18 @@ Web AI 已确定使用 AES-256-GCM 凭据加密和四种 Provider HTTP 协议，
 | JavaScript 运行时 | Node.js           | 24.19.0+ | 仓库要求 | 本地开发与 CI；优先使用 Node 24 LTS  |
 | 包管理            | pnpm              | 11.21.0  | 已声明   | Monorepo 依赖与锁文件                |
 | UI 框架           | React / React DOM | 19.2.8   | 已锁定   | 网页界面                             |
-| UI 组件库         | Ant Design        | 6.6.0    | 规划基线 | 工作台、表单、反馈与管理界面组件     |
+| UI 组件库         | Ant Design        | 6.6.0    | 已锁定   | 工作台、表单、反馈与管理界面组件     |
+| 路由              | React Router DOM  | 7.18.2   | 已锁定   | 登录页、受保护路由和设置页           |
+| 图标              | Lucide React      | 1.33.0   | 已锁定   | 单一线性图标家族                     |
 | 类型系统          | TypeScript        | 6.0.3    | 已锁定   | strict 模式类型检查                  |
 | 构建工具          | Vite              | 8.2.1    | 已锁定   | 开发服务器与生产构建                 |
 | HTTP 客户端       | Axios             | 1.19.0   | 已锁定   | API 请求、Bearer 认证与统一错误适配  |
 | Server State      | TanStack Query    | 5.101.4  | 已锁定   | 请求、缓存、失效和重试               |
 | Schema            | Zod               | 4.4.3    | 已锁定   | 环境变量与不可信数据校验             |
-| 国际化            | i18next           | 26.3.6   | 规划基线 | `zh-CN`、`zh-TW`、`en-US` 资源与回退 |
-| React 国际化      | react-i18next     | 17.0.11  | 规划基线 | React 翻译 Hook 与 Provider          |
+| 国际化            | i18next           | 26.4.0   | 已锁定   | `zh-CN`、`zh-TW`、`en-US` 资源与回退 |
+| React 国际化      | react-i18next     | 17.0.12  | 已锁定   | React 翻译 Hook 与 Provider          |
 
-Ant Design 和国际化规划依赖尚未写入 `package.json` 或锁文件。实施时重新核对 React 19、构建工具与各依赖的兼容性，再使用 pnpm 锁定。Axios 已写入 Web 锁文件；生成的 API 客户端统一使用 Axios 传输层，不保留并行的 Fetch 请求封装。主题通过共享清单、CSS 自定义属性、Ant Design 主题配置和 `prefers-color-scheme` 实现；共享主题清单仍是 Web 与 Desktop 的跨端语义事实来源。
+Ant Design、React Router、Lucide React、i18next 和 react-i18next 已写入 Web 清单与锁文件。生成的 API 客户端统一使用 Axios 传输层，不保留并行的 Fetch 请求封装。主题通过共享运行时主题表、CSS 自定义属性、Ant Design 主题配置和 `prefers-color-scheme` 实现；共享主题清单仍是 Web 与 Desktop 的跨端语义事实来源。
 
 ### 质量工具
 
@@ -254,6 +258,7 @@ Desktop 发布门槛还包括：Windows x64 安装、卸载和升级测试；mac
 - [pnpm config](https://pnpm.io/cli/config)
 - [npmmirror](https://npmmirror.com/)
 - [pwdlib on PyPI](https://pypi.org/project/pwdlib/)
+- [PyJWT on PyPI](https://pypi.org/project/PyJWT/)
 - [email-validator on PyPI](https://pypi.org/project/email-validator/)
 - [phonenumbers on PyPI](https://pypi.org/project/phonenumbers/)
 - [Pillow on PyPI](https://pypi.org/project/pillow/)
@@ -261,5 +266,7 @@ Desktop 发布门槛还包括：Windows x64 安装、卸载和升级测试；mac
 - [i18next on npm](https://www.npmjs.com/package/i18next)
 - [react-i18next on npm](https://www.npmjs.com/package/react-i18next)
 - [Ant Design on npm](https://www.npmjs.com/package/antd)
+- [React Router DOM on npm](https://www.npmjs.com/package/react-router-dom)
+- [Lucide React on npm](https://www.npmjs.com/package/lucide-react)
 - [Axios on npm](https://www.npmjs.com/package/axios)
 - [Hey API OpenAPI TypeScript](https://www.npmjs.com/package/@hey-api/openapi-ts)

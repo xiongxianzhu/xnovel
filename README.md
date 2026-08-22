@@ -63,12 +63,41 @@ uv sync
 cp .env.example .env
 ```
 
-编辑 `.env`，确认 `DATABASE_URL` 指向已经创建且当前账号可以访问的数据库。开发、正式与示例环境的数据库名固定为 `xnovel`；持续集成单独使用 `xnovel_test`。
+确认 PostgreSQL 服务已经启动。使用非超级用户 `xnovel_app`，设置强密码后创建由该用户拥有的开发数据库：
+
+```bash
+psql -U postgres
+```
+
+在 `psql` 中执行以下 SQL。请将占位符替换为随机生成的强密码，不要提交真实密码：
+
+```sql
+CREATE USER xnovel_app WITH PASSWORD 'CHANGE_TO_A_STRONG_PASSWORD';
+CREATE DATABASE xnovel OWNER xnovel_app;
+GRANT ALL PRIVILEGES ON DATABASE xnovel TO xnovel_app;
+```
+
+如果用户或数据库已经存在，跳过对应创建语句。编辑 `.env`，使用刚设置的密码：
+
+```dotenv
+DATABASE_URL=postgresql+asyncpg://xnovel_app:YOUR_PASSWORD@localhost:5432/xnovel
+```
+
+密码包含特殊字符时，需要先进行 URL 编码。开发、正式与示例环境的数据库名固定为 `xnovel`；持续集成单独使用 `xnovel_test`。
 
 ```bash
 uv run alembic upgrade head
 uv run fastapi dev
 ```
+
+首次迁移完成后创建默认管理员：
+
+```bash
+uv run python -m app.cli create-admin
+# Output: Administrator created. Change the password after the first login.
+```
+
+默认账号为 `admin`，昵称为“管理员”，邮箱和手机号为空。初始化密码为一次性引导密码 `123456`，首次登录后必须设置新密码。
 
 启动成功后：
 

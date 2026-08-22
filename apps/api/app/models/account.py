@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import UUID, uuid7
 
-from sqlalchemy import BigInteger, CheckConstraint, Column, Date, DateTime, Index, Text, text
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, Column, Date, DateTime, Index, Text, text
 from sqlmodel import Field
 
 from app.models.base import TimestampMixin
@@ -44,7 +44,10 @@ class User(TimestampMixin, table=True):
 
     id: UUID = Field(default_factory=uuid7, primary_key=True, sa_column_kwargs={"comment": "用户唯一标识"})
     username: str = Field(sa_column=Column(Text, nullable=False, comment="规范化后的唯一用户名"))
-    email: str = Field(sa_column=Column(Text, nullable=False, comment="去除首尾空格并转为小写的唯一邮箱"))
+    email: str | None = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True, comment="去除首尾空格并转为小写的可选唯一邮箱"),
+    )
     email_verified_at: datetime | None = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True), nullable=True, comment="邮箱验证时间（UTC），未验证时为空"),
@@ -59,6 +62,15 @@ class User(TimestampMixin, table=True):
     )
     password_hash: str = Field(sa_column=Column(Text, nullable=False, comment="Argon2id 密码哈希，不保存或返回明文"))
     nickname: str = Field(sa_column=Column(Text, nullable=False, comment="面向用户展示的名称"))
+    must_change_password: bool = Field(
+        default=False,
+        sa_column=Column(
+            Boolean,
+            nullable=False,
+            server_default=text("false"),
+            comment="是否必须完成首次密码修改",
+        ),
+    )
     role: str = Field(
         default="user",
         sa_column=Column(Text, nullable=False, server_default=text("'user'"), comment="账户角色：user 或 admin"),

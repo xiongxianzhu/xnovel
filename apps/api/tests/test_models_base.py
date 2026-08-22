@@ -12,6 +12,7 @@ from sqlmodel import Field, Session, SQLModel, create_engine
 
 from app.models.account import User, UserPreference
 from app.models.base import ImmutableTimestampMixin, TimestampMixin
+from app.models.session import UserSession, UserSessionToken
 from app.models.site import AdminAuditEvent, AuthRateLimitBucket, SiteSetting
 
 
@@ -96,9 +97,9 @@ def test_immutable_timestamp_mixin_has_no_update_hook() -> None:
 
 @pytest.mark.parametrize(
     "model",
-    [User, UserPreference, SiteSetting, AdminAuditEvent, AuthRateLimitBucket],
+    [User, UserPreference, UserSession, UserSessionToken, SiteSetting, AdminAuditEvent, AuthRateLimitBucket],
 )
-def test_t106_tables_have_required_timestamps(model: type[Any]) -> None:
+def test_persistent_tables_have_required_timestamps(model: type[Any]) -> None:
     table = model.__table__  # type: ignore[attr-defined]
 
     assert table.c.created_at.nullable is False
@@ -108,10 +109,21 @@ def test_t106_tables_have_required_timestamps(model: type[Any]) -> None:
 
 
 def test_all_persistent_tables_and_columns_have_chinese_comments() -> None:
-    migration_path = Path(__file__).parents[1] / "alembic" / "versions" / "20260816_0002_persistence_comments.py"
-    migration = run_path(str(migration_path))
-    table_comments: dict[str, str] = migration["TABLE_COMMENTS"]
-    column_comments: dict[str, dict[str, str]] = migration["COLUMN_COMMENTS"]
+    versions_path = Path(__file__).parents[1] / "alembic" / "versions"
+    migration_files = [
+        versions_path / "20260816_0002_persistence_comments.py",
+        versions_path / "20260821_0003_t107_auth_profile_media.py",
+        versions_path / "20260822_0004_t201_projects_documents.py",
+        versions_path / "20260822_0005_admin_bootstrap_password.py",
+    ]
+    table_comments: dict[str, str] = {}
+    column_comments: dict[str, dict[str, str]] = {}
+    for migration_path in migration_files:
+        migration = run_path(str(migration_path))
+        table_comments.update(migration["TABLE_COMMENTS"])
+        column_comments.update(migration["COLUMN_COMMENTS"])
+    column_comments["site_settings"]["logo_original_name"] = "Web 全局 Logo 清理后的原始文件名"
+    column_comments["users"]["must_change_password"] = "是否必须完成首次密码修改"
     persistent_tables = {
         name: table for name, table in SQLModel.metadata.tables.items() if not name.startswith("test_")
     }

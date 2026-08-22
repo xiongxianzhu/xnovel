@@ -48,6 +48,7 @@ apps/desktop/.user-data/
 .eslintcache
 *.tsbuildinfo
 .cache/
+.uv-cache/
 
 # Environment variables and secrets
 .env

@@ -34,8 +34,10 @@ class SiteSetting(TimestampMixin, table=True):
     __table_args__ = (
         CheckConstraint("id = 1", name="ck_site_settings_singleton"),
         CheckConstraint(
-            "(logo_storage_key IS NULL AND logo_mime_type IS NULL AND logo_size_bytes IS NULL) OR "
-            "(logo_storage_key IS NOT NULL AND logo_mime_type IS NOT NULL AND logo_size_bytes IS NOT NULL)",
+            "(logo_storage_key IS NULL AND logo_original_name IS NULL AND logo_mime_type IS NULL "
+            "AND logo_size_bytes IS NULL) OR "
+            "(logo_storage_key IS NOT NULL AND logo_original_name IS NOT NULL AND logo_mime_type IS NOT NULL "
+            "AND logo_size_bytes IS NOT NULL)",
             name="ck_site_settings_logo_fields",
         ),
         Index("ix_site_settings_updated_by", "updated_by"),
@@ -60,6 +62,10 @@ class SiteSetting(TimestampMixin, table=True):
     logo_storage_key: str | None = Field(
         default=None,
         sa_column=Column(Text, nullable=True, comment="Web 全局 Logo 的存储对象键"),
+    )
+    logo_original_name: str | None = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True, comment="Web 全局 Logo 清理后的原始文件名"),
     )
     logo_mime_type: str | None = Field(
         default=None,
@@ -122,7 +128,7 @@ class AuthRateLimitBucket(TimestampMixin, table=True):
     __tablename__ = "auth_rate_limit_buckets"
     __table_args__ = (
         CheckConstraint(
-            "scope IN ('registration_source', 'registration_source_identity')",
+            "scope IN ('registration_source', 'registration_source_identity', 'login_source', 'login_source_identity')",
             name="ck_auth_rate_limit_buckets_scope",
         ),
         CheckConstraint("window_seconds > 0", name="ck_auth_rate_limit_buckets_window_seconds"),

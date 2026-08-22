@@ -21,7 +21,7 @@ class SiteConfigResponse(APIResponse[SiteConfigData]):
 
 class RegisterRequest(BaseModel):
     username: str
-    email: str
+    email: str | None = None
     password: str = Field(json_schema_extra={"writeOnly": True})
     nickname: str
     phone_e164: str | None = None
@@ -30,7 +30,7 @@ class RegisterRequest(BaseModel):
 class RegisteredUserData(BaseModel):
     id: UUID
     username: str
-    email: str
+    email: str | None
     phone_e164: str | None
     nickname: str
     role: Literal["user"]
@@ -40,4 +40,45 @@ class RegisteredUserData(BaseModel):
 
 
 class RegisterUserResponse(APIResponse[RegisteredUserData]):
+    pass
+
+
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str = Field(json_schema_extra={"writeOnly": True})
+
+
+class AuthenticatedUserData(BaseModel):
+    id: UUID
+    username: str
+    email: str | None
+    must_change_password: bool
+    phone_e164: str | None
+    nickname: str
+    role: Literal["user", "admin"]
+    status: Literal["active"]
+
+
+class AuthTokenData(BaseModel):
+    access_token: str
+    token_type: Literal["Bearer"] = "Bearer"
+    expires_at: datetime
+    user: AuthenticatedUserData
+
+
+class LoginResponse(APIResponse[AuthTokenData]):
+    pass
+
+
+class RefreshTokenData(BaseModel):
+    access_token: str
+    token_type: Literal["Bearer"] = "Bearer"
+    expires_at: datetime
+
+
+class RefreshResponse(APIResponse[RefreshTokenData]):
+    pass
+
+
+class LogoutResponse(APIResponse[dict[str, object]]):
     pass

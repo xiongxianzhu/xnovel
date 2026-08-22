@@ -72,7 +72,7 @@ def validate_nickname(value: str) -> str:
 
 
 def validate_password(value: str) -> str:
-    if not 12 <= len(value) <= 128:
+    if not 8 <= len(value) <= 128:
         raise IdentityValidationError("password", "length")
     if "\x00" in value:
         raise IdentityValidationError("password", "format")
@@ -81,6 +81,39 @@ def validate_password(value: str) -> str:
 
 def hash_password(value: str) -> str:
     return password_hash.hash(validate_password(value))
+
+
+def hash_bootstrap_password(value: str = "123456") -> str:
+    if value != "123456":
+        raise ValueError("invalid bootstrap password")
+    return password_hash.hash(value)
+
+
+def validate_strong_password(value: str, *, username: str, email: str | None = None) -> str:
+    validate_password(value)
+    categories = sum(
+        (
+            any(character.isupper() for character in value),
+            any(character.islower() for character in value),
+            any(character.isdigit() for character in value),
+            any(not character.isalnum() for character in value),
+        )
+    )
+    lowered = value.casefold()
+    email_local = email.split("@", 1)[0].casefold() if email else ""
+    if (
+        categories < 3
+        or value == "123456"
+        or lowered == "password"
+        or username.casefold() in lowered
+        or (email_local and email_local in lowered)
+    ):
+        raise IdentityValidationError("password", "strength")
+    return value
+
+
+def hash_strong_password(value: str, *, username: str, email: str | None = None) -> str:
+    return password_hash.hash(validate_strong_password(value, username=username, email=email))
 
 
 def verify_password(value: str, password_digest: str) -> bool:

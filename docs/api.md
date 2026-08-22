@@ -1,8 +1,10 @@
 # xnovel API 文档
 
-> 文档状态：Draft  
-> 文档版本：0.7.0  
-> 最后更新：2026-08-16  
+> 文档状态：Draft
+>
+> 文档版本：0.9.0
+>
+> 最后更新：2026-08-21
 > 当前行为来源：`apps/api/app` 与 `apps/api/tests`
 
 本文供 xnovel 前后端开发者对接 API。健康检查、站点配置和注册章节描述当前可运行行为；分页章节定义后续列表接口必须采用的契约。
@@ -102,6 +104,12 @@ HTTP 状态码表达协议层结果，`code` 表达应用层结果。失败响�
 | `11001` | `REGISTRATION_DISABLED`          | `403`     | 公开注册已关闭           |
 | `11002` | `ACCOUNT_IDENTIFIER_UNAVAILABLE` | `409`     | 一个或多个账户标识已占用 |
 | `11003` | `REGISTRATION_RATE_LIMITED`      | `429`     | 注册固定窗口已超限       |
+| `11004` | `INVALID_CREDENTIALS`            | `401`     | 登录标识或密码无效       |
+| `11005` | `LOGIN_RATE_LIMITED`             | `429`     | 登录固定窗口已超限       |
+| `11006` | `SESSION_INVALID`                | `401`     | 会话无效、过期或已撤销   |
+| `11007` | `CURRENT_PASSWORD_INVALID`       | `422`     | 当前密码不正确           |
+| `12001` | `MEDIA_INVALID`                  | `422`     | 图片格式、内容或地址无效 |
+| `12002` | `MEDIA_TOO_LARGE`                | `413`     | 上传图片超过 5 MiB       |
 
 ### 3.3 成功响应
 
@@ -330,13 +338,13 @@ curl http://127.0.0.1:8000/api/v1/health
 
 `GET` `/api/admin/v1/health`
 
-> 检查管理 API 路由。当前只验证请求是否包含结构正确且非空的 HTTP Bearer 凭证，这是开发期占位逻辑，不能用于生产认证。
+> 检查管理 API 路由。Access Token 必须有效、会话未撤销、用户处于启用状态且角色为 `admin`。
 
 #### Header 参数
 
-| 参数            | 类型   | 必填 | 默认值 | 说明                                          |
-| --------------- | ------ | ---- | ------ | --------------------------------------------- |
-| `Authorization` | string | 是   | -      | `Bearer <access_token>`；当前不校验令牌具体值 |
+| 参数            | 类型   | 必填 | 默认值 | 说明                    |
+| --------------- | ------ | ---- | ------ | ----------------------- |
+| `Authorization` | string | 是   | -      | `Bearer <access_token>` |
 
 Path、Query 和 Request JSON 参数均无。
 
@@ -366,11 +374,11 @@ Path、Query 和 Request JSON 参数均无。
 调用示例：
 
 ```bash
-curl -H "Authorization: Bearer development-only" http://127.0.0.1:8000/api/admin/v1/health
+curl -H "Authorization: Bearer ACCESS_TOKEN" http://127.0.0.1:8000/api/admin/v1/health
 # Output: {"code":0,"msg":"SUCCESS","data":{"status":"ok"}}
 ```
 
-缺少请求头、使用非 Bearer Scheme 或 Bearer 凭证为空时，返回 HTTP `401`，并包含 `WWW-Authenticate: Bearer`：
+缺少或无效 Bearer 返回 `10002`；会话过期或撤销返回 `11006`。两种 HTTP `401` 都包含 `WWW-Authenticate: Bearer`。有效普通用户访问返回 HTTP `403 / 10003`，认证数据库不可用返回 HTTP `503 / 10007`。
 
 ```json
 {
@@ -445,8 +453,8 @@ curl http://127.0.0.1:8000/api/v1/site-config
 | 参数         | 类型   | 必填 | 默认值 | 备注                                       |
 | ------------ | ------ | ---- | ------ | ------------------------------------------ |
 | `username`   | string | 是   | -      | 规范化后长度 `3`–`32`                      |
-| `email`      | string | 是   | -      | 有效邮箱；保存前去除首尾空格并转为小写     |
-| `password`   | string | 是   | -      | `12`–`128` 个 Unicode 字符；不裁剪或规范化 |
+| `email`      | string | 否   | `null` | 有效邮箱；保存前去除首尾空格并转为小写     |
+| `password`   | string | 是   | -      | `8`–`128` 位；新密码需满足四类字符中的至少三类 |
 | `nickname`   | string | 是   | -      | 展示昵称，长度 `1`–`100`                   |
 | `phone_e164` | string | 否   | `null` | 带 `+` 和国家码的规范 E.164 手机号         |
 
@@ -523,34 +531,208 @@ curl http://127.0.0.1:8000/api/v1/site-config
 
 请求与响应字段统一使用 `snake_case`。浏览器不能直接调用模型供应商 API，也不能持有模型供应商密钥。
 
-## 8. 已确认但尚未实现的契约
+## 8. 认证、资料与媒体
 
-以下内容是实现约束，不代表路由已经存在。具体 HTTP 方法、路径和稳定整数业务错误码必须随 FastAPI 路由、OpenAPI 与测试在同一次变更中补充，不能在代码之前虚构。
+T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer <access_token>`。
 
 ### 8.1 认证与会话
 
-- Web 使用服务端可撤销的不透明访问/刷新令牌组合。短期访问令牌由登录或刷新响应返回，只保存在浏览器内存，并通过 `Authorization: Bearer <access_token>` 发送；管理接口不使用独立请求头。
-- 长期刷新令牌只保存在 `HttpOnly`、`Secure`、`SameSite=Lax` Cookie 中，不暴露给 JavaScript。刷新接口校验可信 `Origin` 与 CSRF 令牌，并在成功后轮换刷新令牌。
+| 方法   | 路径                   | 上行参数                                                             | 成功 `data`                                                                                                  | 主要失败                  | 行为                                                                        |
+| ------ | ---------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------- | --------------------------------------------------------------------------- |
+| `POST` | `/api/v1/auth/login`   | JSON：`identifier: string`、`password: string`                       | `access_token`、`token_type=Bearer`、`expires_at`、`user{id,username,email,phone_e164,nickname,role,status,must_change_password}` | `11004`、`11005`、`10007` | 创建独立会话；设置 Path=`/api/v1`、HttpOnly、SameSite=Lax 的 Refresh Cookie |
+| `POST` | `/api/v1/auth/refresh` | Header：`Origin`；配置的 Refresh Cookie，默认 `xnovel_refresh_token` | `access_token`、`token_type=Bearer`、`expires_at`                                                            | `10003`、`11006`、`10007` | 原子轮换 Refresh Token；旧令牌重放撤销会话                                  |
+| `POST` | `/api/v1/auth/logout`  | Header：`Origin`；配置的 Refresh Cookie 可缺省                       | `{}`                                                                                                         | `10003`、`10007`          | 幂等撤销当前会话并清除 Cookie                                               |
+
+登录请求示例：
+
+```json
+{
+  "identifier": "writer@example.com",
+  "password": "correct horse battery staple"
+}
+```
+
+登录成功示例：
+
+```json
+{
+  "code": 0,
+  "msg": "SUCCESS",
+  "data": {
+    "access_token": "ACCESS_TOKEN",
+    "token_type": "Bearer",
+    "expires_at": "2026-08-21T12:15:00Z",
+    "user": {
+      "id": "0198b3d4-95d2-7a31-8ec3-a9c6653fa2f0",
+      "username": "writer",
+      "email": "writer@example.com",
+      "phone_e164": null,
+      "nickname": "作者",
+      "role": "user",
+      "status": "active",
+      "must_change_password": false
+    }
+  }
+}
+```
+
 - 页面重新加载后，Web 使用刷新 Cookie 获取新的访问令牌；刷新失败或会话失效时进入登录页。访问令牌不得写入 `localStorage`、`sessionStorage` 或 Cookie。
 - 登录请求包含 `identifier` 与 `password`。包含 `@` 按邮箱处理，合法 `+` E.164 按手机号处理，其余按用户名处理。
-- 邮箱和手机号只有验证后才可用于登录或找回密码；用户名在邮箱未验证时仍可登录。
-- 账号不存在、密码错误或无法识别标识统一返回相同错误。只有密码校验成功后才可提示邮箱或手机号未验证。
-- 登录、验证和找回密码后续仍须增加独立限流。登出、密码修改、用户禁用和管理员撤销会话后，同一会话的访问令牌与刷新令牌立即失效。
+- 邮箱和手机号均可为空；已填写且未验证的邮箱和手机号首版可以登录，不实现验证与找回密码。
+- 账号不存在、密码错误或无法识别标识统一返回 `11004`。
+- 登录按来源和来源加标识执行固定窗口限流。
 
 认证响应不能返回密码哈希、会话令牌哈希、验证令牌或用户是否存在的探测信息。
 
-### 8.2 用户资料、媒体与偏好
+### 8.2 用户资料
 
-本人资料响应可以包含：`id`、`username`、`email`、`email_verified_at`、`phone_e164`、`phone_verified_at`、`nickname`、头像来源、`address`、`birthday`、`last_login_at`、`created_at` 和 `updated_at`。响应中的 `username` 和 `email` 是数据库保存的规范化值；用户展示名称使用 `nickname`。管理员用户查询不返回 `address`、`birthday`、完整邮箱或完整手机号。
+本人资料响应可以包含：`id`、`username`、`email`、`email_verified_at`、`phone_e164`、`phone_verified_at`、`nickname`、头像来源、`address`、`birthday`、`last_login_at`、`must_change_password`、`created_at` 和 `updated_at`。响应中的 `username` 和 `email` 是数据库保存的规范化值；用户展示名称使用 `nickname`。管理员用户查询不返回 `address`、`birthday`、完整邮箱或完整手机号。
 
-- 普通资料更新只接受 `nickname`、头像、`address` 和 `birthday`；邮箱、手机号和密码使用独立高强度流程并要求重新认证。
+| 方法    | 路径                        | 上行参数                                                                                            | 成功 `data`                                                                                                        | 主要失败                                             | 行为                                     |
+| ------- | --------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ---------------------------------------- |
+| `GET`   | `/api/v1/users/me`          | Header：`Authorization`                                                                             | `id`、`username`、`email`、验证时间、`phone_e164`、`nickname`、`role`、头像、`address`、`birthday`、状态、首次改密状态和时间字段 | `10002`、`11006`、`10007`                            | 只返回当前用户                           |
+| `PATCH` | `/api/v1/users/me`          | JSON 可选：`username`、`email`、`phone_e164`、`nickname`、`address`、`birthday`、`current_password` | 更新后的完整本人资料                                                                                               | `10001`、`10002`、`11002`、`11006`、`11007`、`10007` | 完成首次改密后可用；修改敏感标识必须提交当前密码 |
+| `PUT`   | `/api/v1/users/me/password` | JSON：`current_password`、`new_password`；配置的 Refresh Cookie                                     | `access_token`、`token_type=Bearer`、`expires_at`、更新后的 `user`                                                  | `10001`、`10002`、`11006`、`11007`、`10007`          | 撤销其他会话、清除首次改密状态并轮换当前会话令牌 |
+
+首次改密账号在完成密码修改前，作品、偏好、头像等其他受保护业务接口返回 `403 / 10003`，`data.reason` 为 `must_change_password`。
+
+`PATCH` 中显式传入 `phone_e164: null`、`address: null` 或 `birthday: null` 表示清空字段。省略字段表示不修改。
+
+### 8.3 用户偏好
+
+#### 8.3.1 读取当前用户偏好
+
+`GET` `/api/v1/users/me/preferences`
+
+`request headers` 参数：
+
+| 参数            | 类型   | 必填 | 默认值 | 备注                    |
+| --------------- | ------ | ---- | ------ | ----------------------- |
+| `Authorization` | string | 是   | -      | `Bearer <access_token>` |
+
+下行参数：
+
+| 参数             | 类型   | 默认值             | 备注                                                                          |
+| ---------------- | ------ | ------------------ | ----------------------------------------------------------------------------- |
+| `code`           | int    | `0`                | 成功响应码                                                                    |
+| `msg`            | string | `SUCCESS`          | 稳定消息标识                                                                  |
+| `data`           | object | -                  | 完整用户偏好                                                                  |
+| `└locale`        | string | `zh-CN`            | `zh-CN`、`zh-TW` 或 `en-US`                                                   |
+| `└theme_palette` | string | `manuscript-brown` | `manuscript-brown`、`pine-green`、`harbor-blue`、`grape-purple` 或 `graphite` |
+| `└theme_mode`    | string | `system`           | `system`、`light` 或 `dark`                                                   |
+| `└created_at`    | string | -                  | UTC ISO 8601 创建时间                                                         |
+| `└updated_at`    | string | -                  | UTC ISO 8601 更新时间                                                         |
+
+成功，HTTP `200`：
+
+```json
+{
+  "code": 0,
+  "msg": "SUCCESS",
+  "data": {
+    "locale": "zh-CN",
+    "theme_palette": "manuscript-brown",
+    "theme_mode": "system",
+    "created_at": "2026-08-21T12:00:00Z",
+    "updated_at": "2026-08-21T12:00:00Z"
+  }
+}
+```
+
+失败，HTTP `401`：
+
+```json
+{
+  "code": 11006,
+  "msg": "SESSION_INVALID",
+  "data": {}
+}
+```
+
+该接口还可能返回 `10002 / UNAUTHORIZED` 和 `10007 / SERVICE_UNAVAILABLE`。HTTP `401` 包含 `WWW-Authenticate: Bearer`。
+
+#### 8.3.2 更新当前用户偏好
+
+`PATCH` `/api/v1/users/me/preferences`
+
+> 请求必须至少提交一个字段。省略字段表示不修改；`null` 和未知枚举返回校验失败。
+
+`request headers` 参数：
+
+| 参数            | 类型   | 必填 | 默认值             | 备注                    |
+| --------------- | ------ | ---- | ------------------ | ----------------------- |
+| `Authorization` | string | 是   | -                  | `Bearer <access_token>` |
+| `Content-Type`  | string | 是   | `application/json` | 请求内容类型            |
+
+`request json` 参数：
+
+| 参数            | 类型   | 必填 | 默认值 | 备注                                                                          |
+| --------------- | ------ | ---- | ------ | ----------------------------------------------------------------------------- |
+| `locale`        | string | 否   | -      | `zh-CN`、`zh-TW` 或 `en-US`                                                   |
+| `theme_palette` | string | 否   | -      | `manuscript-brown`、`pine-green`、`harbor-blue`、`grape-purple` 或 `graphite` |
+| `theme_mode`    | string | 否   | -      | `system`、`light` 或 `dark`                                                   |
+
+下行参数：
+
+| 参数             | 类型   | 默认值             | 备注                        |
+| ---------------- | ------ | ------------------ | --------------------------- |
+| `code`           | int    | `0`                | 成功响应码                  |
+| `msg`            | string | `SUCCESS`          | 稳定消息标识                |
+| `data`           | object | -                  | 更新后的完整偏好            |
+| `└locale`        | string | `zh-CN`            | `zh-CN`、`zh-TW` 或 `en-US` |
+| `└theme_palette` | string | `manuscript-brown` | 五套主题家族之一            |
+| `└theme_mode`    | string | `system`           | `system`、`light` 或 `dark` |
+| `└created_at`    | string | -                  | UTC ISO 8601 创建时间       |
+| `└updated_at`    | string | -                  | UTC ISO 8601 更新时间       |
+
+成功，HTTP `200`：
+
+```json
+{
+  "code": 0,
+  "msg": "SUCCESS",
+  "data": {
+    "locale": "en-US",
+    "theme_palette": "harbor-blue",
+    "theme_mode": "dark",
+    "created_at": "2026-08-21T12:00:00Z",
+    "updated_at": "2026-08-21T12:10:00Z"
+  }
+}
+```
+
+失败，HTTP `422`：
+
+```json
+{
+  "code": 10001,
+  "msg": "VALIDATION_ERROR",
+  "data": {
+    "details": []
+  }
+}
+```
+
+该接口还可能返回 `10002 / UNAUTHORIZED`、`11006 / SESSION_INVALID` 和 `10007 / SERVICE_UNAVAILABLE`。HTTP `401` 包含 `WWW-Authenticate: Bearer`。
+
+### 8.4 头像、Logo 与媒体
+
+| 方法     | 路径                               | 上行参数                       | 成功 `data`                        | 主要失败                                             | 缓存与幂等                                           |
+| -------- | ---------------------------------- | ------------------------------ | ---------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| `POST`   | `/api/v1/users/me/avatar`          | Bearer；multipart `file`       | `source=upload`、`url`             | `10002`、`11006`、`12001`、`12002`、`10007`          | 替换头像，不幂等                                     |
+| `PUT`    | `/api/v1/users/me/avatar-url`      | Bearer；JSON `url`             | `source=url`、`url`                | `10002`、`11006`、`12001`、`10007`                   | 同一 URL 可重复设置                                  |
+| `DELETE` | `/api/v1/users/me/avatar`          | Bearer                         | `source=none`、`url=null`          | `10002`、`11006`、`10007`                            | 幂等                                                 |
+| `GET`    | `/api/v1/site-settings/public`     | 无                             | `registration_enabled`、`logo_url` | `10007`                                              | 可公开读取                                           |
+| `GET`    | `/api/v1/media/{storage_key}`      | Path：`storage_key`            | 图片二进制                         | `10004`、`12001`                                     | `Cache-Control: public, max-age=31536000`；`nosniff` |
+| `POST`   | `/api/admin/v1/site-settings/logo` | Admin Bearer；multipart `file` | `url`                              | `10002`、`10003`、`11006`、`12001`、`12002`、`10007` | 替换 Logo，不幂等并写管理员审计                      |
+| `DELETE` | `/api/admin/v1/site-settings/logo` | Admin Bearer                   | `url=null`                         | `10002`、`10003`、`11006`、`10007`                   | 幂等并写管理员审计                                   |
+
 - 上传头像和 Web 全局 Logo 使用 `multipart/form-data`，单文件最大 5 MiB；仅接受解码确认的 PNG、JPEG 或 WebP。Logo 只允许管理员修改。
 - 上传头像最大宽高为 2048×2048，总像素不超过 4,194,304；Web Logo 最大宽高为 4096×4096，总像素不超过 16,777,216。API 必须实际解码后校验，不能只信任文件头或尺寸声明。
 - URL 头像只接受 HTTPS 绝对 URL，并拒绝 userinfo、`localhost`、环回地址和字面量私网 IP。API 不抓取远程文件，也不承诺检查其大小；上传文件与 URL 字段互斥。
-- 偏好只接受 `locale`、`theme_palette` 和 `theme_mode`。语言枚举为 `zh-CN`、`zh-TW`、`en-US`；主题家族为五套已确认标识；模式为 `system`、`light`、`dark`。
-- T-107 增加 Logo 后，公开站点配置可以返回其可访问表示，但仍不返回存储键、管理员 ID 或服务器路径。
+- API 不返回存储键、管理员 ID 或服务器路径。
 
-### 8.3 Web Skill
+### 8.5 Web Skill
 
 所有普通 Skill 请求都以当前用户为所有权边界。不存在与无权访问对外使用一致的 `404` 行为，避免通过 ID 探测其他用户资源。
 
@@ -567,7 +749,7 @@ curl http://127.0.0.1:8000/api/v1/site-config
 
 归档路径、碰撞或压缩预算失败使用 `422`；同用户名称冲突、编辑版本冲突使用 `409`；文件清理失败不把删除响应伪装成完整成功，资源保持 `deleting` 并提供可查询状态。
 
-### 8.4 AI Provider 与模型
+### 8.6 AI Provider 与模型
 
 Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定义 Provider、四种协议、模型和默认模型的详细范围见 [`ai-integration.md`](ai-integration.md)。具体 HTTP 方法和路径随 T-401 的 FastAPI 路由与 OpenAPI 一起确定，本节不预先虚构端点。
 
@@ -580,7 +762,19 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 - 整个调用最长 120 秒，有效输出上限不超过 8,192 tokens。首版不自动重试、不设置日/月配额，也不返回估算费用。
 - Provider 未报告的 Token 用量字段保持 `null`。错误响应使用稳定 AI 错误码和脱敏信息，不包含 Header、完整上下文或完整上游响应。
 
-### 8.5 其他尚未实现领域
+### 8.7 作品
+
+所有作品请求都以当前用户为所有权边界。不存在、已删除或属于其他用户的作品统一返回 `404 / 10004`。
+
+| 方法   | 路径                         | 上行参数                                  | 成功 `data`                                      | 主要失败                  |
+| ------ | ---------------------------- | ----------------------------------------- | ------------------------------------------------ | ------------------------- |
+| `GET`  | `/api/v1/projects`            | Query：`page`、`page_size`                 | 分页作品摘要                                     | `10002`、`11006`、`10007` |
+| `POST` | `/api/v1/projects`            | JSON：`title: string`，长度 `1`–`200`     | 作品摘要与自动创建的“未命名文档”元数据           | `10002`、`11006`、`10007` |
+| `GET`  | `/api/v1/projects/{project_id}` | Path：作品 UUID                         | 作品详情与初始文档元数据，不返回正文             | `10002`、`10004`、`11006`、`10007` |
+
+作品列表按 `updated_at DESC, id DESC` 排序，默认每页 `20` 条，最大 `100` 条。同一用户可以创建同名作品。创建作品时，`projects`、`documents` 和 `document_contents` 在同一事务中生成；失败时整体回滚。
+
+### 8.8 其他尚未实现领域
 
 作品、文档树、正文保存、人物、世界设定、导出和 AI 任务端点同样尚未实现。实现时以代码、OpenAPI 和测试核对本文，并遵守第 6 节的完整记录要求。
 
@@ -588,6 +782,9 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 
 | 日期       | 版本  | 变更                                                          |
 | ---------- | ----- | ------------------------------------------------------------- |
+| 2026-08-22 | 1.0.0 | 实现作品列表、创建、打开和自动创建初始文档                     |
+| 2026-08-21 | 0.9.0 | 实现 Web 用户偏好读取与部分更新契约                           |
+| 2026-08-21 | 0.8.0 | 实现登录会话、用户资料、头像、媒体读取与 Web 全局 Logo        |
 | 2026-08-16 | 0.7.0 | 实现统一响应、公开站点配置、注册、限流与生成客户端契约        |
 | 2026-08-16 | 0.6.1 | 用户名与邮箱直接保存并返回规范化值，不再使用重复规范化字段    |
 | 2026-08-15 | 0.6.0 | 确认 Web BYOK、内置/自定义 Provider、模型与用量规划契约       |

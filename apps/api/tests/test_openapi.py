@@ -80,6 +80,10 @@ def test_registration_documents_stable_error_envelopes_and_retry_header() -> Non
         "minimum": 1,
         "type": "integer",
     }
+    schemas = schema["components"]["schemas"]
+    assert schemas["LoginRequest"]["properties"]["password"]["writeOnly"] is True
+    assert "writeOnly" not in schemas["AuthTokenData"]["properties"]["access_token"]
+    assert "writeOnly" not in schemas["RefreshTokenData"]["properties"]["access_token"]
 
 
 def test_admin_health_uses_http_bearer_security() -> None:
@@ -95,8 +99,96 @@ def test_admin_health_uses_http_bearer_security() -> None:
     unauthorized = operation["responses"]["401"]
     assert unauthorized["headers"]["WWW-Authenticate"]["schema"] == {"type": "string"}
     assert unauthorized["content"]["application/json"]["schema"] == {
-        "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+        "$ref": "#/components/schemas/AuthenticationErrorResponse"
     }
+    assert operation["responses"]["403"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ForbiddenErrorResponse"
+    }
+    assert operation["responses"]["503"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+    }
+
+
+def test_t107_operations_expose_precise_errors_and_binary_media() -> None:
+    schema = load_schema()
+    paths = schema["paths"]
+
+    operations = {
+        ("post", "/api/v1/auth/login"): {"200", "401", "422", "429", "503", "default"},
+        ("post", "/api/v1/auth/refresh"): {"200", "401", "403", "503", "default"},
+        ("post", "/api/v1/auth/logout"): {"200", "403", "503", "default"},
+        ("get", "/api/v1/users/me"): {"200", "401", "503", "default"},
+        ("patch", "/api/v1/users/me"): {"200", "401", "409", "422", "503", "default"},
+        ("put", "/api/v1/users/me/password"): {"200", "401", "422", "503", "default"},
+        ("post", "/api/v1/users/me/avatar"): {"200", "401", "413", "422", "503", "default"},
+        ("put", "/api/v1/users/me/avatar-url"): {"200", "401", "422", "503", "default"},
+        ("delete", "/api/v1/users/me/avatar"): {"200", "401", "503", "default"},
+        ("get", "/api/v1/site-settings/public"): {"200", "503", "default"},
+        ("get", "/api/v1/users/me/preferences"): {"200", "401", "503", "default"},
+        ("patch", "/api/v1/users/me/preferences"): {"200", "401", "422", "503", "default"},
+        ("post", "/api/admin/v1/site-settings/logo"): {
+            "200",
+            "401",
+            "403",
+            "413",
+            "422",
+            "503",
+            "default",
+        },
+        ("delete", "/api/admin/v1/site-settings/logo"): {"200", "401", "403", "503", "default"},
+    }
+    for (method, path), expected_statuses in operations.items():
+        responses = paths[path][method]["responses"]
+        assert set(responses) == expected_statuses
+        if "401" in responses:
+            assert responses["401"]["headers"]["WWW-Authenticate"]["schema"] == {"type": "string"}
+
+    login_responses = paths["/api/v1/auth/login"]["post"]["responses"]
+    assert login_responses["401"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/InvalidCredentialsErrorResponse"
+    }
+    assert login_responses["422"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ValidationErrorResponse"
+    }
+    assert login_responses["429"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/LoginRateLimitedErrorResponse"
+    }
+
+    profile_responses = paths["/api/v1/users/me"]["patch"]["responses"]
+    assert profile_responses["401"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/AuthenticationErrorResponse"
+    }
+    assert profile_responses["422"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ProfileValidationErrorResponse"
+    }
+
+    media_responses = paths["/api/v1/media/{storage_key}"]["get"]["responses"]
+    assert set(media_responses) == {"200", "404", "422", "default"}
+    assert set(media_responses["200"]["content"]) == {"image/jpeg", "image/png", "image/webp"}
+    for content in media_responses["200"]["content"].values():
+        assert content["schema"] == {"type": "string", "format": "binary"}
+    assert media_responses["404"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/NotFoundErrorResponse"
+    }
+
+    preference_update = schema["components"]["schemas"]["UpdateUserPreferenceRequest"]
+    branches = {item["$ref"].rsplit("/", 1)[-1] for item in preference_update["anyOf"]}
+    assert branches == {
+        "UpdateLocalePreferenceRequest",
+        "UpdateThemeModePreferenceRequest",
+        "UpdateThemePalettePreferenceRequest",
+    }
+    required_by_branch = {
+        "UpdateLocalePreferenceRequest": "locale",
+        "UpdateThemeModePreferenceRequest": "theme_mode",
+        "UpdateThemePalettePreferenceRequest": "theme_palette",
+    }
+    for model_name, required_field in required_by_branch.items():
+        model = schema["components"]["schemas"][model_name]
+        assert model["required"] == [required_field]
+        for field in model["properties"].values():
+            assert field["type"] == "string"
+            assert "null" not in field.get("enum", [])
 
 
 def test_openapi_exposes_every_stable_error_code_as_a_literal() -> None:
@@ -113,6 +205,12 @@ def test_openapi_exposes_every_stable_error_code_as_a_literal() -> None:
         "RegistrationDisabledErrorResponse": (11001, "REGISTRATION_DISABLED"),
         "AccountIdentifierUnavailableErrorResponse": (11002, "ACCOUNT_IDENTIFIER_UNAVAILABLE"),
         "RegistrationRateLimitedErrorResponse": (11003, "REGISTRATION_RATE_LIMITED"),
+        "InvalidCredentialsErrorResponse": (11004, "INVALID_CREDENTIALS"),
+        "LoginRateLimitedErrorResponse": (11005, "LOGIN_RATE_LIMITED"),
+        "SessionInvalidErrorResponse": (11006, "SESSION_INVALID"),
+        "CurrentPasswordInvalidErrorResponse": (11007, "CURRENT_PASSWORD_INVALID"),
+        "MediaInvalidErrorResponse": (12001, "MEDIA_INVALID"),
+        "MediaTooLargeErrorResponse": (12002, "MEDIA_TOO_LARGE"),
     }
 
     for model_name, (code, message) in expected.items():

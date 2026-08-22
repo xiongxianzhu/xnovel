@@ -25,6 +25,158 @@ export type AccountIdentifierUnavailableErrorResponse = {
 };
 
 /**
+ * AuthTokenData
+ */
+export type AuthTokenData = {
+    /**
+     * Access Token
+     */
+    access_token: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Token Type
+     */
+    token_type?: 'Bearer';
+    user: AuthenticatedUserData;
+};
+
+/**
+ * AuthenticatedUserData
+ */
+export type AuthenticatedUserData = {
+    /**
+     * Email
+     */
+    email: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Must Change Password
+     */
+    must_change_password: boolean;
+    /**
+     * Nickname
+     */
+    nickname: string;
+    /**
+     * Phone E164
+     */
+    phone_e164: string | null;
+    /**
+     * Role
+     */
+    role: 'user' | 'admin';
+    /**
+     * Status
+     */
+    status: 'active';
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * AuthenticationErrorResponse
+ *
+ * Bearer 缺失、无效或会话失效。
+ */
+export type AuthenticationErrorResponse = UnauthorizedErrorResponse | SessionInvalidErrorResponse;
+
+/**
+ * AvatarData
+ */
+export type AvatarData = {
+    /**
+     * Source
+     */
+    source: 'none' | 'upload' | 'url';
+    /**
+     * Url
+     */
+    url: string | null;
+};
+
+/**
+ * AvatarResponse
+ */
+export type AvatarResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AvatarData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * AvatarUrlRequest
+ */
+export type AvatarUrlRequest = {
+    /**
+     * Url
+     */
+    url: string;
+};
+
+/**
+ * Body_uploadCurrentUserAvatar
+ */
+export type BodyUploadCurrentUserAvatar = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_uploadSiteLogo
+ */
+export type BodyUploadSiteLogo = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * ChangePasswordRequest
+ */
+export type ChangePasswordRequest = {
+    /**
+     * Current Password
+     */
+    current_password: string;
+    /**
+     * New Password
+     */
+    new_password: string;
+};
+
+/**
+ * ChangePasswordResponse
+ */
+export type ChangePasswordResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: PasswordChangedData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ConflictErrorResponse
  */
 export type ConflictErrorResponse = {
@@ -42,6 +194,64 @@ export type ConflictErrorResponse = {
      * Msg
      */
     msg: 'CONFLICT';
+};
+
+/**
+ * CurrentPasswordInvalidErrorResponse
+ */
+export type CurrentPasswordInvalidErrorResponse = {
+    /**
+     * Code
+     */
+    code: 11007;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'CURRENT_PASSWORD_INVALID';
+};
+
+/**
+ * DocumentSummary
+ */
+export type DocumentSummary = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind: 'folder' | 'manuscript' | 'outline' | 'note';
+    /**
+     * Parent Id
+     */
+    parent_id: string | null;
+    /**
+     * Position
+     */
+    position: number;
+    /**
+     * Status
+     */
+    status: 'active' | 'archived';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
 };
 
 /**
@@ -69,7 +279,7 @@ export type ForbiddenErrorResponse = {
  *
  * 所有稳定错误响应的联合类型，用于未预见状态的兜底契约。
  */
-export type HttpErrorResponse = InternalErrorResponse | ValidationErrorResponse | UnauthorizedErrorResponse | ForbiddenErrorResponse | NotFoundErrorResponse | ConflictErrorResponse | RateLimitedErrorResponse | ServiceUnavailableErrorResponse | RegistrationDisabledErrorResponse | AccountIdentifierUnavailableErrorResponse | RegistrationRateLimitedErrorResponse;
+export type HttpErrorResponse = InternalErrorResponse | ValidationErrorResponse | UnauthorizedErrorResponse | ForbiddenErrorResponse | NotFoundErrorResponse | ConflictErrorResponse | RateLimitedErrorResponse | ServiceUnavailableErrorResponse | RegistrationDisabledErrorResponse | AccountIdentifierUnavailableErrorResponse | RegistrationRateLimitedErrorResponse | InvalidCredentialsErrorResponse | LoginRateLimitedErrorResponse | SessionInvalidErrorResponse | CurrentPasswordInvalidErrorResponse | MediaInvalidErrorResponse | MediaTooLargeErrorResponse;
 
 /**
  * HealthData
@@ -117,6 +327,163 @@ export type InternalErrorResponse = {
 };
 
 /**
+ * InvalidCredentialsErrorResponse
+ */
+export type InvalidCredentialsErrorResponse = {
+    /**
+     * Code
+     */
+    code: 11004;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'INVALID_CREDENTIALS';
+};
+
+/**
+ * LoginRateLimitedErrorResponse
+ */
+export type LoginRateLimitedErrorResponse = {
+    /**
+     * Code
+     */
+    code: 11005;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'LOGIN_RATE_LIMITED';
+};
+
+/**
+ * LoginRequest
+ */
+export type LoginRequest = {
+    /**
+     * Identifier
+     */
+    identifier: string;
+};
+
+/**
+ * LoginResponse
+ */
+export type LoginResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AuthTokenData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * LogoData
+ */
+export type LogoData = {
+    /**
+     * Url
+     */
+    url: string | null;
+};
+
+/**
+ * LogoResponse
+ */
+export type LogoResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: LogoData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * LogoutResponse
+ */
+export type LogoutResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * MediaInvalidErrorResponse
+ */
+export type MediaInvalidErrorResponse = {
+    /**
+     * Code
+     */
+    code: 12001;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'MEDIA_INVALID';
+};
+
+/**
+ * MediaTooLargeErrorResponse
+ */
+export type MediaTooLargeErrorResponse = {
+    /**
+     * Code
+     */
+    code: 12002;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'MEDIA_TOO_LARGE';
+};
+
+/**
+ * MediaValidationErrorResponse
+ *
+ * 媒体请求结构或内容校验失败。
+ */
+export type MediaValidationErrorResponse = ValidationErrorResponse | MediaInvalidErrorResponse;
+
+/**
  * NotFoundErrorResponse
  */
 export type NotFoundErrorResponse = {
@@ -134,6 +501,203 @@ export type NotFoundErrorResponse = {
      * Msg
      */
     msg: 'NOT_FOUND';
+};
+
+/**
+ * PasswordChangedData
+ */
+export type PasswordChangedData = {
+    /**
+     * Access Token
+     */
+    access_token: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Token Type
+     */
+    token_type?: 'Bearer';
+    user: UserProfileData;
+};
+
+/**
+ * ProfileValidationErrorResponse
+ *
+ * 资料或密码修改校验失败。
+ */
+export type ProfileValidationErrorResponse = ValidationErrorResponse | CurrentPasswordInvalidErrorResponse;
+
+/**
+ * ProjectCreateRequest
+ */
+export type ProjectCreateRequest = {
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * ProjectCreateResponse
+ */
+export type ProjectCreateResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProjectDetailData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProjectDetailData
+ */
+export type ProjectDetailData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    initial_document: DocumentSummary;
+    /**
+     * Status
+     */
+    status: 'active' | 'archived';
+    /**
+     * Structure Mode
+     */
+    structure_mode: 'single_document' | 'tree';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * ProjectDetailResponse
+ */
+export type ProjectDetailResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProjectDetailData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProjectListData
+ */
+export type ProjectListData = {
+    /**
+     * Items
+     */
+    items: Array<ProjectSummary>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * ProjectListResponse
+ */
+export type ProjectListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProjectListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProjectSummary
+ */
+export type ProjectSummary = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Status
+     */
+    status: 'active' | 'archived';
+    /**
+     * Structure Mode
+     */
+    structure_mode: 'single_document' | 'tree';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * PublicSiteSettingsData
+ */
+export type PublicSiteSettingsData = {
+    /**
+     * Logo Url
+     */
+    logo_url: string | null;
+    /**
+     * Registration Enabled
+     */
+    registration_enabled: boolean;
+};
+
+/**
+ * PublicSiteSettingsResponse
+ */
+export type PublicSiteSettingsResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: PublicSiteSettingsData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
 };
 
 /**
@@ -157,13 +721,46 @@ export type RateLimitedErrorResponse = {
 };
 
 /**
+ * RefreshResponse
+ */
+export type RefreshResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: RefreshTokenData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * RefreshTokenData
+ */
+export type RefreshTokenData = {
+    /**
+     * Access Token
+     */
+    access_token: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Token Type
+     */
+    token_type?: 'Bearer';
+};
+
+/**
  * RegisterRequest
  */
 export type RegisterRequest = {
     /**
      * Email
      */
-    email: string;
+    email?: string | null;
     /**
      * Nickname
      */
@@ -204,7 +801,7 @@ export type RegisteredUserData = {
     /**
      * Email
      */
-    email: string;
+    email: string | null;
     /**
      * Id
      */
@@ -296,6 +893,26 @@ export type ServiceUnavailableErrorResponse = {
 };
 
 /**
+ * SessionInvalidErrorResponse
+ */
+export type SessionInvalidErrorResponse = {
+    /**
+     * Code
+     */
+    code: 11006;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Msg
+     */
+    msg: 'SESSION_INVALID';
+};
+
+/**
  * SiteConfigData
  */
 export type SiteConfigData = {
@@ -341,6 +958,225 @@ export type UnauthorizedErrorResponse = {
 };
 
 /**
+ * UpdateLocalePreferenceRequest
+ */
+export type UpdateLocalePreferenceRequest = {
+    /**
+     * Locale
+     */
+    locale: 'zh-CN' | 'zh-TW' | 'en-US';
+    /**
+     * Theme Mode
+     */
+    theme_mode?: 'system' | 'light' | 'dark';
+    /**
+     * Theme Palette
+     */
+    theme_palette?: 'manuscript-brown' | 'pine-green' | 'harbor-blue' | 'grape-purple' | 'graphite';
+};
+
+/**
+ * UpdateProfileRequest
+ */
+export type UpdateProfileRequest = {
+    /**
+     * Address
+     */
+    address?: string | null;
+    /**
+     * Birthday
+     */
+    birthday?: string | null;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Nickname
+     */
+    nickname?: string | null;
+    /**
+     * Phone E164
+     */
+    phone_e164?: string | null;
+    /**
+     * Username
+     */
+    username?: string | null;
+};
+
+/**
+ * UpdateThemeModePreferenceRequest
+ */
+export type UpdateThemeModePreferenceRequest = {
+    /**
+     * Locale
+     */
+    locale?: 'zh-CN' | 'zh-TW' | 'en-US';
+    /**
+     * Theme Mode
+     */
+    theme_mode: 'system' | 'light' | 'dark';
+    /**
+     * Theme Palette
+     */
+    theme_palette?: 'manuscript-brown' | 'pine-green' | 'harbor-blue' | 'grape-purple' | 'graphite';
+};
+
+/**
+ * UpdateThemePalettePreferenceRequest
+ */
+export type UpdateThemePalettePreferenceRequest = {
+    /**
+     * Locale
+     */
+    locale?: 'zh-CN' | 'zh-TW' | 'en-US';
+    /**
+     * Theme Mode
+     */
+    theme_mode?: 'system' | 'light' | 'dark';
+    /**
+     * Theme Palette
+     */
+    theme_palette: 'manuscript-brown' | 'pine-green' | 'harbor-blue' | 'grape-purple' | 'graphite';
+};
+
+/**
+ * UpdateUserPreferenceRequest
+ */
+export type UpdateUserPreferenceRequest = UpdateLocalePreferenceRequest | UpdateThemePalettePreferenceRequest | UpdateThemeModePreferenceRequest;
+
+/**
+ * UserPreferenceData
+ */
+export type UserPreferenceData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Locale
+     */
+    locale: 'zh-CN' | 'zh-TW' | 'en-US';
+    /**
+     * Theme Mode
+     */
+    theme_mode: 'system' | 'light' | 'dark';
+    /**
+     * Theme Palette
+     */
+    theme_palette: 'manuscript-brown' | 'pine-green' | 'harbor-blue' | 'grape-purple' | 'graphite';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * UserPreferenceResponse
+ */
+export type UserPreferenceResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: UserPreferenceData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * UserProfileData
+ */
+export type UserProfileData = {
+    /**
+     * Address
+     */
+    address: string | null;
+    /**
+     * Avatar Source
+     */
+    avatar_source: 'none' | 'upload' | 'url';
+    /**
+     * Avatar Url
+     */
+    avatar_url: string | null;
+    /**
+     * Birthday
+     */
+    birthday: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Email
+     */
+    email: string | null;
+    /**
+     * Email Verified At
+     */
+    email_verified_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Last Login At
+     */
+    last_login_at: string | null;
+    /**
+     * Must Change Password
+     */
+    must_change_password: boolean;
+    /**
+     * Nickname
+     */
+    nickname: string;
+    /**
+     * Phone E164
+     */
+    phone_e164: string | null;
+    /**
+     * Phone Verified At
+     */
+    phone_verified_at: string | null;
+    /**
+     * Role
+     */
+    role: 'user' | 'admin';
+    /**
+     * Status
+     */
+    status: 'active';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * UserProfileResponse
+ */
+export type UserProfileResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: UserProfileData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ValidationErrorResponse
  */
 export type ValidationErrorResponse = {
@@ -361,13 +1197,27 @@ export type ValidationErrorResponse = {
 };
 
 /**
+ * LoginRequest
+ */
+export type LoginRequestWritable = {
+    /**
+     * Identifier
+     */
+    identifier: string;
+    /**
+     * Password
+     */
+    password: string;
+};
+
+/**
  * RegisterRequest
  */
 export type RegisterRequestWritable = {
     /**
      * Email
      */
-    email: string;
+    email?: string | null;
     /**
      * Nickname
      */
@@ -386,6 +1236,40 @@ export type RegisterRequestWritable = {
     username: string;
 };
 
+/**
+ * UpdateProfileRequest
+ */
+export type UpdateProfileRequestWritable = {
+    /**
+     * Address
+     */
+    address?: string | null;
+    /**
+     * Birthday
+     */
+    birthday?: string | null;
+    /**
+     * Current Password
+     */
+    current_password?: string | null;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Nickname
+     */
+    nickname?: string | null;
+    /**
+     * Phone E164
+     */
+    phone_e164?: string | null;
+    /**
+     * Username
+     */
+    username?: string | null;
+};
+
 export type GetAdminHealthData = {
     body?: never;
     path?: never;
@@ -397,7 +1281,15 @@ export type GetAdminHealthErrors = {
     /**
      * 缺少或无效的 Bearer 访问令牌
      */
-    401: UnauthorizedErrorResponse;
+    401: AuthenticationErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ForbiddenErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
     /**
      * Default Response
      */
@@ -414,6 +1306,199 @@ export type GetAdminHealthResponses = {
 };
 
 export type GetAdminHealthResponse = GetAdminHealthResponses[keyof GetAdminHealthResponses];
+
+export type DeleteSiteLogoData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/v1/site-settings/logo';
+};
+
+export type DeleteSiteLogoErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ForbiddenErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteSiteLogoError = DeleteSiteLogoErrors[keyof DeleteSiteLogoErrors];
+
+export type DeleteSiteLogoResponses = {
+    /**
+     * Successful Response
+     */
+    200: LogoResponse;
+};
+
+export type DeleteSiteLogoResponse = DeleteSiteLogoResponses[keyof DeleteSiteLogoResponses];
+
+export type UploadSiteLogoData = {
+    body: BodyUploadSiteLogo;
+    path?: never;
+    query?: never;
+    url: '/api/admin/v1/site-settings/logo';
+};
+
+export type UploadSiteLogoErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ForbiddenErrorResponse;
+    /**
+     * Content Too Large
+     */
+    413: MediaTooLargeErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: MediaValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UploadSiteLogoError = UploadSiteLogoErrors[keyof UploadSiteLogoErrors];
+
+export type UploadSiteLogoResponses = {
+    /**
+     * Successful Response
+     */
+    200: LogoResponse;
+};
+
+export type UploadSiteLogoResponse = UploadSiteLogoResponses[keyof UploadSiteLogoResponses];
+
+export type LoginData = {
+    body: LoginRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/login';
+};
+
+export type LoginErrors = {
+    /**
+     * Unauthorized
+     */
+    401: InvalidCredentialsErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: LoginRateLimitedErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type LoginError = LoginErrors[keyof LoginErrors];
+
+export type LoginResponses = {
+    /**
+     * Successful Response
+     */
+    200: LoginResponse;
+};
+
+export type LoginResponse2 = LoginResponses[keyof LoginResponses];
+
+export type LogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/logout';
+};
+
+export type LogoutErrors = {
+    /**
+     * Forbidden
+     */
+    403: ForbiddenErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type LogoutError = LogoutErrors[keyof LogoutErrors];
+
+export type LogoutResponses = {
+    /**
+     * Successful Response
+     */
+    200: LogoutResponse;
+};
+
+export type LogoutResponse2 = LogoutResponses[keyof LogoutResponses];
+
+export type RefreshSessionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/refresh';
+};
+
+export type RefreshSessionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: SessionInvalidErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ForbiddenErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type RefreshSessionError = RefreshSessionErrors[keyof RefreshSessionErrors];
+
+export type RefreshSessionResponses = {
+    /**
+     * Successful Response
+     */
+    200: RefreshResponse;
+};
+
+export type RefreshSessionResponse = RefreshSessionResponses[keyof RefreshSessionResponses];
 
 export type RegisterData = {
     body: RegisterRequestWritable;
@@ -485,6 +1570,173 @@ export type GetHealthResponses = {
 
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
 
+export type GetMediaData = {
+    body?: never;
+    path: {
+        /**
+         * Storage Key
+         */
+        storage_key: string;
+    };
+    query?: never;
+    url: '/api/v1/media/{storage_key}';
+};
+
+export type GetMediaErrors = {
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: MediaValidationErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetMediaError = GetMediaErrors[keyof GetMediaErrors];
+
+export type GetMediaResponses = {
+    /**
+     * 图片二进制内容
+     */
+    200: Blob | File;
+};
+
+export type GetMediaResponse = GetMediaResponses[keyof GetMediaResponses];
+
+export type ListProjectsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/projects';
+};
+
+export type ListProjectsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListProjectsError = ListProjectsErrors[keyof ListProjectsErrors];
+
+export type ListProjectsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectListResponse;
+};
+
+export type ListProjectsResponse = ListProjectsResponses[keyof ListProjectsResponses];
+
+export type CreateProjectData = {
+    body: ProjectCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/projects';
+};
+
+export type CreateProjectErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateProjectError = CreateProjectErrors[keyof CreateProjectErrors];
+
+export type CreateProjectResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProjectCreateResponse;
+};
+
+export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
+
+export type GetProjectData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}';
+};
+
+export type GetProjectErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetProjectError = GetProjectErrors[keyof GetProjectErrors];
+
+export type GetProjectResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectDetailResponse;
+};
+
+export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];
+
 export type GetSiteConfigData = {
     body?: never;
     path?: never;
@@ -513,3 +1765,324 @@ export type GetSiteConfigResponses = {
 };
 
 export type GetSiteConfigResponse = GetSiteConfigResponses[keyof GetSiteConfigResponses];
+
+export type GetPublicSiteSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/site-settings/public';
+};
+
+export type GetPublicSiteSettingsErrors = {
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetPublicSiteSettingsError = GetPublicSiteSettingsErrors[keyof GetPublicSiteSettingsErrors];
+
+export type GetPublicSiteSettingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicSiteSettingsResponse;
+};
+
+export type GetPublicSiteSettingsResponse = GetPublicSiteSettingsResponses[keyof GetPublicSiteSettingsResponses];
+
+export type GetCurrentUserProfileData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me';
+};
+
+export type GetCurrentUserProfileErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetCurrentUserProfileError = GetCurrentUserProfileErrors[keyof GetCurrentUserProfileErrors];
+
+export type GetCurrentUserProfileResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserProfileResponse;
+};
+
+export type GetCurrentUserProfileResponse = GetCurrentUserProfileResponses[keyof GetCurrentUserProfileResponses];
+
+export type UpdateCurrentUserProfileData = {
+    body: UpdateProfileRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me';
+};
+
+export type UpdateCurrentUserProfileErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Conflict
+     */
+    409: AccountIdentifierUnavailableErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ProfileValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateCurrentUserProfileError = UpdateCurrentUserProfileErrors[keyof UpdateCurrentUserProfileErrors];
+
+export type UpdateCurrentUserProfileResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserProfileResponse;
+};
+
+export type UpdateCurrentUserProfileResponse = UpdateCurrentUserProfileResponses[keyof UpdateCurrentUserProfileResponses];
+
+export type DeleteCurrentUserAvatarData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/avatar';
+};
+
+export type DeleteCurrentUserAvatarErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteCurrentUserAvatarError = DeleteCurrentUserAvatarErrors[keyof DeleteCurrentUserAvatarErrors];
+
+export type DeleteCurrentUserAvatarResponses = {
+    /**
+     * Successful Response
+     */
+    200: AvatarResponse;
+};
+
+export type DeleteCurrentUserAvatarResponse = DeleteCurrentUserAvatarResponses[keyof DeleteCurrentUserAvatarResponses];
+
+export type UploadCurrentUserAvatarData = {
+    body: BodyUploadCurrentUserAvatar;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/avatar';
+};
+
+export type UploadCurrentUserAvatarErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Content Too Large
+     */
+    413: MediaTooLargeErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: MediaValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UploadCurrentUserAvatarError = UploadCurrentUserAvatarErrors[keyof UploadCurrentUserAvatarErrors];
+
+export type UploadCurrentUserAvatarResponses = {
+    /**
+     * Successful Response
+     */
+    200: AvatarResponse;
+};
+
+export type UploadCurrentUserAvatarResponse = UploadCurrentUserAvatarResponses[keyof UploadCurrentUserAvatarResponses];
+
+export type SetCurrentUserAvatarUrlData = {
+    body: AvatarUrlRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/avatar-url';
+};
+
+export type SetCurrentUserAvatarUrlErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: MediaValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SetCurrentUserAvatarUrlError = SetCurrentUserAvatarUrlErrors[keyof SetCurrentUserAvatarUrlErrors];
+
+export type SetCurrentUserAvatarUrlResponses = {
+    /**
+     * Successful Response
+     */
+    200: AvatarResponse;
+};
+
+export type SetCurrentUserAvatarUrlResponse = SetCurrentUserAvatarUrlResponses[keyof SetCurrentUserAvatarUrlResponses];
+
+export type ChangeCurrentUserPasswordData = {
+    body: ChangePasswordRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/password';
+};
+
+export type ChangeCurrentUserPasswordErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ProfileValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ChangeCurrentUserPasswordError = ChangeCurrentUserPasswordErrors[keyof ChangeCurrentUserPasswordErrors];
+
+export type ChangeCurrentUserPasswordResponses = {
+    /**
+     * Successful Response
+     */
+    200: ChangePasswordResponse;
+};
+
+export type ChangeCurrentUserPasswordResponse = ChangeCurrentUserPasswordResponses[keyof ChangeCurrentUserPasswordResponses];
+
+export type GetCurrentUserPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/preferences';
+};
+
+export type GetCurrentUserPreferencesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetCurrentUserPreferencesError = GetCurrentUserPreferencesErrors[keyof GetCurrentUserPreferencesErrors];
+
+export type GetCurrentUserPreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPreferenceResponse;
+};
+
+export type GetCurrentUserPreferencesResponse = GetCurrentUserPreferencesResponses[keyof GetCurrentUserPreferencesResponses];
+
+export type UpdateCurrentUserPreferencesData = {
+    body: UpdateUserPreferenceRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/preferences';
+};
+
+export type UpdateCurrentUserPreferencesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateCurrentUserPreferencesError = UpdateCurrentUserPreferencesErrors[keyof UpdateCurrentUserPreferencesErrors];
+
+export type UpdateCurrentUserPreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPreferenceResponse;
+};
+
+export type UpdateCurrentUserPreferencesResponse = UpdateCurrentUserPreferencesResponses[keyof UpdateCurrentUserPreferencesResponses];

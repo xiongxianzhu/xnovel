@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.schemas.common import UnauthorizedErrorResponse
+from app.schemas.common import (
+    BEARER_AUTH_RESPONSE_HEADERS,
+    AuthenticationErrorResponse,
+    ForbiddenErrorResponse,
+    ServiceUnavailableErrorResponse,
+)
 from app.schemas.health import HealthData, HealthResponse
 
 router = APIRouter()
@@ -16,14 +21,11 @@ router = APIRouter()
     responses={
         401: {
             "description": "缺少或无效的 Bearer 访问令牌",
-            "headers": {
-                "WWW-Authenticate": {
-                    "description": "客户端应使用 Bearer 认证方案",
-                    "schema": {"type": "string"},
-                }
-            },
-            "model": UnauthorizedErrorResponse,
-        }
+            "headers": BEARER_AUTH_RESPONSE_HEADERS,
+            "model": AuthenticationErrorResponse,
+        },
+        403: {"model": ForbiddenErrorResponse},
+        503: {"model": ServiceUnavailableErrorResponse},
     },
 )
 async def admin_health() -> HealthResponse:

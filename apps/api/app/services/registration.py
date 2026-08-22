@@ -72,7 +72,7 @@ async def register_user(
         raise _registration_disabled()
 
     username_for_key = normalize_username(payload.username)
-    email_for_key = normalize_email(payload.email)
+    email_for_key = normalize_email(payload.email) if payload.email else ""
     try:
         limit = await increment_registration_limits(
             session,
@@ -100,7 +100,7 @@ async def register_user(
 
     try:
         username = validate_username(payload.username)
-        email = validate_account_email(payload.email)
+        email = validate_account_email(payload.email) if payload.email else None
         phone = validate_phone_e164(payload.phone_e164)
         nickname = validate_nickname(payload.nickname)
         password_digest = await run_in_threadpool(hash_password, payload.password)

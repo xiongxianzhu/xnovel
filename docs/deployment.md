@@ -1,7 +1,8 @@
 # xnovel 部署与发布
 
-> 状态：Draft  
-> 最后更新：2026-08-16
+> 状态：Draft
+>
+> 最后更新：2026-08-22
 
 ## 1. 当前部署模型
 
@@ -24,6 +25,39 @@ Web 静态资源、FastAPI 和 PostgreSQL 分别部署。Electron 打包 React �
 | API     | `http://127.0.0.1:8000`      | `apps/api/.env` |
 | OpenAPI | `http://127.0.0.1:8000/docs` | FastAPI         |
 
+### 本地创建 PostgreSQL 数据库
+
+首次启动 API 前，确认 PostgreSQL 服务已经启动。使用非超级用户 `xnovel_app`，设置强密码后创建由该用户拥有的开发数据库：
+
+```bash
+psql -U postgres
+```
+
+在 `psql` 中执行以下 SQL。请将占位符替换为随机生成的强密码，不要提交真实密码：
+
+```sql
+CREATE USER xnovel_app WITH PASSWORD 'CHANGE_TO_A_STRONG_PASSWORD';
+CREATE DATABASE xnovel OWNER xnovel_app;
+GRANT ALL PRIVILEGES ON DATABASE xnovel TO xnovel_app;
+```
+
+如果用户或数据库已经存在，跳过对应创建语句。
+
+在 `apps/api/.env` 中使用刚设置的密码：
+
+```dotenv
+DATABASE_URL=postgresql+asyncpg://xnovel_app:YOUR_PASSWORD@localhost:5432/xnovel
+```
+
+密码包含特殊字符时，需要先进行 URL 编码。完成配置后执行迁移：
+
+```bash
+cd apps/api
+uv run alembic upgrade head
+```
+
+持续集成使用独立数据库 `xnovel_test`，不要将本地开发数据库配置为测试库。
+
 ## 3. 环境变量
 
 ### Web
@@ -36,12 +70,22 @@ Web 静态资源、FastAPI 和 PostgreSQL 分别部署。Electron 打包 React �
 
 ### API
 
-API 当前使用 `APP_ENV`、`SECRET_KEY` 和 `DATABASE_URL`。开发与正式环境的 PostgreSQL 数据库名固定为 `xnovel`；GitHub Actions 使用隔离库 `xnovel_test`。`SECRET_KEY` 同时派生注册限流的 HMAC 专用密钥，生产轮换会重置当前限流窗口，但不会影响账户数据。媒体与 Skill 能力落地后增加以下配置；实现前不得让缺失目录静默回退到临时路径：
+API 使用以下认证、数据库与媒体配置。开发与正式环境的 PostgreSQL 数据库名固定为 `xnovel`；GitHub Actions 使用隔离库 `xnovel_test`。`SECRET_KEY` 至少使用 32 字节随机值，同时派生 JWT 签名、Refresh Token 哈希和认证限流专用密钥。
 
-| 变量                 | 必填 | 说明                                       |
-| -------------------- | ---- | ------------------------------------------ |
-| `MEDIA_ROOT`         | 是   | Web 上传头像和全局站点 Logo 的持久化根目录 |
-| `SKILL_STORAGE_ROOT` | 是   | Web Skill 暂存、原始包、规范化包和版本目录 |
+| 变量                    | 必填           | 默认值                   | 说明                                           |
+| ----------------------- | -------------- | ------------------------ | ---------------------------------------------- |
+| `APP_ENV`               | 否             | `development`            | 运行环境                                       |
+| `SECRET_KEY`            | 是             | -                        | 至少 32 字节随机强密钥                         |
+| `DATABASE_URL`          | 否             | 本地 `xnovel` PostgreSQL | 异步数据库连接                                 |
+| `ACCESS_TOKEN_MINUTES`  | 否             | `15`                     | Access Token 有效分钟数                        |
+| `REFRESH_TOKEN_DAYS`    | 否             | `30`                     | 会话和 Refresh Token 有效天数                  |
+| `JWT_ISSUER`            | 否             | `xnovel-api`             | JWT Issuer                                     |
+| `JWT_AUDIENCE`          | 否             | `xnovel-web`             | JWT Audience                                   |
+| `REFRESH_COOKIE_NAME`   | 否             | `xnovel_refresh_token`   | HttpOnly Refresh Cookie 名称                   |
+| `REFRESH_COOKIE_SECURE` | 生产           | `false`                  | 生产 HTTPS 部署必须设为 `true`                 |
+| `TRUSTED_WEB_ORIGINS`   | 生产必配       | 两个本地 Vite 来源       | CORS、Refresh 与 Logout 允许的精确 Origin JSON |
+| `MEDIA_ROOT`            | 持久化部署必配 | `./data/media`           | 头像和 Web 全局 Logo 的持久化根目录            |
+| `SKILL_STORAGE_ROOT`    | T-406          | -                        | Web Skill 暂存、原始包、规范化包和版本目录     |
 
 Web AI 凭据能力落地后增加以下服务端 Secret/策略配置；这些变量不能使用 `VITE_` 前缀，也不能返回浏览器：
 
@@ -55,6 +99,8 @@ Web AI 凭据能力落地后增加以下服务端 Secret/策略配置；这些�
 默认策略只允许公网 HTTPS 和内置 Provider 官方 Origin。`AI_PROVIDER_EXTRA_ALLOWED_ORIGINS` 只放行精确 Origin，不接受通配符、路径、userinfo 或任意 CIDR；加入本地 Origin 等于部署管理员接受对应无认证或内网访问风险。Provider HTTP 客户端仍须校验 DNS 与实际对端，并禁止重定向，不能把该配置当作唯一 SSRF 防线。
 
 生产环境必须生成新的 `SECRET_KEY`，并通过部署平台的安全配置注入。AI 功能启用时还必须独立生成凭据主密钥；不能复用 `SECRET_KEY`，也不能在镜像、仓库、日志或数据库备份中保存主密钥。`MEDIA_ROOT` 与 `SKILL_STORAGE_ROOT` 必须位于持久化卷，使用不同子目录，且不能由静态服务器直接列目录或执行文件。
+
+FastAPI 的 CORS 允许列表直接复用 `TRUSTED_WEB_ORIGINS`，允许凭据 Cookie，并只开放应用使用的方法以及 `Authorization`、`Content-Type` Header。生产环境不得使用 `*`，也不能把不受控来源加入该列表。
 
 ### Desktop
 
@@ -98,11 +144,11 @@ Web AI 上线后，发布前还要验证当前主密钥版本可解密抽样凭�
 
 ```bash
 cd apps/api
-uv run python -m app.cli create-admin --username ADMIN --email ADMIN_EMAIL --nickname ADMIN_NICKNAME
-# Output: Administrator created.
+uv run python -m app.cli create-admin
+# Output: Administrator created. Change the password after the first login.
 ```
 
-命令在终端隐藏读取并确认密码，不接受 `--password`。已有管理员或标识冲突时安全失败，不覆盖账户或提升普通用户。
+命令默认创建用户名为 `admin`、昵称为“管理员”的管理员，邮箱和手机号为空。初始化密码为一次性引导密码 `123456`，首次登录后必须修改。已有管理员或标识冲突时安全失败，不覆盖账户或提升普通用户。
 
 使用当前启用管理员动态修改注册开关：
 
@@ -121,7 +167,7 @@ uv run python -m app.cli set-registration --admin-username ADMIN --disabled
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips="127.0.0.1"
 ```
 
-将示例地址替换为实际反向代理 IP，不使用不受控的 `*`。生产健康检查还应验证后续媒体和 Skill 持久化目录可写，但不能在响应或日志中暴露真实路径。
+将示例地址替换为实际反向代理 IP，不使用不受控的 `*`。生产健康检查应验证当前 `MEDIA_ROOT` 可写；T-406 实现后再检查 Skill 持久化目录。响应和日志都不能暴露真实路径。
 
 ### Web 持久化与备份
 

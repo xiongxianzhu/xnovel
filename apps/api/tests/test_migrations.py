@@ -36,14 +36,19 @@ def test_upgrade_from_empty_database_seeds_disabled_site_settings(
             "site_settings",
             "admin_audit_events",
             "auth_rate_limit_buckets",
-        }.issubset(table_names)
+                "user_sessions",
+                "user_session_tokens",
+                "projects",
+                "documents",
+                "document_contents",
+            }.issubset(table_names)
         with engine.connect() as connection:
             revision = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
             row = connection.execute(
                 text("SELECT id, registration_enabled, created_at, updated_at FROM site_settings")
             ).one()
         assert row.id == 1
-        assert revision == "20260816_0002"
+        assert revision == "20260822_0005"
         assert row.registration_enabled == 0
         assert row.created_at is not None
         assert row.updated_at is not None

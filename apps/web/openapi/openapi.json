@@ -27,6 +27,254 @@
         "title": "AccountIdentifierUnavailableErrorResponse",
         "type": "object"
       },
+      "AuthTokenData": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "Bearer",
+            "default": "Bearer",
+            "title": "Token Type",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthenticatedUserData"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_at",
+          "user"
+        ],
+        "title": "AuthTokenData",
+        "type": "object"
+      },
+      "AuthenticatedUserData": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "must_change_password": {
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone E164"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "const": "active",
+            "title": "Status",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "must_change_password",
+          "phone_e164",
+          "nickname",
+          "role",
+          "status"
+        ],
+        "title": "AuthenticatedUserData",
+        "type": "object"
+      },
+      "AuthenticationErrorResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/SessionInvalidErrorResponse"
+          }
+        ],
+        "description": "Bearer 缺失、无效或会话失效。",
+        "title": "AuthenticationErrorResponse"
+      },
+      "AvatarData": {
+        "properties": {
+          "source": {
+            "enum": [
+              "none",
+              "upload",
+              "url"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "source",
+          "url"
+        ],
+        "title": "AvatarData",
+        "type": "object"
+      },
+      "AvatarResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AvatarData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "AvatarResponse",
+        "type": "object"
+      },
+      "AvatarUrlRequest": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "AvatarUrlRequest",
+        "type": "object"
+      },
+      "Body_uploadCurrentUserAvatar": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_uploadCurrentUserAvatar",
+        "type": "object"
+      },
+      "Body_uploadSiteLogo": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_uploadSiteLogo",
+        "type": "object"
+      },
+      "ChangePasswordRequest": {
+        "properties": {
+          "current_password": {
+            "title": "Current Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "new_password": {
+            "title": "New Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
+        "type": "object"
+      },
+      "ChangePasswordResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PasswordChangedData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ChangePasswordResponse",
+        "type": "object"
+      },
       "ConflictErrorResponse": {
         "properties": {
           "code": {
@@ -51,6 +299,101 @@
           "msg"
         ],
         "title": "ConflictErrorResponse",
+        "type": "object"
+      },
+      "CurrentPasswordInvalidErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11007,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "CURRENT_PASSWORD_INVALID",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "CurrentPasswordInvalidErrorResponse",
+        "type": "object"
+      },
+      "DocumentSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "folder",
+              "manuscript",
+              "outline",
+              "note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "kind",
+          "parent_id",
+          "position",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DocumentSummary",
         "type": "object"
       },
       "ForbiddenErrorResponse": {
@@ -113,6 +456,24 @@
           },
           {
             "$ref": "#/components/schemas/RegistrationRateLimitedErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/InvalidCredentialsErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/LoginRateLimitedErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/SessionInvalidErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/CurrentPasswordInvalidErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/MediaInvalidErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/MediaTooLargeErrorResponse"
           }
         ],
         "description": "所有稳定错误响应的联合类型，用于未预见状态的兜底契约。",
@@ -182,6 +543,235 @@
         "title": "InternalErrorResponse",
         "type": "object"
       },
+      "InvalidCredentialsErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11004,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "INVALID_CREDENTIALS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "InvalidCredentialsErrorResponse",
+        "type": "object"
+      },
+      "LoginRateLimitedErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11005,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "LOGIN_RATE_LIMITED",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "LoginRateLimitedErrorResponse",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "properties": {
+          "identifier": {
+            "title": "Identifier",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "LoginResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AuthTokenData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "LoginResponse",
+        "type": "object"
+      },
+      "LogoData": {
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "LogoData",
+        "type": "object"
+      },
+      "LogoResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LogoData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "LogoResponse",
+        "type": "object"
+      },
+      "LogoutResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "LogoutResponse",
+        "type": "object"
+      },
+      "MediaInvalidErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 12001,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "MEDIA_INVALID",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "MediaInvalidErrorResponse",
+        "type": "object"
+      },
+      "MediaTooLargeErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 12002,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "MEDIA_TOO_LARGE",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "MediaTooLargeErrorResponse",
+        "type": "object"
+      },
+      "MediaValidationErrorResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ValidationErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/MediaInvalidErrorResponse"
+          }
+        ],
+        "description": "媒体请求结构或内容校验失败。",
+        "title": "MediaValidationErrorResponse"
+      },
       "NotFoundErrorResponse": {
         "properties": {
           "code": {
@@ -206,6 +796,321 @@
           "msg"
         ],
         "title": "NotFoundErrorResponse",
+        "type": "object"
+      },
+      "PasswordChangedData": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "Bearer",
+            "default": "Bearer",
+            "title": "Token Type",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserProfileData"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_at",
+          "user"
+        ],
+        "title": "PasswordChangedData",
+        "type": "object"
+      },
+      "ProfileValidationErrorResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ValidationErrorResponse"
+          },
+          {
+            "$ref": "#/components/schemas/CurrentPasswordInvalidErrorResponse"
+          }
+        ],
+        "description": "资料或密码修改校验失败。",
+        "title": "ProfileValidationErrorResponse"
+      },
+      "ProjectCreateRequest": {
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ProjectCreateRequest",
+        "type": "object"
+      },
+      "ProjectCreateResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectDetailData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProjectCreateResponse",
+        "type": "object"
+      },
+      "ProjectDetailData": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "initial_document": {
+            "$ref": "#/components/schemas/DocumentSummary"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "structure_mode": {
+            "enum": [
+              "single_document",
+              "tree"
+            ],
+            "title": "Structure Mode",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "structure_mode",
+          "status",
+          "created_at",
+          "updated_at",
+          "initial_document"
+        ],
+        "title": "ProjectDetailData",
+        "type": "object"
+      },
+      "ProjectDetailResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectDetailData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProjectDetailResponse",
+        "type": "object"
+      },
+      "ProjectListData": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "pages": {
+            "title": "Pages",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "page_size",
+          "total",
+          "pages",
+          "items"
+        ],
+        "title": "ProjectListData",
+        "type": "object"
+      },
+      "ProjectListResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectListData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProjectListResponse",
+        "type": "object"
+      },
+      "ProjectSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "structure_mode": {
+            "enum": [
+              "single_document",
+              "tree"
+            ],
+            "title": "Structure Mode",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "structure_mode",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProjectSummary",
+        "type": "object"
+      },
+      "PublicSiteSettingsData": {
+        "properties": {
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "registration_enabled": {
+            "title": "Registration Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "registration_enabled",
+          "logo_url"
+        ],
+        "title": "PublicSiteSettingsData",
+        "type": "object"
+      },
+      "PublicSiteSettingsResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicSiteSettingsData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "PublicSiteSettingsResponse",
         "type": "object"
       },
       "RateLimitedErrorResponse": {
@@ -234,11 +1139,67 @@
         "title": "RateLimitedErrorResponse",
         "type": "object"
       },
+      "RefreshResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RefreshTokenData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "RefreshResponse",
+        "type": "object"
+      },
+      "RefreshTokenData": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "Bearer",
+            "default": "Bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_at"
+        ],
+        "title": "RefreshTokenData",
+        "type": "object"
+      },
       "RegisterRequest": {
         "properties": {
           "email": {
-            "title": "Email",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
           },
           "nickname": {
             "title": "Nickname",
@@ -267,7 +1228,6 @@
         },
         "required": [
           "username",
-          "email",
           "password",
           "nickname"
         ],
@@ -306,8 +1266,15 @@
             "type": "string"
           },
           "email": {
-            "title": "Email",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
           },
           "id": {
             "format": "uuid",
@@ -441,6 +1408,32 @@
         "title": "ServiceUnavailableErrorResponse",
         "type": "object"
       },
+      "SessionInvalidErrorResponse": {
+        "properties": {
+          "code": {
+            "const": 11006,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "msg": {
+            "const": "SESSION_INVALID",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "code",
+          "msg"
+        ],
+        "title": "SessionInvalidErrorResponse",
+        "type": "object"
+      },
       "SiteConfigData": {
         "properties": {
           "registration_enabled": {
@@ -504,6 +1497,485 @@
         "title": "UnauthorizedErrorResponse",
         "type": "object"
       },
+      "UpdateLocalePreferenceRequest": {
+        "properties": {
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "zh-TW",
+              "en-US"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "theme_mode": {
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme Mode",
+            "type": "string"
+          },
+          "theme_palette": {
+            "enum": [
+              "manuscript-brown",
+              "pine-green",
+              "harbor-blue",
+              "grape-purple",
+              "graphite"
+            ],
+            "title": "Theme Palette",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale"
+        ],
+        "title": "UpdateLocalePreferenceRequest",
+        "type": "object"
+      },
+      "UpdateProfileRequest": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthday"
+          },
+          "current_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Password",
+            "writeOnly": true
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone E164"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "title": "UpdateProfileRequest",
+        "type": "object"
+      },
+      "UpdateThemeModePreferenceRequest": {
+        "properties": {
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "zh-TW",
+              "en-US"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "theme_mode": {
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme Mode",
+            "type": "string"
+          },
+          "theme_palette": {
+            "enum": [
+              "manuscript-brown",
+              "pine-green",
+              "harbor-blue",
+              "grape-purple",
+              "graphite"
+            ],
+            "title": "Theme Palette",
+            "type": "string"
+          }
+        },
+        "required": [
+          "theme_mode"
+        ],
+        "title": "UpdateThemeModePreferenceRequest",
+        "type": "object"
+      },
+      "UpdateThemePalettePreferenceRequest": {
+        "properties": {
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "zh-TW",
+              "en-US"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "theme_mode": {
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme Mode",
+            "type": "string"
+          },
+          "theme_palette": {
+            "enum": [
+              "manuscript-brown",
+              "pine-green",
+              "harbor-blue",
+              "grape-purple",
+              "graphite"
+            ],
+            "title": "Theme Palette",
+            "type": "string"
+          }
+        },
+        "required": [
+          "theme_palette"
+        ],
+        "title": "UpdateThemePalettePreferenceRequest",
+        "type": "object"
+      },
+      "UpdateUserPreferenceRequest": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/UpdateLocalePreferenceRequest"
+          },
+          {
+            "$ref": "#/components/schemas/UpdateThemePalettePreferenceRequest"
+          },
+          {
+            "$ref": "#/components/schemas/UpdateThemeModePreferenceRequest"
+          }
+        ],
+        "title": "UpdateUserPreferenceRequest"
+      },
+      "UserPreferenceData": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "zh-TW",
+              "en-US"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "theme_mode": {
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ],
+            "title": "Theme Mode",
+            "type": "string"
+          },
+          "theme_palette": {
+            "enum": [
+              "manuscript-brown",
+              "pine-green",
+              "harbor-blue",
+              "grape-purple",
+              "graphite"
+            ],
+            "title": "Theme Palette",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale",
+          "theme_palette",
+          "theme_mode",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserPreferenceData",
+        "type": "object"
+      },
+      "UserPreferenceResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserPreferenceData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "UserPreferenceResponse",
+        "type": "object"
+      },
+      "UserProfileData": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "avatar_source": {
+            "enum": [
+              "none",
+              "upload",
+              "url"
+            ],
+            "title": "Avatar Source",
+            "type": "string"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthday"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "email_verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Verified At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "must_change_password": {
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone E164"
+          },
+          "phone_verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Verified At"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "const": "active",
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "email_verified_at",
+          "phone_e164",
+          "phone_verified_at",
+          "nickname",
+          "role",
+          "avatar_source",
+          "avatar_url",
+          "address",
+          "birthday",
+          "status",
+          "last_login_at",
+          "created_at",
+          "updated_at",
+          "must_change_password"
+        ],
+        "title": "UserProfileData",
+        "type": "object"
+      },
+      "UserProfileResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserProfileData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "UserProfileResponse",
+        "type": "object"
+      },
       "ValidationErrorResponse": {
         "properties": {
           "code": {
@@ -562,7 +2034,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
                 }
               }
             },
@@ -575,6 +2047,26 @@
                 }
               }
             }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
           },
           "default": {
             "content": {
@@ -595,6 +2087,391 @@
         "summary": "Admin Health",
         "tags": [
           "admin-health"
+        ]
+      }
+    },
+    "/api/admin/v1/site-settings/logo": {
+      "delete": {
+        "operationId": "deleteSiteLogo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Logo",
+        "tags": [
+          "admin-site-settings"
+        ]
+      },
+      "post": {
+        "operationId": "uploadSiteLogo",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_uploadSiteLogo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaTooLargeErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Logo",
+        "tags": [
+          "admin-site-settings"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidCredentialsErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRateLimitedErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "refreshSession",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInvalidErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "auth"
         ]
       }
     },
@@ -729,6 +2606,358 @@
         ]
       }
     },
+    "/api/v1/media/{storage_key}": {
+      "get": {
+        "operationId": "getMedia",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storage_key",
+            "required": true,
+            "schema": {
+              "title": "Storage Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "图片二进制内容"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Get Media",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Projects",
+        "tags": [
+          "projects"
+        ]
+      },
+      "post": {
+        "operationId": "createProject",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}": {
+      "get": {
+        "operationId": "getProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Project Detail",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
     "/api/v1/site-config": {
       "get": {
         "operationId": "getSiteConfig",
@@ -767,6 +2996,673 @@
         "summary": "Get Site Config",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/site-settings/public": {
+      "get": {
+        "operationId": "getPublicSiteSettings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSiteSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "summary": "Public Site Settings",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "getCurrentUserProfile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Profile",
+        "tags": [
+          "profile"
+        ]
+      },
+      "patch": {
+        "operationId": "updateCurrentUserProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountIdentifierUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Profile",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/api/v1/users/me/avatar": {
+      "delete": {
+        "operationId": "deleteCurrentUserAvatar",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Avatar",
+        "tags": [
+          "media"
+        ]
+      },
+      "post": {
+        "operationId": "uploadCurrentUserAvatar",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_uploadCurrentUserAvatar"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaTooLargeErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Avatar",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/users/me/avatar-url": {
+      "put": {
+        "operationId": "setCurrentUserAvatarUrl",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarUrlRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Avatar Url",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/users/me/password": {
+      "put": {
+        "operationId": "changeCurrentUserPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Password",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/api/v1/users/me/preferences": {
+      "get": {
+        "operationId": "getCurrentUserPreferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Preferences",
+        "tags": [
+          "preferences"
+        ]
+      },
+      "patch": {
+        "operationId": "updateCurrentUserPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPreferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Preferences",
+        "tags": [
+          "preferences"
         ]
       }
     }

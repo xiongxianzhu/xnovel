@@ -12,6 +12,7 @@ from app.models.account import User, UserPreference
 from app.models.site import AdminAuditEvent, SiteSetting
 from app.services.identity import (
     IdentityValidationError,
+    hash_bootstrap_password,
     hash_password,
     validate_account_email,
     validate_nickname,
@@ -33,15 +34,19 @@ async def create_first_admin(
     session: AsyncSession,
     *,
     username_input: str,
-    email_input: str,
+    email_input: str | None = None,
     nickname_input: str,
-    password_input: str,
+    password_input: str = "123456",
+    bootstrap: bool = False,
 ) -> User:
     try:
         username = validate_username(username_input)
-        email = validate_account_email(email_input)
+        email = validate_account_email(email_input) if email_input else None
         nickname = validate_nickname(nickname_input)
-        password_digest = await asyncio.to_thread(hash_password, password_input)
+        password_digest = await asyncio.to_thread(
+            hash_bootstrap_password if bootstrap else hash_password,
+            password_input,
+        )
     except IdentityValidationError as exc:
         raise AdministrationError(2, f"{exc.field}: {exc.reason}") from exc
 
@@ -61,6 +66,7 @@ async def create_first_admin(
                 email=email,
                 password_hash=password_digest,
                 nickname=nickname,
+                must_change_password=True,
                 role="admin",
                 status="active",
             )

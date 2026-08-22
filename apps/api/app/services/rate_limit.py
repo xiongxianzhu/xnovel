@@ -23,6 +23,8 @@ from app.models.site import AuthRateLimitBucket
 WINDOW_SECONDS = 600
 SOURCE_LIMIT = 10
 IDENTITY_LIMIT = 3
+LOGIN_SOURCE_LIMIT = 20
+LOGIN_IDENTITY_LIMIT = 5
 _KEY_DERIVATION_MESSAGE = b"xnovel:auth-rate-limit:key:v1"
 
 
@@ -119,5 +121,35 @@ async def increment_registration_limits(
     await session.commit()
     return RateLimitResult(
         allowed=source_count <= SOURCE_LIMIT and identity_count <= IDENTITY_LIMIT,
+        retry_after_seconds=retry_after,
+    )
+
+
+async def increment_login_limits(
+    session: AsyncSession,
+    *,
+    secret_key: str,
+    client_ip: str,
+    identifier: str,
+    now: datetime | None = None,
+) -> RateLimitResult:
+    current_time = now or datetime.now(UTC)
+    window_started_at, retry_after = _window(current_time)
+    normalized_ip = normalize_client_ip(client_ip)
+    source_count = await _increment_bucket(
+        session,
+        scope="login_source",
+        key_hash=_key_digest(secret_key, "login_source", [normalized_ip]),
+        window_started_at=window_started_at,
+    )
+    identity_count = await _increment_bucket(
+        session,
+        scope="login_source_identity",
+        key_hash=_key_digest(secret_key, "login_source_identity", [normalized_ip, identifier]),
+        window_started_at=window_started_at,
+    )
+    await session.commit()
+    return RateLimitResult(
+        allowed=source_count <= LOGIN_SOURCE_LIMIT and identity_count <= LOGIN_IDENTITY_LIMIT,
         retry_after_seconds=retry_after,
     )

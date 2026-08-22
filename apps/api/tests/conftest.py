@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncIterator
 
-os.environ.setdefault("SECRET_KEY", "testing-secret")
+os.environ.setdefault("SECRET_KEY", "testing-secret-key-at-least-32-bytes-long")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 os.environ.setdefault("APP_ENV", "testing")
 
