@@ -1,0 +1,14 @@
+packages:
+  - .
+
+allowBuilds:
+  electron-winstaller: true
+  esbuild: true
+
+overrides:
+  "@electron/get@^3.0.0": 3.1.0
+
+onlyBuiltDependencies:
+  - electron
+  - electron-winstaller
+  - esbuild

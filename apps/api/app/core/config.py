@@ -31,6 +31,12 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ]
     media_root: Path = Path("data/media")
+    skill_storage_root: Path = Path("data/skills")
+    xnovel_credential_master_key: str | None = None
+    credential_master_key_version: str = "v1"
+    provider_allowed_origins: list[str] = []
+    ai_call_timeout_seconds: int = 120
+    ai_max_concurrency_per_user: int = 2
 
 
 @lru_cache

@@ -85,18 +85,19 @@ API 使用以下认证、数据库与媒体配置。开发与正式环境的 Pos
 | `REFRESH_COOKIE_SECURE` | 生产           | `false`                  | 生产 HTTPS 部署必须设为 `true`                 |
 | `TRUSTED_WEB_ORIGINS`   | 生产必配       | 两个本地 Vite 来源       | CORS、Refresh 与 Logout 允许的精确 Origin JSON |
 | `MEDIA_ROOT`            | 持久化部署必配 | `./data/media`           | 头像和 Web 全局 Logo 的持久化根目录            |
-| `SKILL_STORAGE_ROOT`    | T-406          | -                        | Web Skill 暂存、原始包、规范化包和版本目录     |
+| `SKILL_STORAGE_ROOT`    | AI/Skill 必配  | `./data/skills`          | Web Skill 规范化包和不可变版本目录             |
 
-Web AI 凭据能力落地后增加以下服务端 Secret/策略配置；这些变量不能使用 `VITE_` 前缀，也不能返回浏览器：
+Web AI 使用以下服务端 Secret/策略配置；这些变量不能使用 `VITE_` 前缀，也不能返回浏览器：
 
 | 变量                                   | 必填   | 说明                                               |
 | -------------------------------------- | ------ | -------------------------------------------------- |
 | `XNOVEL_CREDENTIAL_MASTER_KEY`         | 是     | 当前 Base64 编码的 32 字节 AES-256-GCM 主密钥      |
-| `XNOVEL_CREDENTIAL_MASTER_KEY_VERSION` | 是     | 当前主密钥的稳定版本标识                           |
-| `XNOVEL_CREDENTIAL_PREVIOUS_KEYS`      | 轮换时 | 旧版本到 Base64 密钥的 JSON 映射；完成重加密后移除 |
-| `AI_PROVIDER_EXTRA_ALLOWED_ORIGINS`    | 否     | 显式允许的 HTTP、环回、私网或本机 Origin JSON 数组 |
+| `CREDENTIAL_MASTER_KEY_VERSION`        | 是     | 当前主密钥的稳定版本标识，默认 `v1`                |
+| `PROVIDER_ALLOWED_ORIGINS`             | 否     | 显式允许的 HTTP、环回、私网或本机 Origin JSON 数组 |
+| `AI_CALL_TIMEOUT_SECONDS`              | 否     | Provider 整体调用超时，默认 `120`                  |
+| `AI_MAX_CONCURRENCY_PER_USER`          | 否     | 正式任务与连接测试共享的每用户并发数，默认 `2`     |
 
-默认策略只允许公网 HTTPS 和内置 Provider 官方 Origin。`AI_PROVIDER_EXTRA_ALLOWED_ORIGINS` 只放行精确 Origin，不接受通配符、路径、userinfo 或任意 CIDR；加入本地 Origin 等于部署管理员接受对应无认证或内网访问风险。Provider HTTP 客户端仍须校验 DNS 与实际对端，并禁止重定向，不能把该配置当作唯一 SSRF 防线。
+默认策略只允许公网 HTTPS 和内置 Provider 官方 Origin。`PROVIDER_ALLOWED_ORIGINS` 只放行精确 Origin，不接受通配符、路径、userinfo 或任意 CIDR；加入本地 Origin 等于部署管理员接受对应无认证或内网访问风险。Provider HTTP 客户端在调用前校验 DNS 并禁止重定向；当前尚未固定解析结果到实际 socket peer，因此受控自定义域名的 DNS 仍须可信。
 
 生产环境必须生成新的 `SECRET_KEY`，并通过部署平台的安全配置注入。AI 功能启用时还必须独立生成凭据主密钥；不能复用 `SECRET_KEY`，也不能在镜像、仓库、日志或数据库备份中保存主密钥。`MEDIA_ROOT` 与 `SKILL_STORAGE_ROOT` 必须位于持久化卷，使用不同子目录，且不能由静态服务器直接列目录或执行文件。
 
@@ -105,6 +106,8 @@ FastAPI 的 CORS 允许列表直接复用 `TRUSTED_WEB_ORIGINS`，允许凭据 C
 ### Desktop
 
 Desktop 不使用 `DATABASE_URL`，也不要求用户配置 FastAPI 地址。数据库路径由 `app.getPath("userData")` 决定；Provider 地址等非敏感设置保存在 SQLite。主进程通过 `safeStorage` 加解密 Provider 密钥，并把密文写入 `userData/credentials.v1.json`。本地 Skill 根目录固定为当前用户主目录下的 `~/.agents/skills/`，不是部署变量，也不由安装程序创建或修改。
+
+Desktop 工程已落地于 `apps/desktop`。开发与验证命令为 `pnpm check`、`pnpm build` 和 `pnpm pack:dir`；Windows 安装包使用 `pnpm dist:win`，macOS 分别使用 `pnpm dist:mac:x64` 与 `pnpm dist:mac:arm64`。
 
 ## 4. Web 发布门槛
 
@@ -242,4 +245,4 @@ Desktop Logo 随安装包固定，不从数据库或运行时配置加载。主�
 - API：锁定依赖安装、Ruff 检查与格式检查、mypy、PostgreSQL 迁移、pytest，以及已提交 OpenAPI Schema 的确定性校验。pytest 直接针对迁移后的专用 PostgreSQL 数据库验证 JSONB、部分索引、`CHECK`、行锁竞争、限流原子 upsert、10/3 次边界和独立提交；不以 ORM 临时建表代替迁移验收。
 - Web：锁定依赖安装、生成 API 客户端的文件清单与字节校验、`pnpm check` 和生产构建。
 
-工作流只拥有 `contents: read` 权限，不使用生产密钥，也不执行部署或桌面端发布。Desktop 工程落地后，再按目标平台增加签名、打包和更新验证。
+常规 CI 的 Desktop Job 只拥有 `contents: read`，执行锁文件安装、静态检查、测试和三段构建。`desktop-release.yml` 仅在 SemVer Tag 或手动触发时运行 Windows x64、macOS x64、macOS arm64 矩阵；Tag 发布使用 GitHub Release、平台签名 Secret 与 macOS 公证 Secret，手动验证构建禁用签名自动发现且不发布。安装和更新均不把 `userData` 纳入应用文件。

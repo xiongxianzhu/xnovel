@@ -51,6 +51,10 @@ export function setAccessToken(token: string | null | undefined): void {
   accessToken = token?.trim() || undefined;
 }
 
+export function getAccessToken(): string | undefined {
+  return accessToken;
+}
+
 export function setRefreshAccessTokenHandler(
   handler: (() => Promise<string | null>) | undefined,
 ): void {

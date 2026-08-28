@@ -5,6 +5,225 @@ export type ClientOptions = {
 };
 
 /**
+ * AIResultApplyRequest
+ */
+export type AiResultApplyRequest = {
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Version
+     */
+    version: number;
+};
+
+/**
+ * AIResultData
+ */
+export type AiResultData = {
+    /**
+     * Applied Document Id
+     */
+    applied_document_id: string | null;
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Decided At
+     */
+    decided_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Sequence
+     */
+    sequence: number;
+    /**
+     * Status
+     */
+    status: 'candidate' | 'applied' | 'rejected';
+};
+
+/**
+ * AIResultDecisionData
+ */
+export type AiResultDecisionData = {
+    /**
+     * Document Version
+     */
+    document_version?: number | null;
+    result: AiResultData;
+};
+
+/**
+ * AIResultDecisionResponse
+ */
+export type AiResultDecisionResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AiResultDecisionData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * AITaskCreateRequest
+ */
+export type AiTaskCreateRequest = {
+    /**
+     * Document Id
+     */
+    document_id?: string | null;
+    /**
+     * Instruction
+     */
+    instruction: string;
+    /**
+     * Max Output Tokens
+     */
+    max_output_tokens?: number;
+    /**
+     * Model Id
+     */
+    model_id?: string | null;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Provider Config Id
+     */
+    provider_config_id: string;
+    /**
+     * Selected Text
+     */
+    selected_text?: string | null;
+    /**
+     * Skill Ids
+     */
+    skill_ids?: Array<string>;
+    /**
+     * Task Type
+     */
+    task_type: 'brainstorm' | 'outline' | 'rewrite' | 'expand' | 'compress' | 'consistency' | 'extract_settings';
+};
+
+/**
+ * AITaskData
+ */
+export type AiTaskData = {
+    /**
+     * Cache Read Tokens
+     */
+    cache_read_tokens: number | null;
+    /**
+     * Cancel Requested At
+     */
+    cancel_requested_at: string | null;
+    /**
+     * Context Manifest
+     */
+    context_manifest: {
+        [key: string]: unknown;
+    };
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string | null;
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Error Message
+     */
+    error_message: string | null;
+    /**
+     * Finished At
+     */
+    finished_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Input Tokens
+     */
+    input_tokens: number | null;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Output Tokens
+     */
+    output_tokens: number | null;
+    /**
+     * Project Id
+     */
+    project_id: string | null;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Reasoning Tokens
+     */
+    reasoning_tokens: number | null;
+    /**
+     * Results
+     */
+    results?: Array<AiResultData>;
+    /**
+     * Started At
+     */
+    started_at: string | null;
+    /**
+     * Status
+     */
+    status: 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+    /**
+     * Task Type
+     */
+    task_type: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * AITaskResponse
+ */
+export type AiTaskResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AiTaskData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * AccountIdentifierUnavailableErrorResponse
  */
 export type AccountIdentifierUnavailableErrorResponse = {
@@ -22,6 +241,94 @@ export type AccountIdentifierUnavailableErrorResponse = {
      * Msg
      */
     msg: 'ACCOUNT_IDENTIFIER_UNAVAILABLE';
+};
+
+/**
+ * AdminSkillData
+ */
+export type AdminSkillData = {
+    /**
+     * Content Sha256
+     */
+    content_sha256: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * File Count
+     */
+    file_count: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Owner Id
+     */
+    owner_id: string;
+    /**
+     * Status
+     */
+    status: 'ready' | 'quarantined' | 'deleting';
+    /**
+     * Uncompressed Size
+     */
+    uncompressed_size: number;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Validation Summary
+     */
+    validation_summary: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * AdminSkillListData
+ */
+export type AdminSkillListData = {
+    /**
+     * Items
+     */
+    items: Array<AdminSkillData>;
+};
+
+/**
+ * AdminSkillListResponse
+ */
+export type AdminSkillListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AdminSkillListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * AdminSkillResponse
+ */
+export type AdminSkillResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AdminSkillData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
 };
 
 /**
@@ -148,6 +455,16 @@ export type BodyUploadSiteLogo = {
 };
 
 /**
+ * Body_uploadSkill
+ */
+export type BodyUploadSkill = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * ChangePasswordRequest
  */
 export type ChangePasswordRequest = {
@@ -174,6 +491,144 @@ export type ChangePasswordResponse = {
      * Msg
      */
     msg: 'SUCCESS';
+};
+
+/**
+ * CharacterCreateRequest
+ */
+export type CharacterCreateRequest = {
+    /**
+     * Aliases
+     */
+    aliases?: Array<string>;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Profile
+     */
+    profile?: {
+        [key: string]: string;
+    };
+    /**
+     * Summary
+     */
+    summary?: string;
+};
+
+/**
+ * CharacterData
+ */
+export type CharacterData = {
+    /**
+     * Aliases
+     */
+    aliases: Array<string>;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Position
+     */
+    position: number;
+    /**
+     * Profile
+     */
+    profile: {
+        [key: string]: string;
+    };
+    /**
+     * Summary
+     */
+    summary: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * CharacterListData
+ */
+export type CharacterListData = {
+    /**
+     * Items
+     */
+    items: Array<CharacterData>;
+};
+
+/**
+ * CharacterListResponse
+ */
+export type CharacterListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: CharacterListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * CharacterReorderRequest
+ */
+export type CharacterReorderRequest = {
+    /**
+     * Items
+     */
+    items: Array<OrderedResourceItem>;
+};
+
+/**
+ * CharacterResponse
+ */
+export type CharacterResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: CharacterData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * CharacterUpdateRequest
+ */
+export type CharacterUpdateRequest = {
+    /**
+     * Aliases
+     */
+    aliases?: Array<string> | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Profile
+     */
+    profile?: {
+        [key: string]: string;
+    } | null;
+    /**
+     * Summary
+     */
+    summary?: string | null;
 };
 
 /**
@@ -217,6 +672,261 @@ export type CurrentPasswordInvalidErrorResponse = {
 };
 
 /**
+ * DocumentContentData
+ */
+export type DocumentContentData = {
+    /**
+     * Checksum
+     */
+    checksum: string;
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Content Format
+     */
+    content_format: 'plain_text';
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version: number;
+    /**
+     * Word Count
+     */
+    word_count: number;
+};
+
+/**
+ * DocumentContentResponse
+ */
+export type DocumentContentResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentContentData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * DocumentContentUpdateRequest
+ */
+export type DocumentContentUpdateRequest = {
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Content Format
+     */
+    content_format: 'plain_text';
+    /**
+     * Version
+     */
+    version: number;
+};
+
+/**
+ * DocumentCreateRequest
+ */
+export type DocumentCreateRequest = {
+    /**
+     * Kind
+     */
+    kind: 'folder' | 'manuscript' | 'outline';
+    /**
+     * Parent Id
+     */
+    parent_id?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * DocumentDeleteData
+ */
+export type DocumentDeleteData = {
+    /**
+     * Deleted
+     */
+    deleted: true;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * DocumentDeleteResponse
+ */
+export type DocumentDeleteResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentDeleteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * DocumentListData
+ */
+export type DocumentListData = {
+    /**
+     * Items
+     */
+    items: Array<DocumentSummary>;
+};
+
+/**
+ * DocumentListResponse
+ */
+export type DocumentListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * DocumentMutationResponse
+ */
+export type DocumentMutationResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentSummary;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * DocumentReferencesData
+ */
+export type DocumentReferencesData = {
+    /**
+     * Character Ids
+     */
+    character_ids: Array<string>;
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * World Entry Ids
+     */
+    world_entry_ids: Array<string>;
+};
+
+/**
+ * DocumentReferencesResponse
+ */
+export type DocumentReferencesResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentReferencesData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * DocumentReferencesUpdateRequest
+ */
+export type DocumentReferencesUpdateRequest = {
+    /**
+     * Character Ids
+     */
+    character_ids?: Array<string>;
+    /**
+     * World Entry Ids
+     */
+    world_entry_ids?: Array<string>;
+};
+
+/**
+ * DocumentReorderGroup
+ */
+export type DocumentReorderGroup = {
+    /**
+     * Items
+     */
+    items: Array<DocumentReorderItem>;
+    /**
+     * Parent Id
+     */
+    parent_id: string | null;
+};
+
+/**
+ * DocumentReorderItem
+ */
+export type DocumentReorderItem = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * DocumentReorderRequest
+ */
+export type DocumentReorderRequest = {
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Groups
+     */
+    groups: Array<DocumentReorderGroup>;
+    /**
+     * Target Parent Id
+     */
+    target_parent_id: string | null;
+};
+
+/**
  * DocumentSummary
  */
 export type DocumentSummary = {
@@ -252,6 +962,20 @@ export type DocumentSummary = {
      * Updated At
      */
     updated_at: string;
+};
+
+/**
+ * DocumentUpdateRequest
+ */
+export type DocumentUpdateRequest = {
+    /**
+     * Status
+     */
+    status?: 'active' | 'archived' | null;
+    /**
+     * Title
+     */
+    title?: string | null;
 };
 
 /**
@@ -504,6 +1228,20 @@ export type NotFoundErrorResponse = {
 };
 
 /**
+ * OrderedResourceItem
+ */
+export type OrderedResourceItem = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
  * PasswordChangedData
  */
 export type PasswordChangedData = {
@@ -669,6 +1407,342 @@ export type ProjectSummary = {
      * Updated At
      */
     updated_at: string;
+};
+
+/**
+ * ProviderCatalogData
+ */
+export type ProviderCatalogData = {
+    /**
+     * Items
+     */
+    items: Array<ProviderCatalogItem>;
+};
+
+/**
+ * ProviderCatalogItem
+ */
+export type ProviderCatalogItem = {
+    /**
+     * Base Url
+     */
+    base_url: string;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Protocol
+     */
+    protocol: 'openai_chat' | 'openai_responses' | 'anthropic' | 'google';
+    /**
+     * Provider Id
+     */
+    provider_id: string;
+    /**
+     * Requires Key
+     */
+    requires_key?: boolean;
+};
+
+/**
+ * ProviderCatalogResponse
+ */
+export type ProviderCatalogResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProviderCatalogData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProviderConfigCreateRequest
+ */
+export type ProviderConfigCreateRequest = {
+    /**
+     * Base Url
+     */
+    base_url?: string | null;
+    /**
+     * Default Model Id
+     */
+    default_model_id: string;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Models
+     */
+    models: Array<ProviderModelInput>;
+    /**
+     * Protocol
+     */
+    protocol: 'openai_chat' | 'openai_responses' | 'anthropic' | 'google';
+    /**
+     * Provider Id
+     */
+    provider_id: string;
+    /**
+     * Source
+     */
+    source: 'builtin' | 'custom';
+};
+
+/**
+ * ProviderConfigData
+ */
+export type ProviderConfigData = {
+    /**
+     * Base Url
+     */
+    base_url: string;
+    /**
+     * Configured
+     */
+    configured: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Default Model Id
+     */
+    default_model_id: string;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Key Hint
+     */
+    key_hint: string | null;
+    /**
+     * Models
+     */
+    models: Array<ProviderModelData>;
+    /**
+     * Protocol
+     */
+    protocol: 'openai_chat' | 'openai_responses' | 'anthropic' | 'google';
+    /**
+     * Provider Id
+     */
+    provider_id: string;
+    /**
+     * Source
+     */
+    source: 'builtin' | 'custom';
+    /**
+     * Unauthenticated Warning
+     */
+    unauthenticated_warning: boolean;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * ProviderConfigListData
+ */
+export type ProviderConfigListData = {
+    /**
+     * Items
+     */
+    items: Array<ProviderConfigData>;
+};
+
+/**
+ * ProviderConfigListResponse
+ */
+export type ProviderConfigListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProviderConfigListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProviderConfigResponse
+ */
+export type ProviderConfigResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProviderConfigData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProviderConfigUpdateRequest
+ */
+export type ProviderConfigUpdateRequest = {
+    /**
+     * Base Url
+     */
+    base_url?: string | null;
+    /**
+     * Clear Api Key
+     */
+    clear_api_key?: boolean;
+    /**
+     * Default Model Id
+     */
+    default_model_id: string;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Models
+     */
+    models: Array<ProviderModelInput>;
+};
+
+/**
+ * ProviderConnectionTestData
+ */
+export type ProviderConnectionTestData = {
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Input Tokens
+     */
+    input_tokens: number | null;
+    /**
+     * Output Tokens
+     */
+    output_tokens: number | null;
+    /**
+     * Status
+     */
+    status: 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+    /**
+     * Task Id
+     */
+    task_id: string;
+};
+
+/**
+ * ProviderConnectionTestRequest
+ */
+export type ProviderConnectionTestRequest = {
+    /**
+     * Model Id
+     */
+    model_id?: string | null;
+};
+
+/**
+ * ProviderConnectionTestResponse
+ */
+export type ProviderConnectionTestResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProviderConnectionTestData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * ProviderModelData
+ */
+export type ProviderModelData = {
+    /**
+     * Context Window
+     */
+    context_window: number;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Max Output Tokens
+     */
+    max_output_tokens: number;
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Supports Streaming
+     */
+    supports_streaming: boolean;
+};
+
+/**
+ * ProviderModelInput
+ */
+export type ProviderModelInput = {
+    /**
+     * Context Window
+     */
+    context_window: number;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Max Output Tokens
+     */
+    max_output_tokens: number;
+    /**
+     * Model Id
+     */
+    model_id: string;
+    /**
+     * Supports Streaming
+     */
+    supports_streaming?: boolean;
 };
 
 /**
@@ -873,6 +1947,35 @@ export type RegistrationRateLimitedErrorResponse = {
 };
 
 /**
+ * ResourceDeleteData
+ */
+export type ResourceDeleteData = {
+    /**
+     * Deleted
+     */
+    deleted: true;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * ResourceDeleteResponse
+ */
+export type ResourceDeleteResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ResourceDeleteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ServiceUnavailableErrorResponse
  */
 export type ServiceUnavailableErrorResponse = {
@@ -935,6 +2038,221 @@ export type SiteConfigResponse = {
      * Msg
      */
     msg: 'SUCCESS';
+};
+
+/**
+ * SkillData
+ */
+export type SkillData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    current_version: SkillVersionData;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Status
+     */
+    status: 'ready' | 'quarantined' | 'deleting';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * SkillDeleteData
+ */
+export type SkillDeleteData = {
+    /**
+     * Deleted
+     */
+    deleted: true;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * SkillDeleteResponse
+ */
+export type SkillDeleteResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: SkillDeleteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * SkillEnabledRequest
+ */
+export type SkillEnabledRequest = {
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+};
+
+/**
+ * SkillListData
+ */
+export type SkillListData = {
+    /**
+     * Items
+     */
+    items: Array<SkillData>;
+};
+
+/**
+ * SkillListResponse
+ */
+export type SkillListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: SkillListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * SkillQuarantineRequest
+ */
+export type SkillQuarantineRequest = {
+    /**
+     * Note
+     */
+    note?: string | null;
+    /**
+     * Reason Code
+     */
+    reason_code: string;
+};
+
+/**
+ * SkillResourceData
+ */
+export type SkillResourceData = {
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Path
+     */
+    path: string;
+};
+
+/**
+ * SkillResourceResponse
+ */
+export type SkillResourceResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: SkillResourceData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * SkillResponse
+ */
+export type SkillResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: SkillData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * SkillUpdateRequest
+ */
+export type SkillUpdateRequest = {
+    /**
+     * Current Version Id
+     */
+    current_version_id: string;
+    /**
+     * Skill Md Text
+     */
+    skill_md_text: string;
+};
+
+/**
+ * SkillVersionData
+ */
+export type SkillVersionData = {
+    /**
+     * Content Sha256
+     */
+    content_sha256: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * File Count
+     */
+    file_count: number;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Normalized Package Size
+     */
+    normalized_package_size: number;
+    /**
+     * Source Kind
+     */
+    source_kind: 'upload' | 'editor';
+    /**
+     * Uncompressed Size
+     */
+    uncompressed_size: number;
+    /**
+     * Validation Summary
+     */
+    validation_summary: {
+        [key: string]: unknown;
+    };
+    /**
+     * Version Number
+     */
+    version_number: number;
 };
 
 /**
@@ -1197,6 +2515,174 @@ export type ValidationErrorResponse = {
 };
 
 /**
+ * WorldEntryCreateRequest
+ */
+export type WorldEntryCreateRequest = {
+    /**
+     * Attributes
+     */
+    attributes?: {
+        [key: string]: string;
+    };
+    /**
+     * Category
+     */
+    category?: 'location' | 'faction' | 'item' | 'rule' | 'event' | 'other';
+    /**
+     * Content
+     */
+    content?: string;
+    /**
+     * Parent Id
+     */
+    parent_id?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * WorldEntryData
+ */
+export type WorldEntryData = {
+    /**
+     * Attributes
+     */
+    attributes: {
+        [key: string]: string;
+    };
+    /**
+     * Category
+     */
+    category: 'location' | 'faction' | 'item' | 'rule' | 'event' | 'other';
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Parent Id
+     */
+    parent_id: string | null;
+    /**
+     * Position
+     */
+    position: number;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * WorldEntryListData
+ */
+export type WorldEntryListData = {
+    /**
+     * Items
+     */
+    items: Array<WorldEntryData>;
+};
+
+/**
+ * WorldEntryListResponse
+ */
+export type WorldEntryListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: WorldEntryListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * WorldEntryReorderGroup
+ */
+export type WorldEntryReorderGroup = {
+    /**
+     * Items
+     */
+    items: Array<OrderedResourceItem>;
+    /**
+     * Parent Id
+     */
+    parent_id: string | null;
+};
+
+/**
+ * WorldEntryReorderRequest
+ */
+export type WorldEntryReorderRequest = {
+    /**
+     * Entry Id
+     */
+    entry_id: string;
+    /**
+     * Groups
+     */
+    groups: Array<WorldEntryReorderGroup>;
+    /**
+     * Target Parent Id
+     */
+    target_parent_id: string | null;
+};
+
+/**
+ * WorldEntryResponse
+ */
+export type WorldEntryResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: WorldEntryData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * WorldEntryUpdateRequest
+ */
+export type WorldEntryUpdateRequest = {
+    /**
+     * Attributes
+     */
+    attributes?: {
+        [key: string]: string;
+    } | null;
+    /**
+     * Category
+     */
+    category?: 'location' | 'faction' | 'item' | 'rule' | 'event' | 'other' | null;
+    /**
+     * Content
+     */
+    content?: string | null;
+    /**
+     * Title
+     */
+    title?: string | null;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequestWritable = {
@@ -1208,6 +2694,82 @@ export type LoginRequestWritable = {
      * Password
      */
     password: string;
+};
+
+/**
+ * ProviderConfigCreateRequest
+ */
+export type ProviderConfigCreateRequestWritable = {
+    /**
+     * Api Key
+     */
+    api_key?: string | null;
+    /**
+     * Base Url
+     */
+    base_url?: string | null;
+    /**
+     * Default Model Id
+     */
+    default_model_id: string;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Models
+     */
+    models: Array<ProviderModelInput>;
+    /**
+     * Protocol
+     */
+    protocol: 'openai_chat' | 'openai_responses' | 'anthropic' | 'google';
+    /**
+     * Provider Id
+     */
+    provider_id: string;
+    /**
+     * Source
+     */
+    source: 'builtin' | 'custom';
+};
+
+/**
+ * ProviderConfigUpdateRequest
+ */
+export type ProviderConfigUpdateRequestWritable = {
+    /**
+     * Api Key
+     */
+    api_key?: string | null;
+    /**
+     * Base Url
+     */
+    base_url?: string | null;
+    /**
+     * Clear Api Key
+     */
+    clear_api_key?: boolean;
+    /**
+     * Default Model Id
+     */
+    default_model_id: string;
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Models
+     */
+    models: Array<ProviderModelInput>;
 };
 
 /**
@@ -1388,6 +2950,653 @@ export type UploadSiteLogoResponses = {
 };
 
 export type UploadSiteLogoResponse = UploadSiteLogoResponses[keyof UploadSiteLogoResponses];
+
+export type ListAdminSkillsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/v1/skills';
+};
+
+export type ListAdminSkillsErrors = {
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAdminSkillsError = ListAdminSkillsErrors[keyof ListAdminSkillsErrors];
+
+export type ListAdminSkillsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminSkillListResponse;
+};
+
+export type ListAdminSkillsResponse = ListAdminSkillsResponses[keyof ListAdminSkillsResponses];
+
+export type QuarantineSkillData = {
+    body: SkillQuarantineRequest;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/admin/v1/skills/{skill_id}/quarantine';
+};
+
+export type QuarantineSkillErrors = {
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type QuarantineSkillError = QuarantineSkillErrors[keyof QuarantineSkillErrors];
+
+export type QuarantineSkillResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminSkillResponse;
+};
+
+export type QuarantineSkillResponse = QuarantineSkillResponses[keyof QuarantineSkillResponses];
+
+export type ReleaseSkillQuarantineData = {
+    body: SkillQuarantineRequest;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/admin/v1/skills/{skill_id}/release';
+};
+
+export type ReleaseSkillQuarantineErrors = {
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ReleaseSkillQuarantineError = ReleaseSkillQuarantineErrors[keyof ReleaseSkillQuarantineErrors];
+
+export type ReleaseSkillQuarantineResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminSkillResponse;
+};
+
+export type ReleaseSkillQuarantineResponse = ReleaseSkillQuarantineResponses[keyof ReleaseSkillQuarantineResponses];
+
+export type ListAiProviderConfigsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/providers';
+};
+
+export type ListAiProviderConfigsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAiProviderConfigsError = ListAiProviderConfigsErrors[keyof ListAiProviderConfigsErrors];
+
+export type ListAiProviderConfigsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProviderConfigListResponse;
+};
+
+export type ListAiProviderConfigsResponse = ListAiProviderConfigsResponses[keyof ListAiProviderConfigsResponses];
+
+export type CreateAiProviderConfigData = {
+    body: ProviderConfigCreateRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/providers';
+};
+
+export type CreateAiProviderConfigErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateAiProviderConfigError = CreateAiProviderConfigErrors[keyof CreateAiProviderConfigErrors];
+
+export type CreateAiProviderConfigResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProviderConfigResponse;
+};
+
+export type CreateAiProviderConfigResponse = CreateAiProviderConfigResponses[keyof CreateAiProviderConfigResponses];
+
+export type GetAiProviderCatalogData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/providers/catalog';
+};
+
+export type GetAiProviderCatalogErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAiProviderCatalogError = GetAiProviderCatalogErrors[keyof GetAiProviderCatalogErrors];
+
+export type GetAiProviderCatalogResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProviderCatalogResponse;
+};
+
+export type GetAiProviderCatalogResponse = GetAiProviderCatalogResponses[keyof GetAiProviderCatalogResponses];
+
+export type GetAiProviderConfigData = {
+    body?: never;
+    path: {
+        /**
+         * Config Id
+         */
+        config_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/providers/{config_id}';
+};
+
+export type GetAiProviderConfigErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAiProviderConfigError = GetAiProviderConfigErrors[keyof GetAiProviderConfigErrors];
+
+export type GetAiProviderConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProviderConfigResponse;
+};
+
+export type GetAiProviderConfigResponse = GetAiProviderConfigResponses[keyof GetAiProviderConfigResponses];
+
+export type UpdateAiProviderConfigData = {
+    body: ProviderConfigUpdateRequestWritable;
+    path: {
+        /**
+         * Config Id
+         */
+        config_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/providers/{config_id}';
+};
+
+export type UpdateAiProviderConfigErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateAiProviderConfigError = UpdateAiProviderConfigErrors[keyof UpdateAiProviderConfigErrors];
+
+export type UpdateAiProviderConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProviderConfigResponse;
+};
+
+export type UpdateAiProviderConfigResponse = UpdateAiProviderConfigResponses[keyof UpdateAiProviderConfigResponses];
+
+export type TestAiProviderConnectionData = {
+    body: ProviderConnectionTestRequest;
+    path: {
+        /**
+         * Config Id
+         */
+        config_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/providers/{config_id}/test';
+};
+
+export type TestAiProviderConnectionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type TestAiProviderConnectionError = TestAiProviderConnectionErrors[keyof TestAiProviderConnectionErrors];
+
+export type TestAiProviderConnectionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProviderConnectionTestResponse;
+};
+
+export type TestAiProviderConnectionResponse = TestAiProviderConnectionResponses[keyof TestAiProviderConnectionResponses];
+
+export type ApplyAiResultData = {
+    body: AiResultApplyRequest;
+    path: {
+        /**
+         * Result Id
+         */
+        result_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/results/{result_id}/apply';
+};
+
+export type ApplyAiResultErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ApplyAiResultError = ApplyAiResultErrors[keyof ApplyAiResultErrors];
+
+export type ApplyAiResultResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiResultDecisionResponse;
+};
+
+export type ApplyAiResultResponse = ApplyAiResultResponses[keyof ApplyAiResultResponses];
+
+export type RejectAiResultData = {
+    body?: never;
+    path: {
+        /**
+         * Result Id
+         */
+        result_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/results/{result_id}/reject';
+};
+
+export type RejectAiResultErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type RejectAiResultError = RejectAiResultErrors[keyof RejectAiResultErrors];
+
+export type RejectAiResultResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiResultDecisionResponse;
+};
+
+export type RejectAiResultResponse = RejectAiResultResponses[keyof RejectAiResultResponses];
+
+export type CreateAiTaskData = {
+    body: AiTaskCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/tasks';
+};
+
+export type CreateAiTaskErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateAiTaskError = CreateAiTaskErrors[keyof CreateAiTaskErrors];
+
+export type CreateAiTaskResponses = {
+    /**
+     * Successful Response
+     */
+    202: AiTaskResponse;
+};
+
+export type CreateAiTaskResponse = CreateAiTaskResponses[keyof CreateAiTaskResponses];
+
+export type GetAiTaskData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/tasks/{task_id}';
+};
+
+export type GetAiTaskErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAiTaskError = GetAiTaskErrors[keyof GetAiTaskErrors];
+
+export type GetAiTaskResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiTaskResponse;
+};
+
+export type GetAiTaskResponse = GetAiTaskResponses[keyof GetAiTaskResponses];
+
+export type CancelAiTaskData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/tasks/{task_id}/cancel';
+};
+
+export type CancelAiTaskErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CancelAiTaskError = CancelAiTaskErrors[keyof CancelAiTaskErrors];
+
+export type CancelAiTaskResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiTaskResponse;
+};
+
+export type CancelAiTaskResponse = CancelAiTaskResponses[keyof CancelAiTaskResponses];
+
+export type StreamAiTaskEventsData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/tasks/{task_id}/events';
+};
+
+export type StreamAiTaskEventsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type StreamAiTaskEventsError = StreamAiTaskEventsErrors[keyof StreamAiTaskEventsErrors];
+
+export type StreamAiTaskEventsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type LoginData = {
     body: LoginRequestWritable;
@@ -1737,6 +3946,1032 @@ export type GetProjectResponses = {
 
 export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];
 
+export type ListProjectCharactersData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/characters';
+};
+
+export type ListProjectCharactersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListProjectCharactersError = ListProjectCharactersErrors[keyof ListProjectCharactersErrors];
+
+export type ListProjectCharactersResponses = {
+    /**
+     * Successful Response
+     */
+    200: CharacterListResponse;
+};
+
+export type ListProjectCharactersResponse = ListProjectCharactersResponses[keyof ListProjectCharactersResponses];
+
+export type CreateProjectCharacterData = {
+    body: CharacterCreateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/characters';
+};
+
+export type CreateProjectCharacterErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateProjectCharacterError = CreateProjectCharacterErrors[keyof CreateProjectCharacterErrors];
+
+export type CreateProjectCharacterResponses = {
+    /**
+     * Successful Response
+     */
+    201: CharacterResponse;
+};
+
+export type CreateProjectCharacterResponse = CreateProjectCharacterResponses[keyof CreateProjectCharacterResponses];
+
+export type ReorderProjectCharactersData = {
+    body: CharacterReorderRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/characters/reorder';
+};
+
+export type ReorderProjectCharactersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ReorderProjectCharactersError = ReorderProjectCharactersErrors[keyof ReorderProjectCharactersErrors];
+
+export type ReorderProjectCharactersResponses = {
+    /**
+     * Successful Response
+     */
+    200: CharacterListResponse;
+};
+
+export type ReorderProjectCharactersResponse = ReorderProjectCharactersResponses[keyof ReorderProjectCharactersResponses];
+
+export type DeleteProjectCharacterData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Character Id
+         */
+        character_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/characters/{character_id}';
+};
+
+export type DeleteProjectCharacterErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteProjectCharacterError = DeleteProjectCharacterErrors[keyof DeleteProjectCharacterErrors];
+
+export type DeleteProjectCharacterResponses = {
+    /**
+     * Successful Response
+     */
+    200: ResourceDeleteResponse;
+};
+
+export type DeleteProjectCharacterResponse = DeleteProjectCharacterResponses[keyof DeleteProjectCharacterResponses];
+
+export type UpdateProjectCharacterData = {
+    body: CharacterUpdateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Character Id
+         */
+        character_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/characters/{character_id}';
+};
+
+export type UpdateProjectCharacterErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateProjectCharacterError = UpdateProjectCharacterErrors[keyof UpdateProjectCharacterErrors];
+
+export type UpdateProjectCharacterResponses = {
+    /**
+     * Successful Response
+     */
+    200: CharacterResponse;
+};
+
+export type UpdateProjectCharacterResponse = UpdateProjectCharacterResponses[keyof UpdateProjectCharacterResponses];
+
+export type ListProjectDocumentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Status
+         */
+        status?: 'active' | 'archived' | 'all';
+    };
+    url: '/api/v1/projects/{project_id}/documents';
+};
+
+export type ListProjectDocumentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListProjectDocumentsError = ListProjectDocumentsErrors[keyof ListProjectDocumentsErrors];
+
+export type ListProjectDocumentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentListResponse;
+};
+
+export type ListProjectDocumentsResponse = ListProjectDocumentsResponses[keyof ListProjectDocumentsResponses];
+
+export type CreateProjectDocumentData = {
+    body: DocumentCreateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents';
+};
+
+export type CreateProjectDocumentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateProjectDocumentError = CreateProjectDocumentErrors[keyof CreateProjectDocumentErrors];
+
+export type CreateProjectDocumentResponses = {
+    /**
+     * Successful Response
+     */
+    201: DocumentMutationResponse;
+};
+
+export type CreateProjectDocumentResponse = CreateProjectDocumentResponses[keyof CreateProjectDocumentResponses];
+
+export type ReorderProjectDocumentsData = {
+    body: DocumentReorderRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/reorder';
+};
+
+export type ReorderProjectDocumentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ReorderProjectDocumentsError = ReorderProjectDocumentsErrors[keyof ReorderProjectDocumentsErrors];
+
+export type ReorderProjectDocumentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentListResponse;
+};
+
+export type ReorderProjectDocumentsResponse = ReorderProjectDocumentsResponses[keyof ReorderProjectDocumentsResponses];
+
+export type DeleteProjectDocumentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}';
+};
+
+export type DeleteProjectDocumentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteProjectDocumentError = DeleteProjectDocumentErrors[keyof DeleteProjectDocumentErrors];
+
+export type DeleteProjectDocumentResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentDeleteResponse;
+};
+
+export type DeleteProjectDocumentResponse = DeleteProjectDocumentResponses[keyof DeleteProjectDocumentResponses];
+
+export type UpdateProjectDocumentData = {
+    body: DocumentUpdateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}';
+};
+
+export type UpdateProjectDocumentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateProjectDocumentError = UpdateProjectDocumentErrors[keyof UpdateProjectDocumentErrors];
+
+export type UpdateProjectDocumentResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentMutationResponse;
+};
+
+export type UpdateProjectDocumentResponse = UpdateProjectDocumentResponses[keyof UpdateProjectDocumentResponses];
+
+export type GetProjectDocumentContentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/content';
+};
+
+export type GetProjectDocumentContentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetProjectDocumentContentError = GetProjectDocumentContentErrors[keyof GetProjectDocumentContentErrors];
+
+export type GetProjectDocumentContentResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentContentResponse;
+};
+
+export type GetProjectDocumentContentResponse = GetProjectDocumentContentResponses[keyof GetProjectDocumentContentResponses];
+
+export type SaveProjectDocumentContentData = {
+    body: DocumentContentUpdateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/content';
+};
+
+export type SaveProjectDocumentContentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SaveProjectDocumentContentError = SaveProjectDocumentContentErrors[keyof SaveProjectDocumentContentErrors];
+
+export type SaveProjectDocumentContentResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentContentResponse;
+};
+
+export type SaveProjectDocumentContentResponse = SaveProjectDocumentContentResponses[keyof SaveProjectDocumentContentResponses];
+
+export type GetProjectDocumentReferencesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/references';
+};
+
+export type GetProjectDocumentReferencesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetProjectDocumentReferencesError = GetProjectDocumentReferencesErrors[keyof GetProjectDocumentReferencesErrors];
+
+export type GetProjectDocumentReferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentReferencesResponse;
+};
+
+export type GetProjectDocumentReferencesResponse = GetProjectDocumentReferencesResponses[keyof GetProjectDocumentReferencesResponses];
+
+export type UpdateProjectDocumentReferencesData = {
+    body: DocumentReferencesUpdateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/references';
+};
+
+export type UpdateProjectDocumentReferencesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateProjectDocumentReferencesError = UpdateProjectDocumentReferencesErrors[keyof UpdateProjectDocumentReferencesErrors];
+
+export type UpdateProjectDocumentReferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: DocumentReferencesResponse;
+};
+
+export type UpdateProjectDocumentReferencesResponse = UpdateProjectDocumentReferencesResponses[keyof UpdateProjectDocumentReferencesResponses];
+
+export type ExportProjectData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Format
+         */
+        format?: 'markdown' | 'plain_text';
+    };
+    url: '/api/v1/projects/{project_id}/export';
+};
+
+export type ExportProjectErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ExportProjectError = ExportProjectErrors[keyof ExportProjectErrors];
+
+export type ExportProjectResponses = {
+    /**
+     * UTF-8 作品正文导出文件
+     */
+    200: string;
+};
+
+export type ExportProjectResponse = ExportProjectResponses[keyof ExportProjectResponses];
+
+export type ListProjectWorldEntriesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/world-entries';
+};
+
+export type ListProjectWorldEntriesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListProjectWorldEntriesError = ListProjectWorldEntriesErrors[keyof ListProjectWorldEntriesErrors];
+
+export type ListProjectWorldEntriesResponses = {
+    /**
+     * Successful Response
+     */
+    200: WorldEntryListResponse;
+};
+
+export type ListProjectWorldEntriesResponse = ListProjectWorldEntriesResponses[keyof ListProjectWorldEntriesResponses];
+
+export type CreateProjectWorldEntryData = {
+    body: WorldEntryCreateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/world-entries';
+};
+
+export type CreateProjectWorldEntryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateProjectWorldEntryError = CreateProjectWorldEntryErrors[keyof CreateProjectWorldEntryErrors];
+
+export type CreateProjectWorldEntryResponses = {
+    /**
+     * Successful Response
+     */
+    201: WorldEntryResponse;
+};
+
+export type CreateProjectWorldEntryResponse = CreateProjectWorldEntryResponses[keyof CreateProjectWorldEntryResponses];
+
+export type ReorderProjectWorldEntriesData = {
+    body: WorldEntryReorderRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/world-entries/reorder';
+};
+
+export type ReorderProjectWorldEntriesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ReorderProjectWorldEntriesError = ReorderProjectWorldEntriesErrors[keyof ReorderProjectWorldEntriesErrors];
+
+export type ReorderProjectWorldEntriesResponses = {
+    /**
+     * Successful Response
+     */
+    200: WorldEntryListResponse;
+};
+
+export type ReorderProjectWorldEntriesResponse = ReorderProjectWorldEntriesResponses[keyof ReorderProjectWorldEntriesResponses];
+
+export type DeleteProjectWorldEntryData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Entry Id
+         */
+        entry_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/world-entries/{entry_id}';
+};
+
+export type DeleteProjectWorldEntryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteProjectWorldEntryError = DeleteProjectWorldEntryErrors[keyof DeleteProjectWorldEntryErrors];
+
+export type DeleteProjectWorldEntryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ResourceDeleteResponse;
+};
+
+export type DeleteProjectWorldEntryResponse = DeleteProjectWorldEntryResponses[keyof DeleteProjectWorldEntryResponses];
+
+export type UpdateProjectWorldEntryData = {
+    body: WorldEntryUpdateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Entry Id
+         */
+        entry_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/world-entries/{entry_id}';
+};
+
+export type UpdateProjectWorldEntryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateProjectWorldEntryError = UpdateProjectWorldEntryErrors[keyof UpdateProjectWorldEntryErrors];
+
+export type UpdateProjectWorldEntryResponses = {
+    /**
+     * Successful Response
+     */
+    200: WorldEntryResponse;
+};
+
+export type UpdateProjectWorldEntryResponse = UpdateProjectWorldEntryResponses[keyof UpdateProjectWorldEntryResponses];
+
 export type GetSiteConfigData = {
     body?: never;
     path?: never;
@@ -1794,6 +5029,339 @@ export type GetPublicSiteSettingsResponses = {
 };
 
 export type GetPublicSiteSettingsResponse = GetPublicSiteSettingsResponses[keyof GetPublicSiteSettingsResponses];
+
+export type ListSkillsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/skills';
+};
+
+export type ListSkillsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListSkillsError = ListSkillsErrors[keyof ListSkillsErrors];
+
+export type ListSkillsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SkillListResponse;
+};
+
+export type ListSkillsResponse = ListSkillsResponses[keyof ListSkillsResponses];
+
+export type UploadSkillData = {
+    body: BodyUploadSkill;
+    path?: never;
+    query?: never;
+    url: '/api/v1/skills';
+};
+
+export type UploadSkillErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UploadSkillError = UploadSkillErrors[keyof UploadSkillErrors];
+
+export type UploadSkillResponses = {
+    /**
+     * Successful Response
+     */
+    201: SkillResponse;
+};
+
+export type UploadSkillResponse = UploadSkillResponses[keyof UploadSkillResponses];
+
+export type DeleteSkillData = {
+    body?: never;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/v1/skills/{skill_id}';
+};
+
+export type DeleteSkillErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteSkillError = DeleteSkillErrors[keyof DeleteSkillErrors];
+
+export type DeleteSkillResponses = {
+    /**
+     * Successful Response
+     */
+    200: SkillDeleteResponse;
+};
+
+export type DeleteSkillResponse = DeleteSkillResponses[keyof DeleteSkillResponses];
+
+export type GetSkillData = {
+    body?: never;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/v1/skills/{skill_id}';
+};
+
+export type GetSkillErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetSkillError = GetSkillErrors[keyof GetSkillErrors];
+
+export type GetSkillResponses = {
+    /**
+     * Successful Response
+     */
+    200: SkillResponse;
+};
+
+export type GetSkillResponse = GetSkillResponses[keyof GetSkillResponses];
+
+export type SetSkillEnabledData = {
+    body: SkillEnabledRequest;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/v1/skills/{skill_id}/enabled';
+};
+
+export type SetSkillEnabledErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SetSkillEnabledError = SetSkillEnabledErrors[keyof SetSkillEnabledErrors];
+
+export type SetSkillEnabledResponses = {
+    /**
+     * Successful Response
+     */
+    200: SkillResponse;
+};
+
+export type SetSkillEnabledResponse = SetSkillEnabledResponses[keyof SetSkillEnabledResponses];
+
+export type GetSkillResourceData = {
+    body?: never;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query: {
+        /**
+         * Path
+         */
+        path: string;
+    };
+    url: '/api/v1/skills/{skill_id}/resource';
+};
+
+export type GetSkillResourceErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetSkillResourceError = GetSkillResourceErrors[keyof GetSkillResourceErrors];
+
+export type GetSkillResourceResponses = {
+    /**
+     * Successful Response
+     */
+    200: SkillResourceResponse;
+};
+
+export type GetSkillResourceResponse = GetSkillResourceResponses[keyof GetSkillResourceResponses];
+
+export type UpdateSkillMarkdownData = {
+    body: SkillUpdateRequest;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/v1/skills/{skill_id}/skill-md';
+};
+
+export type UpdateSkillMarkdownErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ConflictErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateSkillMarkdownError = UpdateSkillMarkdownErrors[keyof UpdateSkillMarkdownErrors];
+
+export type UpdateSkillMarkdownResponses = {
+    /**
+     * Successful Response
+     */
+    200: SkillResponse;
+};
+
+export type UpdateSkillMarkdownResponse = UpdateSkillMarkdownResponses[keyof UpdateSkillMarkdownResponses];
 
 export type GetCurrentUserProfileData = {
     body?: never;

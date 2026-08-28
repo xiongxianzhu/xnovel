@@ -51,7 +51,7 @@ describe("appearance bootstrap", () => {
   it("defines complete light and dark values for every theme family", () => {
     for (const palette of Object.values(themeValues)) {
       for (const scheme of [palette.light, palette.dark]) {
-        expect(Object.keys(scheme)).toHaveLength(11);
+        expect(Object.keys(scheme)).toHaveLength(14);
         expect(Object.values(scheme).every(Boolean)).toBe(true);
       }
     }

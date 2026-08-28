@@ -37,8 +37,8 @@ xnovel/
 ├─ apps/
 │  ├─ api/                 # FastAPI 后端
 │  ├─ web/                 # Vite + React 网页端
-│  └─ desktop/             # Electron + SQLite 桌面端（规划中）
-├─ packages/               # 跨前端应用复用的包（规划中）
+│  └─ desktop/             # Electron + SQLite 离线桌面端
+├─ packages/               # Web/Desktop 稳定共享包（当前含主题契约）
 ├─ docs/                   # 产品、架构、接口与交付文档
 ├─ scripts/                # 构建、发布和开发脚本
 └─ .github/                # GitHub 工作流与仓库配置
@@ -73,7 +73,7 @@ xnovel/
 
 - `apps/api/` 拥有 Web 业务规则、PostgreSQL 持久化、鉴权和 Web AI Provider 调用。
 - `apps/web/` 负责浏览器交互、登录后工作区、国际化、主题与私有 Skill 管理，不持有服务端密钥，也不绕过 API 直接访问数据库或存储目录。
-- `apps/desktop/` 后续负责 Electron 主进程、预加载、本地 SQLite、加密凭据存储、只读本地 Skill、Desktop AI Provider 调用和发布；renderer 不直接访问这些能力。`safeStorage` 只负责加解密，密文仍由应用持久化。
+- `apps/desktop/` 负责 Electron 主进程、预加载、本地 SQLite、加密凭据存储、只读本地 Skill、Desktop AI Provider 调用和发布；renderer 不直接访问这些能力。`safeStorage` 只负责加解密，密文仍由应用持久化。
 - `packages/` 只存放至少被两个前端应用真实复用的稳定能力。
 - AI 输出是候选内容。未经作者确认，不得覆盖正文或结构化设定。
 - Skill 内容是不可信输入。任何应用、服务或 Agent 都不得执行 Skill 中的脚本、二进制或安装命令；Desktop 不得修改 `~/.agents/skills/`。
@@ -121,6 +121,17 @@ pnpm build
 ```
 
 预期结果：代码规范、格式、类型检查、单元测试和生产构建全部通过。
+
+### Electron 桌面端
+
+```bash
+cd apps/desktop
+pnpm check
+pnpm build
+pnpm pack:dir
+```
+
+发布安装包由 `.github/workflows/desktop-release.yml` 在 Windows x64、macOS x64 和 macOS arm64 上构建；签名与公证凭据只来自 CI Secret。
 
 ## 文档同步
 

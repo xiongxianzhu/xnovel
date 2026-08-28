@@ -738,6 +738,19 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 
 管理员普通 Skill 接口只返回名称、所有者标识、状态、大小、文件数、哈希和校验摘要等非内容安全元数据，不得返回 `SKILL.md` 或资源正文。安全事件处置可以把 Skill 设为 `quarantined` 或解除隔离；两种操作都要求管理员身份、稳定原因码、可选脱敏备注和管理员审计事件。隔离立即禁用 Skill，解除隔离只恢复为 `ready`，不会自动启用。
 
+| 方法     | 路径                                           | 用途                              |
+| -------- | ---------------------------------------------- | --------------------------------- |
+| `GET`    | `/api/v1/skills`                               | 列出当前用户 Skill                |
+| `POST`   | `/api/v1/skills`                               | 上传并校验 Skill ZIP              |
+| `GET`    | `/api/v1/skills/{skill_id}`                    | 读取当前投影和版本摘要            |
+| `PUT`    | `/api/v1/skills/{skill_id}/skill-md`           | 编辑 `SKILL.md` 并创建不可变版本  |
+| `PATCH`  | `/api/v1/skills/{skill_id}/enabled`            | 启用或禁用                        |
+| `GET`    | `/api/v1/skills/{skill_id}/resource?path=...`  | 读取允许的当前版本文本资源        |
+| `DELETE` | `/api/v1/skills/{skill_id}`                    | 删除 Skill 与版本存储             |
+| `GET`    | `/api/admin/v1/skills`                         | 管理员读取非内容安全元数据        |
+| `POST`   | `/api/admin/v1/skills/{skill_id}/quarantine`   | 隔离并写管理员审计                |
+| `POST`   | `/api/admin/v1/skills/{skill_id}/release`      | 解除隔离并写管理员审计            |
+
 - 上传使用 `multipart/form-data`，只接受单个 `.zip` 或 `.skill` 文件；压缩包最大 10 MiB，解压累计最大 50 MiB，最多 500 个文件，`SKILL.md` 最大 1 MiB。
 - 列表使用第 4 节页码分页，支持名称搜索和启用状态筛选；默认按 `updated_at DESC, id DESC` 排序。
 - 详情返回当前投影、状态、当前版本、文件清单、压缩与解压大小、文件数、内容 SHA-256 和结构化校验摘要，不返回服务器真实路径。
@@ -751,7 +764,29 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 
 ### 8.6 AI Provider 与模型
 
-Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定义 Provider、四种协议、模型和默认模型的详细范围见 [`ai-integration.md`](ai-integration.md)。具体 HTTP 方法和路径随 T-401 的 FastAPI 路由与 OpenAPI 一起确定，本节不预先虚构端点。
+Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定义 Provider、四种协议、模型和默认模型的详细范围见 [`ai-integration.md`](ai-integration.md)。
+
+| 方法   | 路径                                       | 用途                                     |
+| ------ | ------------------------------------------ | ---------------------------------------- |
+| `GET`  | `/api/v1/ai/providers/catalog`             | 读取 16 个内置 Provider 目录             |
+| `GET`  | `/api/v1/ai/providers`                     | 列出当前用户连接                         |
+| `POST` | `/api/v1/ai/providers`                     | 创建连接、模型与加密凭据                 |
+| `GET`  | `/api/v1/ai/providers/{config_id}`         | 读取非敏感连接详情                       |
+| `PUT`  | `/api/v1/ai/providers/{config_id}`         | 更新连接、模型和可选密钥                 |
+| `POST` | `/api/v1/ai/providers/{config_id}/test`    | 发起最多 1 token 的连接测试              |
+
+### 8.7 AI 任务与候选
+
+| 方法   | 路径                                  | 用途                                      |
+| ------ | ------------------------------------- | ----------------------------------------- |
+| `POST` | `/api/v1/ai/tasks`                    | 创建任务并返回 `202`                      |
+| `GET`  | `/api/v1/ai/tasks/{task_id}`          | 读取状态、用量、错误和候选                |
+| `GET`  | `/api/v1/ai/tasks/{task_id}/events`   | Bearer 鉴权 SSE 状态、增量、用量与终态流  |
+| `POST` | `/api/v1/ai/tasks/{task_id}/cancel`   | 幂等请求取消                              |
+| `POST` | `/api/v1/ai/results/{result_id}/apply`| 以正文版本锁显式应用候选                  |
+| `POST` | `/api/v1/ai/results/{result_id}/reject`| 显式舍弃候选                             |
+
+任务请求只接受当前用户拥有的作品、文档、Provider、模型和明确选择的已启用 Skill。`context_manifest` 只保存范围、版本和哈希等标量快照，不返回完整上下文。应用候选提交目标文档、当前正文版本和最终确认内容；版本变化返回 `409 / 10005`，不会自动覆盖。
 
 - Provider 配置响应只返回非敏感字段、`configured` 和脱敏 `key_hint`，不得提供读取密钥明文的接口。
 - 同一用户的 `provider_id` 唯一；内置 ID 是保留字，自定义 ID 创建后不可修改。
@@ -762,7 +797,7 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 - 整个调用最长 120 秒，有效输出上限不超过 8,192 tokens。首版不自动重试、不设置日/月配额，也不返回估算费用。
 - Provider 未报告的 Token 用量字段保持 `null`。错误响应使用稳定 AI 错误码和脱敏信息，不包含 Header、完整上下文或完整上游响应。
 
-### 8.7 作品
+### 8.8 作品
 
 所有作品请求都以当前用户为所有权边界。不存在、已删除或属于其他用户的作品统一返回 `404 / 10004`。
 
@@ -774,14 +809,75 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 
 作品列表按 `updated_at DESC, id DESC` 排序，默认每页 `20` 条，最大 `100` 条。同一用户可以创建同名作品。创建作品时，`projects`、`documents` 和 `document_contents` 在同一事务中生成；失败时整体回滚。
 
-### 8.8 其他尚未实现领域
+### 8.9 文档树
 
-作品、文档树、正文保存、人物、世界设定、导出和 AI 任务端点同样尚未实现。实现时以代码、OpenAPI 和测试核对本文，并遵守第 6 节的完整记录要求。
+所有文档端点先验证当前用户拥有路径中的作品。不存在、已删除、跨作品或跨用户的节点统一返回 `404 / 10004`。
+
+| 方法     | 路径                                                         | 上行参数                                              | 成功 `data`          | 主要失败                           |
+| -------- | ------------------------------------------------------------ | ----------------------------------------------------- | -------------------- | ---------------------------------- |
+| `GET`    | `/api/v1/projects/{project_id}/documents`                    | Query：`status=active\|archived\|all`，默认 `active` | `{items}` 扁平节点表 | `10002`、`10004`、`11006`、`10007` |
+| `POST`   | `/api/v1/projects/{project_id}/documents`                    | `title`、`kind=folder\|manuscript`、`parent_id`       | 新节点摘要           | `10002`、`10004`、`10005`、`10007` |
+| `PATCH`  | `/api/v1/projects/{project_id}/documents/{document_id}`      | 至少一个：`title`、`status=active\|archived`          | 更新后节点摘要       | `10002`、`10004`、`10005`、`10007` |
+| `POST`   | `/api/v1/projects/{project_id}/documents/reorder`            | 移动节点、目标父级、完整受影响同级组                  | 更新后的活动节点表   | `10002`、`10004`、`10005`、`10007` |
+| `DELETE` | `/api/v1/projects/{project_id}/documents/{document_id}`      | Path：作品与节点 UUID                                 | `id`、`deleted=true` | `10002`、`10004`、`10005`、`10007` |
+
+创建正文或大纲时在同一事务生成空 `document_contents`，文件夹不生成正文。父节点必须是同作品中未删除、未归档的文件夹。
+
+排序请求的每个同级组包含 `parent_id` 和移动完成后的有序 `items`；每项携带 `id` 与提交前 `updated_at`。同级排序提交一个组，跨父级移动提交来源与目标两个组。服务端锁定节点、拒绝循环，并验证组完整覆盖当前同级；集合或时间戳不一致返回 `409 / 10005`，`data.reason=tree_changed`。
+
+归档非空文件夹、删除非空文件夹、形成树循环、使用无效父节点，以及归档或删除最后一个当前正文均返回 `409 / 10005`。`data.reason` 分别使用 `folder_not_empty`、`tree_cycle`、`invalid_parent`、`last_active_manuscript`。归档节点可以通过 `PATCH status=active` 恢复并追加到原父级末尾。
+
+### 8.10 正文读取与保存
+
+正文端点只允许当前用户访问自己作品中未删除、未归档的非文件夹节点。文件夹、归档节点、跨作品、跨用户和不存在资源统一返回 `404 / 10004`。
+
+| 方法  | 路径                                                                 | 上行参数                                        | 成功 `data`                                  | 主要失败                                      |
+| ----- | -------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------- | --------------------------------------------- |
+| `GET` | `/api/v1/projects/{project_id}/documents/{document_id}/content`      | Path：作品与文档 UUID                           | 正文、格式、版本、字数、校验和与时间戳       | `10002`、`10004`、`11006`、`10007`            |
+| `PUT` | `/api/v1/projects/{project_id}/documents/{document_id}/content`      | `content`、`content_format=plain_text`、`version` | 保存后的完整正文状态，版本递增               | `10002`、`10004`、`10005`、`11006`、`10007`   |
+
+保存使用请求 `version` 与当前 `document_contents.version` 执行乐观并发控制。版本不一致返回 `409 / 10005`，`data.reason=content_version_conflict`，数据库正文保持不变。客户端确认保留本地版本时必须先读取最新版本，再使用新的版本号重新提交；接口不提供无条件覆盖参数。
+
+服务端统一计算正文 UTF-8 SHA-256 与字数：每个中日韩统一表意文字计一个字，连续 Unicode 字母或数字计一个词，空白和纯标点不计数。保存事务同时更新时间、最近保存用户、文档节点和作品更新时间。正文不得进入异常日志、审计详情或调试快照。
+
+### 8.11 规划、设定、引用与导出
+
+人物、世界设定和正文引用均继承作品所有权。跨用户、跨作品、软删除和不存在资源统一返回 `404 / 10004`。
+
+| 方法     | 路径                                                                         | 用途                         |
+| -------- | ---------------------------------------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/v1/projects/{project_id}/characters`                                   | 读取稳定排序人物列表         |
+| `POST`   | `/api/v1/projects/{project_id}/characters`                                   | 创建人物并追加到末尾         |
+| `PATCH`  | `/api/v1/projects/{project_id}/characters/{character_id}`                    | 更新人物资料                 |
+| `POST`   | `/api/v1/projects/{project_id}/characters/reorder`                           | 完整集合排序                 |
+| `DELETE` | `/api/v1/projects/{project_id}/characters/{character_id}`                    | 软删除人物并移除正文引用     |
+| `GET`    | `/api/v1/projects/{project_id}/world-entries`                                | 读取层级世界设定             |
+| `POST`   | `/api/v1/projects/{project_id}/world-entries`                                | 创建根级或子设定             |
+| `PATCH`  | `/api/v1/projects/{project_id}/world-entries/{entry_id}`                     | 更新设定                     |
+| `POST`   | `/api/v1/projects/{project_id}/world-entries/reorder`                        | 同级排序或跨父级移动         |
+| `DELETE` | `/api/v1/projects/{project_id}/world-entries/{entry_id}`                     | 软删除空节点并移除正文引用   |
+| `GET`    | `/api/v1/projects/{project_id}/documents/{document_id}/references`           | 读取正文显式引用             |
+| `PUT`    | `/api/v1/projects/{project_id}/documents/{document_id}/references`           | 完整替换人物与世界设定引用   |
+| `GET`    | `/api/v1/projects/{project_id}/export?format=markdown\|plain_text`           | 下载作品正文，默认 Markdown  |
+
+人物别名最多 20 项；`profile` 和 `attributes` 是最多 50 项的字符串键值对象。人物排序与世界设定移动都提交完整受影响集合及各项 `updated_at`，过期集合返回 `409 / 10005` 和 `planning_changed`。世界设定循环返回 `world_entry_cycle`，非空节点删除返回 `world_entry_not_empty`。
+
+正文引用只允许活动 `manuscript`，PUT 字段为唯一的 `character_ids` 与 `world_entry_ids` 完整集合。任一目标不可见时整体返回 `404`，不产生部分更新。
+
+导出在内存中生成 UTF-8 文件，Markdown 默认扩展名 `.md`，纯文本为 `.txt`。只导出活动文件夹与正文，保留树顺序；大纲、笔记和归档节点不进入文件。响应使用安全 `Content-Disposition` 与 `nosniff`，不把正文写入日志或临时文件。
+
+### 8.12 其他尚未实现领域
+
+Desktop 不调用本 HTTP API，也不提供本地 HTTP 端点。renderer 通过安全 preload 使用领域级 IPC；SQLite、只读 Skill、凭据与 Provider 调用由 Electron 主进程持有，契约以 `apps/desktop/src/shared/contracts.ts` 和测试为准。
 
 ## 9. 变更记录
 
 | 日期       | 版本  | 变更                                                          |
 | ---------- | ----- | ------------------------------------------------------------- |
+| 2026-08-28 | 1.4.0 | 实现 Provider、流式 AI 任务、候选决策与 Web 私有 Skill API    |
+| 2026-08-28 | 1.3.0 | 实现大纲、人物、世界设定、正文引用和 Markdown/纯文本导出       |
+| 2026-08-27 | 1.2.0 | 实现纯文本正文读取、乐观锁保存、服务端字数与冲突响应           |
+| 2026-08-27 | 1.1.0 | 实现可排序文档树、归档恢复、完整同级并发校验和节点软删除       |
 | 2026-08-22 | 1.0.0 | 实现作品列表、创建、打开和自动创建初始文档                     |
 | 2026-08-21 | 0.9.0 | 实现 Web 用户偏好读取与部分更新契约                           |
 | 2026-08-21 | 0.8.0 | 实现登录会话、用户资料、头像、媒体读取与 Web 全局 Logo        |

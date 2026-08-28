@@ -13,7 +13,7 @@
 
 xnovel 统一管理灵感、故事大纲、人物与世界设定、正文草稿和 AI 辅助流程。项目采用 Monorepo：Web 通过本地账号、FastAPI 和 PostgreSQL 提供登录后的云端工作区；Electron 将复用前端能力，并通过本地 SQLite 提供无需登录的离线工作区。
 
-> **当前状态**：早期开发。FastAPI 与 React 工程骨架已经建立，核心小说创作功能和 AI Provider 尚未实现。
+> **当前状态**：早期可用版本。Web 已覆盖写作、规划、AI Provider 与私有 Skill；Desktop 已覆盖离线写作、本地 Skill、加密 Provider 凭据、备份恢复与安装包配置。
 
 ## 项目方向
 
@@ -31,8 +31,8 @@ xnovel/
 ├─ apps/
 │  ├─ api/                 # FastAPI 后端
 │  ├─ web/                 # Vite + React 网页端
-│  └─ desktop/             # Electron + SQLite 桌面端（规划中）
-├─ packages/               # 跨前端应用复用的包（规划中）
+│  └─ desktop/             # Electron + SQLite 离线桌面端
+├─ packages/               # Web/Desktop 稳定共享包（当前含主题契约）
 ├─ docs/                   # 产品、架构、接口与交付文档
 ├─ scripts/                # 构建、发布和开发脚本
 └─ .github/                # GitHub 工作流与仓库配置
@@ -132,11 +132,31 @@ pnpm check
 pnpm build
 ```
 
+### 启动与验证桌面端
+
+桌面端无需 API、PostgreSQL 或登录。需要 Node.js 24.18+ 和 pnpm 11+：
+
+```bash
+cd apps/desktop
+pnpm install
+pnpm dev
+```
+
+本地数据保存在 Electron `userData` 目录。提交前执行：
+
+```bash
+pnpm check
+pnpm build
+pnpm pack:dir
+```
+
+Windows x64 安装包使用 `pnpm dist:win`；macOS x64 / arm64 分别使用 `pnpm dist:mac:x64` 与 `pnpm dist:mac:arm64`。签名、公证和 GitHub Release 由 Tag 发布工作流注入 Secret，仓库不保存证书或密码。
+
 ## 参与开发
 
 开始实现功能前，先阅读 [贡献指南](CONTRIBUTING.md) 和 [文档导航](docs/README.md)。报告问题或提出功能建议时，使用结构化的 [GitHub Issue 表单](https://github.com/xiongxianzhu/xnovel/issues/new/choose)。
 
-修改产品范围、API、AI 数据边界或部署方式时，同步更新对应文档。Pull Request 会通过 GitHub Actions 自动验证 API 与 Web。
+修改产品范围、API、AI 数据边界或部署方式时，同步更新对应文档。Pull Request 会通过 GitHub Actions 自动验证 API、Web 与 Desktop。
 
 ## 许可
 

@@ -21,7 +21,7 @@
 - T-107 创建 `user_sessions`、`user_session_tokens`，并补充 Logo 元数据与登录限流范围。
 - API 单元测试使用内存 SQLite；它不是 Desktop 本地数据库实现。
 
-`apps/desktop` 当前仍是目录占位，尚未建立 SQLite 文件、驱动或迁移工具。除 T-106、T-107 已迁移的表外，其余业务表仍是规划；第 3.4 节定义 Desktop 的本地映射规则。
+`apps/desktop` 已使用 Electron 内置 `node:sqlite` 建立独立 SQLite v2 Schema、单向迁移、事务、升级前备份和恢复校验。Web 继续使用 SQLModel/Alembic，二者不共享物理迁移。
 
 业务表实现后，事实来源按以下顺序判断：
 
@@ -207,6 +207,8 @@ erDiagram
 | `document_contents`       | P0   | 文档当前正文与并发版本号          |
 | `characters`              | P0   | 人物资料与扩展属性                |
 | `world_entries`           | P0   | 世界设定分类与层级内容            |
+| `document_character_links` | P0  | 正文与同作品人物的显式引用        |
+| `document_world_entry_links` | P0 | 正文与同作品世界设定的显式引用    |
 | `ai_credentials`          | P0   | Web 用户 Provider 加密凭据        |
 | `ai_provider_configs`     | P0   | Provider 连接、协议与凭据引用     |
 | `ai_provider_models`      | P0   | Provider 下的模型与能力边界       |
@@ -216,7 +218,7 @@ erDiagram
 
 ## 6. 表设计
 
-T-201 已实现账户、会话、Refresh Token 历史、站点设置、管理员审计、认证限流、作品、文档和当前正文相关表。Skill 与 AI 小节仍是后续任务的规划契约。
+Phase 4 已实现账户、会话、站点设置、作品、文档、正文、人物、世界设定、两类正文引用，以及 Web Skill、Provider、AI 任务和候选结果表。Desktop SQLite 小节仍是后续任务的规划契约。
 
 ### 6.1 `users`
 
@@ -467,6 +469,10 @@ Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。
 
 数据库外键不能独立阻止深层循环。移动节点时，服务层必须在同一事务中确认目标不是当前节点的后代。
 
+文档创建接口开放 `folder`、`manuscript` 和 `outline`；`note` 保留给后续能力。大纲复用 `document_contents`、纯文本格式和版本锁，不进入正文导出。同一作品的树写事务先锁定作品聚合根，避免并发追加产生重复位置；活动树排序再锁定来源和目标同级，核对请求提交的完整节点顺序与各节点提交前 `updated_at`，然后连续写入 `0..n-1`。集合遗漏、重复、额外节点或并发变化返回 `409`，不会静默覆盖新顺序。
+
+归档节点不参与活动树排序，恢复时追加到仍然有效的父文件夹末尾。非空文件夹不能归档或删除；文件夹移动不能形成循环。作品必须始终保留至少一个未删除、未归档的 `manuscript`。归档、恢复、移动和软删除都在同一事务更新受影响同级位置与作品 `updated_at`。
+
 ### 6.11 `document_contents`
 
 该表保存每个非文件夹文档的当前内容。将正文与树节点分开，可以降低频繁自动保存对目录查询的影响。
@@ -509,13 +515,12 @@ Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。
 
 索引：
 
-- `(project_id)`，覆盖包含软删除行的作品外键引用检查。
-- `(project_id, position) WHERE deleted_at IS NULL`。
-- `(project_id, lower(name)) WHERE deleted_at IS NULL`，用于名称查找但不强制唯一。
+- `(project_id, position, id)`，支持稳定人物排序。
+- `(project_id, updated_at, id) WHERE deleted_at IS NULL`，支持活动人物刷新。
 
 ### 6.13 `world_entries`
 
-世界设定允许分类和层级组织。正文与设定的引用关系在 P1 再增加专用关联表。
+世界设定允许分类和层级组织。移动使用完整受影响同级集合和 `updated_at` 并发检查，拒绝循环；非空节点不能删除。
 
 | 字段         | 类型        | 必填 | 默认值   | 说明                                                      |
 | ------------ | ----------- | ---- | -------- | --------------------------------------------------------- |
@@ -537,13 +542,19 @@ Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。
 - 检查约束：`category` 只能使用已列出的值。
 - 唯一约束：`(project_id, id)`，供同作品父设定外键引用。
 - 复合外键：`(project_id, parent_id)` 引用 `(project_id, id)`。
-- 索引：`(project_id)`，覆盖包含软删除行的作品外键引用检查。
-- 索引：`(project_id, parent_id)`，覆盖包含软删除行的复合外键引用检查。
-- 索引：`(project_id, parent_id, position) WHERE deleted_at IS NULL`。
-- 索引：`(project_id, category, lower(title)) WHERE deleted_at IS NULL`。
+- 索引：`(project_id, parent_id, position, id)`。
+- 部分索引：`(project_id, updated_at, id) WHERE deleted_at IS NULL`。
 - 索引：`(parent_id)`，覆盖包含软删除行的父设定引用检查。
 
-移动设定节点时采用与文档树相同的同作品和防循环校验。
+### 6.13.1 `document_character_links`
+
+正文与人物使用显式关联表。字段为 UUID 主键、`project_id`、`document_id`、`character_id` 和公共时间戳。复合外键分别引用 `(project_id, document_id)` 与 `(project_id, character_id)`，确保两端属于同一作品；唯一约束禁止重复引用。删除文档或人物时级联删除关联。
+
+### 6.13.2 `document_world_entry_links`
+
+正文与世界设定关联表字段为 UUID 主键、`project_id`、`document_id`、`world_entry_id` 和公共时间戳。复合外键、唯一约束和级联规则与人物引用一致。关联只表达资源集合，不保存正文选区、位置或自动抽取结果。
+
+人物 `aliases` 最多 20 项；人物 `profile` 与世界设定 `attributes` 首版为最多 50 项的字符串键值对象，键最长 100 字符，值最长 2,000 字符。人物和世界设定软删除时同步移除显式引用。
 
 ### 6.14 `ai_credentials`
 
@@ -651,12 +662,13 @@ AI 任务记录调度状态和最小必要上下文清单。它不复制完整�
 | `output_tokens`      | integer     | 否   | `null`   | Provider 返回的输出 Token 数                              |
 | `cache_read_tokens`  | integer     | 否   | `null`   | Provider 返回的缓存读取 Token 数                          |
 | `reasoning_tokens`   | integer     | 否   | `null`   | Provider 返回的推理 Token 数                              |
+| `cancel_requested_at` | timestamptz | 否   | `null`   | 用户请求取消的时间；执行器据此丢弃迟到流                  |
 | `started_at`         | timestamptz | 否   | `null`   | 开始执行时间                                              |
 | `finished_at`        | timestamptz | 否   | `null`   | 终止时间                                                  |
 | `created_at`         | timestamptz | 是   | `now()`  | 创建时间                                                  |
 | `updated_at`         | timestamptz | 是   | `now()`  | 最后更新时间                                              |
 
-`task_type` 首版允许 `provider_connection_test`、`brainstorm`、`continue`、`rewrite`、`summarize`、`proofread` 和 `consistency_check`。
+`task_type` 首版允许 `provider_connection_test`、`brainstorm`、`outline`、`rewrite`、`expand`、`compress`、`consistency` 和 `extract_settings`。
 
 索引：
 
@@ -779,9 +791,12 @@ AI 输出与作者正文分离。只有显式“应用”操作才能把候选�
 ### 8.2 保存正文
 
 1. 校验用户拥有目标作品。
-2. 使用 `document_id` 与客户端 `version` 更新当前正文。
-3. 更新内容、字数、校验和与 `updated_at`，并将版本加 `1`。
-4. 没有匹配行时返回冲突，不执行最后写入者覆盖。
+2. 锁定作品聚合根和当前正文，使用 `document_id` 与客户端 `version` 匹配当前版本。
+3. 更新纯文本内容、字数、UTF-8 SHA-256、`updated_by` 与 `updated_at`，并将版本加 `1`。
+4. 使用同一时间更新文档节点与作品 `updated_at`。
+5. 没有匹配版本时返回 `content_version_conflict`，不执行最后写入者覆盖。
+
+字数算法固定为：每个中日韩统一表意文字计一个字，连续 Unicode 字母或数字计一个词，空白和纯标点不计数。Web 可以在输入期间显示同算法的本地估算值，但持久化值始终由 API 计算。
 
 P1 启用历史后，在相同事务中先插入新版本快照，再提交当前正文。
 
@@ -859,6 +874,8 @@ make migrate
 
 Desktop 使用独立的单向版本迁移链。主进程在开放写入前读取 Schema 版本，并在事务中按顺序升级。破坏性迁移前先创建数据库备份；迁移失败时回滚事务、保留原文件并停止写入。
 
+当前 Desktop Schema v2 包含 `schema_migrations`、`projects`、`documents`、`document_contents`、`document_revisions`、`app_settings`、`local_skill_preferences`、`ai_provider_configs`、`ai_tasks` 和 `ai_results`。所有表与字段在迁移元数据 `SCHEMA_COMMENTS` 中保存简体中文注释，并由测试逐表逐字段比对。v2 增加不可变正文历史表；每次正文保存和 AI 候选应用都在同一事务先写入旧版本快照。
+
 Desktop 数据测试至少覆盖：
 
 - 从空目录创建数据库，并打开、关闭和重新打开。
@@ -912,6 +929,6 @@ Desktop `app_settings` 至少保存 `theme_palette` 与 `theme_mode`。`local_sk
 4. 按已确认的 BYOK、AES-256-GCM、Provider 目录、模型与用量契约实现 AI 配置、任务和候选结果。
 5. 实现 Web Skill 当前记录、不可变版本、存储事务和任务快照。
 6. 确认版本保留策略后实现 `document_revisions`。
-7. Desktop 工程建立后，实现独立 SQLite Schema、主题设置、本地 Skill 偏好、迁移、备份和平台存储适配器。
+7. Desktop 已实现独立 SQLite Schema、主题设置、本地 Skill 偏好、迁移、备份和平台存储适配器；后续 Schema 变化继续追加单向版本。
 
 Web 阶段同时提交 SQLModel、Alembic 迁移、约束测试和对应 API 文档。Desktop 阶段同时提交本地迁移、主进程存储测试、恢复测试和对应架构文档。

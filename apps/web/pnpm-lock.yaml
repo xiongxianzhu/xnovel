@@ -11,6 +11,9 @@ importers:
       '@tanstack/react-query':
         specifier: 5.101.4
         version: 5.101.4(react@19.2.8)
+      '@xnovel/theme':
+        specifier: link:../../packages/theme
+        version: link:../../packages/theme
       antd:
         specifier: 6.6.0
         version: 6.6.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

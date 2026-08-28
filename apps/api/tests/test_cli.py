@@ -49,8 +49,8 @@ async def test_create_admin_uses_bootstrap_password_without_prompting(monkeypatc
             "create-admin",
             "--username",
             "admin",
-                "--nickname",
-                "管理员",
+            "--nickname",
+            "管理员",
         ]
     )
 

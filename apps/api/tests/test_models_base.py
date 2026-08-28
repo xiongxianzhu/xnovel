@@ -11,7 +11,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 from app.models.account import User, UserPreference
+from app.models.ai import AICredential, AIProviderConfig, AIProviderModel, AIResult, AITask, Skill, SkillVersion
 from app.models.base import ImmutableTimestampMixin, TimestampMixin
+from app.models.planning import Character, DocumentCharacterLink, DocumentWorldEntryLink, WorldEntry
 from app.models.session import UserSession, UserSessionToken
 from app.models.site import AdminAuditEvent, AuthRateLimitBucket, SiteSetting
 
@@ -97,7 +99,26 @@ def test_immutable_timestamp_mixin_has_no_update_hook() -> None:
 
 @pytest.mark.parametrize(
     "model",
-    [User, UserPreference, UserSession, UserSessionToken, SiteSetting, AdminAuditEvent, AuthRateLimitBucket],
+    [
+        User,
+        UserPreference,
+        UserSession,
+        UserSessionToken,
+        SiteSetting,
+        AdminAuditEvent,
+        AuthRateLimitBucket,
+        Character,
+        WorldEntry,
+        DocumentCharacterLink,
+        DocumentWorldEntryLink,
+        Skill,
+        SkillVersion,
+        AICredential,
+        AIProviderConfig,
+        AIProviderModel,
+        AITask,
+        AIResult,
+    ],
 )
 def test_persistent_tables_have_required_timestamps(model: type[Any]) -> None:
     table = model.__table__  # type: ignore[attr-defined]
@@ -115,6 +136,8 @@ def test_all_persistent_tables_and_columns_have_chinese_comments() -> None:
         versions_path / "20260821_0003_t107_auth_profile_media.py",
         versions_path / "20260822_0004_t201_projects_documents.py",
         versions_path / "20260822_0005_admin_bootstrap_password.py",
+        versions_path / "20260828_0006_phase3_planning.py",
+        versions_path / "20260828_0007_phase4_ai_and_skills.py",
     ]
     table_comments: dict[str, str] = {}
     column_comments: dict[str, dict[str, str]] = {}

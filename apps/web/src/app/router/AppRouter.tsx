@@ -50,6 +50,21 @@ const ProjectDetailPage = lazy(() =>
     default: module.ProjectDetailPage,
   })),
 );
+const ProviderPage = lazy(() =>
+  import("../../pages/ai/ProviderPage").then((module) => ({
+    default: module.ProviderPage,
+  })),
+);
+const SkillsPage = lazy(() =>
+  import("../../pages/skills/SkillsPage").then((module) => ({
+    default: module.SkillsPage,
+  })),
+);
+const AdminSkillsPage = lazy(() =>
+  import("../../pages/admin/AdminSkillsPage").then((module) => ({
+    default: module.AdminSkillsPage,
+  })),
+);
 
 export function AppRouter() {
   return (
@@ -71,13 +86,14 @@ export function AppRouter() {
             />
             <Route path="/settings/preferences" element={<PreferencesPage />} />
             <Route path="/settings/password" element={<PasswordChangePage />} />
+            <Route path="/ai-models" element={<ProviderPage />} />
+            <Route path="/skills" element={<SkillsPage />} />
             <Route
-              path="/ai-models"
+              path="/admin/skills"
               element={
-                <PlaceholderPage
-                  descriptionKey="aiModelsDescription"
-                  titleKey="aiModels"
-                />
+                <AdminOnly>
+                  <AdminSkillsPage />
+                </AdminOnly>
               }
             />
             <Route

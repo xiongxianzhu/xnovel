@@ -14,7 +14,7 @@ body:
       options:
         - API
         - Web
-        - Desktop（规划中）
+        - Desktop
         - 文档
         - 仓库与工具链
         - 其他

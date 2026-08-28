@@ -13,10 +13,12 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.db.session import engine
+from app.services.ai_tasks import recover_interrupted_ai_tasks
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    await recover_interrupted_ai_tasks()
     yield
     await engine.dispose()
 

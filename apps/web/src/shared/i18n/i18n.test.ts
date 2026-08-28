@@ -19,4 +19,13 @@ describe("i18n", () => {
   it("configures simplified Chinese as the fallback", () => {
     expect(i18n.options.fallbackLng).toContain("zh-CN");
   });
+
+  it("localizes AI and Skill workspaces in every supported locale", async () => {
+    await setLocale("zh-CN");
+    expect(i18n.t("ai:assistantTitle")).toBe("AI 助手");
+    await setLocale("zh-TW");
+    expect(i18n.t("skills:adminTitle")).toBe("Skill 安全管理");
+    await setLocale("en-US");
+    expect(i18n.t("ai:providersTitle")).toBe("Model connections");
+  });
 });

@@ -1,17 +1,19 @@
+import {
+  isThemeMode as isSharedThemeMode,
+  isThemePalette as isSharedThemePalette,
+  themeModes,
+  themePalettes,
+  type ColorScheme,
+  type ThemeMode,
+  type ThemePalette,
+} from "@xnovel/theme";
+
+export { themeModes, themePalettes };
+export type { ColorScheme, ThemeMode, ThemePalette };
+
 export const locales = ["zh-CN", "zh-TW", "en-US"] as const;
-export const themePalettes = [
-  "manuscript-brown",
-  "pine-green",
-  "harbor-blue",
-  "grape-purple",
-  "graphite",
-] as const;
-export const themeModes = ["system", "light", "dark"] as const;
 
 export type Locale = (typeof locales)[number];
-export type ThemePalette = (typeof themePalettes)[number];
-export type ThemeMode = (typeof themeModes)[number];
-export type ColorScheme = "light" | "dark";
 
 export interface Appearance {
   locale: Locale;
@@ -30,9 +32,9 @@ export function isLocale(value: unknown): value is Locale {
 }
 
 export function isThemePalette(value: unknown): value is ThemePalette {
-  return themePalettes.includes(value as ThemePalette);
+  return isSharedThemePalette(value);
 }
 
 export function isThemeMode(value: unknown): value is ThemeMode {
-  return themeModes.includes(value as ThemeMode);
+  return isSharedThemeMode(value);
 }

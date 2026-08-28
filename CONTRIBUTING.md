@@ -92,4 +92,4 @@ git push -u origin feat/short-description
 4. 说明迁移、兼容性、安全和回滚风险。
 5. 确认相关文档已经同步。
 
-GitHub Actions 会并行验证 API 与 Web。所有相关检查通过并完成评审后，维护者才能合并变更。
+GitHub Actions 会并行验证 API、Web 与 Desktop。所有相关检查通过并完成评审后，维护者才能合并变更。

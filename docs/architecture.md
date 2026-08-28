@@ -37,7 +37,7 @@ Web 与 Desktop 是两个独立运行边界。Desktop 不把 FastAPI 作为保�
 | -------------- | ---------------------------------------------------- | ------------------------ |
 | `apps/api`     | Web API、PostgreSQL、鉴权、媒体与 Skill、Web AI 调度 | 浏览器界面和桌面本地数据 |
 | `apps/web`     | Web 登录、工作台、偏好和私有 Skill 管理界面          | 模型密钥与可信授权       |
-| `apps/desktop` | Electron、SQLite、本地文件、只读 Skill、AI 与更新    | 登录和修改本机 Skill     |
+| `apps/desktop` | Electron 44、SQLite、本地文件、只读 Skill、AI 与更新 | 登录和修改本机 Skill     |
 | `packages`     | 多个前端消费者稳定复用的领域与界面能力               | 平台数据库连接和提前抽象 |
 | `docs`         | 产品、契约和技术决策                                 | 与实现脱节的愿望清单     |
 
@@ -66,7 +66,7 @@ apps/web/src/
 
 Web 使用短期 JWT Access Token 与可撤销的不透明 Refresh Token。Access Token 只保存在浏览器内存，并通过 `Authorization: Bearer <access_token>` 发送；Refresh Token 只存在 `HttpOnly`、生产环境 `Secure`、`SameSite=Lax` Cookie 中。刷新接口校验可信 `Origin`，轮换令牌并保留哈希历史以检测重放。用户名、邮箱和手机号都可以登录；首版只校验格式与唯一性，不实现联系方式验证和找回密码。
 
-当前已实现注册、登录、刷新、退出、当前用户资料和偏好闭环。Web 启动时先应用版本化设备外观缓存，再用 HttpOnly Refresh Cookie 恢复会话；成功后服务端偏好覆盖缓存。并发 `401` 共享一次 Refresh，每个原请求最多重试一次。头像与 Web 全局 Logo 使用 `MEDIA_ROOT` 中的随机存储键，数据库只保存引用和解码后的媒体元数据。
+当前已实现注册、登录、资料与偏好、作品文档树、纯文本正文、大纲、人物、世界设定、正文引用和导出闭环。正文保存通过版本号乐观锁拒绝过期写入，Web 在当前标签页保留未保存草稿并要求作者明确处理冲突。人物和世界设定通过作品所有权隔离；正文引用使用两张同作品复合外键表。导出由 API 在内存中生成 UTF-8 Markdown 或纯文本，不写临时文件、不记录正文。
 
 Web 登录后使用统一 AppShell：顶部导航承载品牌和账户入口，侧边栏承载仪表盘、作品、AI 模型和系统设置；管理员额外看到用户、登录日志和操作日志入口。前端根据内存中的用户角色过滤菜单，后端仍是权限最终边界。首次强制改密期间不渲染控制台侧边栏，路由只允许进入改密页面。
 
@@ -88,11 +88,13 @@ Web AI 使用用户自带密钥。Provider 目录保存公开端点和协议元�
 
 Desktop 只读扫描 `~/.agents/skills/` 的一级子目录。启动和手动重新扫描负责发现变化；每次 AI 任务前仍重新校验文件数、累计大小、`SKILL.md` 大小和内容指纹，并使用本次校验捕获的不可变字节，避免检查后替换。preload 只暴露列表、详情、重新扫描、启用和禁用，不暴露写文件能力。
 
+当前实现由 `src/main` 持有 `node:sqlite`、迁移、备份、凭据、Skill 与 Provider 服务，`src/preload` 只映射白名单领域方法，`src/renderer` 通过 `XnovelDesktopApi` 存储适配器使用 React 工作台。窗口启用 `contextIsolation`、sandbox 和禁用 Node integration，拒绝权限请求、任意新窗口和非应用导航。
+
 Web 与 Desktop 的 Skill 指纹统一使用 [`database.md`](database.md) 第 3.5 节的清单式 SHA-256；路径规范化、排序、Unicode 碰撞和元数据排除规则不能由平台适配器自行改写。
 
 正文保存和 AI 生成必须是两个独立操作。AI 输出先进入候选结果，用户确认后才能写入正文。
 
-Web 与 Desktop 使用相同的领域标识和业务语义，但维护独立迁移。Desktop 不运行 Alembic，也不复制 PostgreSQL 专用类型或约束。
+Web 与 Desktop 使用相同的领域标识和业务语义，但维护独立迁移。Desktop 不运行 Alembic，也不复制 PostgreSQL 专用类型或约束。五套主题值由 `packages/theme` 作为跨端唯一运行时事实来源，两端通过各自存储适配器保存主题选择。
 
 业务表、关系、并发控制和迁移策略见 [`database.md`](database.md)。
 
@@ -104,6 +106,7 @@ Web 与 Desktop 使用相同的领域标识和业务语义，但维护独立迁�
 - AI 请求失败时保留原文、上下文选择和用户指令。
 - API 统一返回稳定整数错误码与英文消息标识；Web 根据错误码选择本地化文案。
 - Desktop 数据库迁移失败时停止写入，保留原数据库和升级前备份，并提供恢复说明。
+- Desktop 恢复前验证备份 `integrity_check` 和 Schema 版本，先备份当前数据库，再以原子文件替换恢复并重启应用。
 - Desktop 卸载和自动更新默认不删除用户数据库、附件或备份。
 
 ## 7. 安全边界

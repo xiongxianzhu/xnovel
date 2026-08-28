@@ -220,3 +220,82 @@ def test_openapi_exposes_every_stable_error_code_as_a_literal() -> None:
 
     refs = schemas["HTTPErrorResponse"]["anyOf"]
     assert {item["$ref"].rsplit("/", 1)[-1] for item in refs} == set(expected)
+
+
+def test_t202_document_tree_contract_is_complete() -> None:
+    schema = load_schema()
+    paths = schema["paths"]
+    collection = paths["/api/v1/projects/{project_id}/documents"]
+    item = paths["/api/v1/projects/{project_id}/documents/{document_id}"]
+    reorder = paths["/api/v1/projects/{project_id}/documents/reorder"]["post"]
+
+    assert collection["get"]["operationId"] == "listProjectDocuments"
+    assert collection["post"]["operationId"] == "createProjectDocument"
+    assert item["patch"]["operationId"] == "updateProjectDocument"
+    assert item["delete"]["operationId"] == "deleteProjectDocument"
+    assert reorder["operationId"] == "reorderProjectDocuments"
+
+    for operation in (collection["post"], item["patch"], item["delete"], reorder):
+        assert set(operation["responses"]) == {"200", "401", "404", "409", "422", "503", "default"} or set(
+            operation["responses"]
+        ) == {"201", "401", "404", "409", "422", "503", "default"}
+        assert operation["responses"]["409"]["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/ConflictErrorResponse"
+        }
+
+    create_kind = schema["components"]["schemas"]["DocumentCreateRequest"]["properties"]["kind"]
+    assert create_kind["enum"] == ["folder", "manuscript", "outline"]
+    status_parameter = next(parameter for parameter in collection["get"]["parameters"] if parameter["name"] == "status")
+    assert status_parameter["schema"]["enum"] == ["active", "archived", "all"]
+
+
+def test_t203_document_content_contract_is_complete() -> None:
+    schema = load_schema()
+    operations = schema["paths"]["/api/v1/projects/{project_id}/documents/{document_id}/content"]
+    read = operations["get"]
+    save = operations["put"]
+
+    assert read["operationId"] == "getProjectDocumentContent"
+    assert save["operationId"] == "saveProjectDocumentContent"
+    assert set(read["responses"]) == {"200", "401", "404", "422", "503", "default"}
+    assert set(save["responses"]) == {"200", "401", "404", "409", "422", "503", "default"}
+    assert save["responses"]["409"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ConflictErrorResponse"
+    }
+    request = schema["components"]["schemas"]["DocumentContentUpdateRequest"]
+    assert set(request["required"]) == {"content", "content_format", "version"}
+    assert request["properties"]["content_format"]["const"] == "plain_text"
+    assert request["properties"]["version"]["minimum"] == 1
+
+
+def test_phase3_planning_reference_and_export_contracts_are_complete() -> None:
+    schema = load_schema()
+    paths = schema["paths"]
+    operations = {
+        ("get", "/api/v1/projects/{project_id}/characters"): "listProjectCharacters",
+        ("post", "/api/v1/projects/{project_id}/characters"): "createProjectCharacter",
+        ("post", "/api/v1/projects/{project_id}/characters/reorder"): "reorderProjectCharacters",
+        ("patch", "/api/v1/projects/{project_id}/characters/{character_id}"): "updateProjectCharacter",
+        ("delete", "/api/v1/projects/{project_id}/characters/{character_id}"): "deleteProjectCharacter",
+        ("get", "/api/v1/projects/{project_id}/world-entries"): "listProjectWorldEntries",
+        ("post", "/api/v1/projects/{project_id}/world-entries"): "createProjectWorldEntry",
+        ("post", "/api/v1/projects/{project_id}/world-entries/reorder"): "reorderProjectWorldEntries",
+        ("patch", "/api/v1/projects/{project_id}/world-entries/{entry_id}"): "updateProjectWorldEntry",
+        ("delete", "/api/v1/projects/{project_id}/world-entries/{entry_id}"): "deleteProjectWorldEntry",
+        ("get", "/api/v1/projects/{project_id}/documents/{document_id}/references"): "getProjectDocumentReferences",
+        ("put", "/api/v1/projects/{project_id}/documents/{document_id}/references"): "updateProjectDocumentReferences",
+        ("get", "/api/v1/projects/{project_id}/export"): "exportProject",
+    }
+    for (method, path), operation_id in operations.items():
+        assert paths[path][method]["operationId"] == operation_id
+
+    export = paths["/api/v1/projects/{project_id}/export"]["get"]
+    success_content = export["responses"]["200"]["content"]
+    assert set(success_content) == {"text/markdown", "text/plain"}
+    format_parameter = next(parameter for parameter in export["parameters"] if parameter["name"] == "format")
+    assert format_parameter["schema"]["default"] == "markdown"
+    assert format_parameter["schema"]["enum"] == ["markdown", "plain_text"]
+
+    references = schema["components"]["schemas"]["DocumentReferencesUpdateRequest"]
+    assert references["properties"]["character_ids"]["maxItems"] == 500
+    assert references["properties"]["world_entry_ids"]["maxItems"] == 500

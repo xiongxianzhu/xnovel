@@ -96,12 +96,18 @@ export function ConsoleSidebar() {
                   {t("administration")}
                 </div>
               ) : null}
-              <NavItem collapsed={collapsed} item={administrationItems[0]} />
+              {administrationItems
+                .filter((item) => !item.path.startsWith("/admin/audit/"))
+                .map((item) => (
+                  <NavItem collapsed={collapsed} item={item} key={item.key} />
+                ))}
               <AuditNavigation
                 active={auditActive}
                 collapsed={collapsed}
                 expanded={auditExpanded}
-                items={administrationItems.slice(1)}
+                items={administrationItems.filter((item) =>
+                  item.path.startsWith("/admin/audit/"),
+                )}
                 onToggle={() => setAuditExpanded((value) => !value)}
               />
             </section>

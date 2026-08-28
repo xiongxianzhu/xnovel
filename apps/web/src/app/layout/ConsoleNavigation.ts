@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BookOpenText,
   Brain,
+  FileCode2,
   ChartNoAxesColumnIncreasing,
   Settings,
   List,
@@ -37,6 +38,12 @@ export const workspaceNavigation: NavigationItem[] = [
     icon: Brain,
   },
   {
+    key: "skills",
+    labelKey: "skills",
+    path: "/skills",
+    icon: FileCode2,
+  },
+  {
     key: "settings",
     labelKey: "settings",
     path: "/settings",
@@ -45,6 +52,13 @@ export const workspaceNavigation: NavigationItem[] = [
 ];
 
 export const administrationNavigation: NavigationItem[] = [
+  {
+    key: "adminSkills",
+    labelKey: "adminSkills",
+    path: "/admin/skills",
+    icon: FileCode2,
+    adminOnly: true,
+  },
   {
     key: "users",
     labelKey: "users",

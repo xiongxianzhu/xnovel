@@ -30,3 +30,22 @@ Object.defineProperty(window, "matchMedia", {
   }),
   writable: true,
 });
+
+class ResizeObserverMock implements ResizeObserver {
+  disconnect = vi.fn();
+  observe = vi.fn();
+  unobserve = vi.fn();
+}
+
+Object.defineProperty(window, "ResizeObserver", {
+  configurable: true,
+  value: ResizeObserverMock,
+  writable: true,
+});
+
+const getComputedStyle = window.getComputedStyle.bind(window);
+Object.defineProperty(window, "getComputedStyle", {
+  configurable: true,
+  value: (element: Element) => getComputedStyle(element),
+  writable: true,
+});

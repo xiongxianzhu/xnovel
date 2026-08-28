@@ -4,13 +4,13 @@
 >
 > 版本核实日期：2026-08-21
 
-本文分别记录 API、Web 和 Desktop 的技术栈。表中的“已锁定”以仓库锁文件为准；“规划基线”用于尚未创建的桌面工程，落地时必须重新核对稳定版和兼容性。
+本文分别记录 API、Web 和 Desktop 的技术栈。表中的“已锁定”以各应用锁文件为准。
 
 ## 1. 版本与平台原则
 
 - 只采用 stable / LTS 版本，不使用 alpha、beta、rc 或 nightly。
 - API 以 apps/api/uv.lock 为可复现安装来源，Web 以 apps/web/pnpm-lock.yaml 为准。
-- 未落地的 Desktop 版本采用 2026-08-15 的最新稳定版，但不代表依赖已经安装。
+- Desktop 直接依赖以 `apps/desktop/package.json` 和独立 `pnpm-lock.yaml` 为准。
 - 主版本升级必须单独验证类型检查、测试、构建、安装包和自动更新。
 - 生产数据库跟随 PostgreSQL 当前受支持的最新大版本，并及时升级该大版本的补丁版本。
 
@@ -48,11 +48,13 @@
 | 邮箱校验     | email-validator   | 2.3.0    | 已锁定   | 邮箱语法与规范化校验         |
 | 手机号       | phonenumbers      | 9.0.37   | 已锁定   | 完整 E.164 解析与有效性校验  |
 | 图片处理     | Pillow            | 12.3.0   | 已锁定   | 头像与 Logo 类型和像素校验   |
-| YAML         | PyYAML            | 6.0.3    | 规划基线 | 安全解析 Skill frontmatter   |
+| YAML         | PyYAML            | 6.0.3    | 已锁定   | 安全解析 Skill frontmatter   |
+| 加密         | cryptography      | 50.0.1   | 已锁定   | AES-256-GCM Provider 凭据    |
+| Provider HTTP | HTTPX             | 0.28.1   | 已锁定   | 异步流式 Provider 调用       |
 
-PyJWT 与 Pillow 已写入 `pyproject.toml` 和 `uv.lock`。PyYAML 仍是规划依赖；实现 Skill 纵向切片时重新核对 Python 3.14 兼容性并通过 `uv add` 锁定。Skill ZIP 使用 Python 标准库 `zipfile` 配合自定义路径、条目类型、累计大小和碰撞校验，不能直接信任 `extractall()`。
+PyJWT、Pillow、PyYAML、cryptography 与 HTTPX 已写入 `pyproject.toml` 和 `uv.lock`。Skill ZIP 使用 Python 标准库 `zipfile` 配合自定义路径、条目类型、累计大小和碰撞校验，不调用 `extractall()`。
 
-Web AI 已确定使用 AES-256-GCM 凭据加密和四种 Provider HTTP 协议，但运行时加密库与异步 HTTP 客户端尚未选择或写入锁文件。T-401 实施时必须重新核对 Python 3.14 兼容的最新稳定版，通过 `uv add` 锁定，并分别验证流式取消、连接目标校验、禁止重定向和 AES-GCM 测试向量。当前开发依赖中的 HTTPX 只承担 ASGI/API 测试，不能据此描述为已选定的 Provider 运行时客户端。
+Web AI 使用 cryptography 的 AES-GCM 保存凭据，使用 HTTPX 异步流调用四种 Provider 协议。客户端设置显式连接/读取/写入/连接池超时、禁用环境代理与重定向；地址在保存和调用前执行协议、Origin 与 DNS 分类校验。
 
 数据模型、约束、索引和迁移规则见 [database.md](database.md)，接口契约见 [api.md](api.md)。
 
@@ -88,6 +90,8 @@ Web AI 已确定使用 AES-256-GCM 凭据加密和四种 Provider HTTP 协议，
 
 Ant Design、React Router、Lucide React、i18next 和 react-i18next 已写入 Web 清单与锁文件。生成的 API 客户端统一使用 Axios 传输层，不保留并行的 Fetch 请求封装。主题通过共享运行时主题表、CSS 自定义属性、Ant Design 主题配置和 `prefers-color-scheme` 实现；共享主题清单仍是 Web 与 Desktop 的跨端语义事实来源。
 
+`packages/theme` 由 Web 与 Desktop 真实复用，导出五套主题、两种解析后明暗配色、三种用户模式及完整语义色值；两个应用不得再维护独立主题常量副本。
+
 ### 质量工具
 
 | 类别      | 技术                     | 当前基线 | 状态   | 用途                               |
@@ -115,24 +119,26 @@ Ant Design、React Router、Lucide React、i18next 和 react-i18next 已写入 W
 
 ## 4. Desktop 技术栈
 
-apps/desktop 当前只有目录占位，以下版本均为规划基线。实施时应先创建独立 package.json 和锁文件，再把“规划基线”改为“已锁定”。
+`apps/desktop` 已建立独立 Electron 工程、依赖清单和锁文件。
 
 ### 运行时、构建与发布
 
-| 类别       | 技术                            | 规划基线        | 用途                                     |
-| ---------- | ------------------------------- | --------------- | ---------------------------------------- |
-| 桌面运行时 | Electron                        | 43.4.0          | 主进程、窗口、系统能力和 Chromium 运行时 |
-| 桌面构建   | electron-vite                   | 5.0.0           | 分别构建 main、preload 和 renderer       |
-| UI 与类型  | React 19.2.8 + TypeScript 6.0.3 | 与 Web 同步     | 复用网页端 UI、编辑器和领域能力          |
-| 前端构建   | Vite                            | 7.3.6           | electron-vite 5 支持的最新稳定主线       |
-| 打包发布   | electron-builder                | 26.15.7         | Windows / macOS 安装包、签名与发布元数据 |
-| 自动更新   | electron-updater                | 6.8.9           | 检查、下载和安装已签名更新               |
-| 受限桥接   | contextBridge + preload         | Electron 内置   | 只暴露经过校验的最小 IPC API             |
-| 本地数据库 | SQLite                          | 3.x，实施时锁定 | 无需登录的本地业务数据持久化             |
-| 凭据加密   | safeStorage                     | Electron 内置   | 使用操作系统密码学加解密本地凭据密文     |
-| 本地文件   | Node.js 文件系统 API            | Electron 内置   | 封面、附件、导出文件和数据库备份         |
+| 类别       | 技术                            | 已锁定版本 | 用途                                     |
+| ---------- | ------------------------------- | ---------- | ---------------------------------------- |
+| 桌面运行时 | Electron                        | 44.0.0     | 主进程、窗口、系统能力和 Chromium 运行时 |
+| 桌面构建   | electron-vite                   | 5.0.0      | 分别构建 main、preload 和 renderer       |
+| UI 与类型  | React + TypeScript              | 19.2.8 / 6.0.3 | 复用 React 交互与领域契约             |
+| 前端构建   | Vite + React Plugin             | 7.3.6 / 5.2.0 | renderer 构建                         |
+| 打包发布   | electron-builder                | 26.15.7    | Windows / macOS 安装包、签名与发布元数据 |
+| 自动更新   | electron-updater                | 6.8.9      | 检查已签名更新                           |
+| 公证       | @electron/notarize              | 3.1.1      | macOS Developer ID 公证                  |
+| UUID       | uuid                            | 13.0.0     | 本地 UUID v7 主键                        |
+| 受限桥接   | contextBridge + preload         | Electron 内置 | 只暴露经过校验的最小 IPC API          |
+| 本地数据库 | Node.js `node:sqlite`            | Electron Node 24.18.1 | SQLite 持久化与一致性快照     |
+| 凭据加密   | safeStorage                     | Electron 内置 | 使用操作系统密码学加解密本地凭据密文  |
+| 本地文件   | Node.js 文件系统 API            | Electron 内置 | Skill、凭据文件和数据库备份            |
 
-SQLite 驱动和迁移工具尚未选定。Desktop 工程落地时先验证 Electron ABI、Windows 与 macOS 打包、备份能力和事务行为，再锁定最新稳定兼容版本并提交锁文件。不得仅为了填写版本表提前声明未安装的 npm 包。
+Desktop 使用 Electron 内置 Node 24 的 `node:sqlite`，没有原生扩展 ABI 或额外 SQLite 驱动。`DatabaseSync` 只在主进程运行；单向 SQL 迁移、事务、`VACUUM INTO` 一致性快照和恢复校验由应用实现并测试。
 
 默认打包组合：
 
@@ -172,7 +178,7 @@ SQLite 驱动和迁移工具尚未选定。Desktop 工程落地时先验证 Elec
 - renderer 直接访问 SQLite 或任意文件系统：会扩大攻击面并绕过 IPC 校验。
 - Web 与 Desktop 自动同步：身份、冲突和删除传播尚未设计，不能把导入导出冒充同步。
 - Electron Forge 8 alpha：未达到稳定版；当前桌面规划使用稳定的 electron-vite + electron-builder 组合。
-- Desktop 不与 Web 强行共用 Vite 版本：electron-vite 5 的 peer dependency 只支持 Vite 5–7，Desktop 使用 Vite 7.3.6，Web 继续使用 Vite 8.2.1。
+- Desktop 使用 electron-vite 5 支持的 Vite 7.3.6，Web 使用 Vite 8.2.1；两端保留独立清单和锁文件，主题复用不依赖构建工具版本一致。
 - 单一 macOS Universal 包：首版分别发布 x64 和 arm64，降低下载体积并简化问题定位。
 
 ## 6. 版本升级流程
@@ -234,7 +240,7 @@ pnpm check
 pnpm build
 ```
 
-### Desktop（工程建立后）
+### Desktop
 
 ```bash
 cd apps/desktop

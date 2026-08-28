@@ -1,0 +1,100 @@
+name: Desktop release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            release_script: release:win
+            verify_script: verify:win
+          - name: macOS x64
+            os: macos-15-intel
+            release_script: release:mac:x64
+            verify_script: verify:mac:x64
+          - name: macOS arm64
+            os: macos-15
+            release_script: release:mac:arm64
+            verify_script: verify:mac:arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/desktop
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CSC_LINK: ${{ matrix.os == 'windows-latest' && secrets.WINDOWS_CSC_LINK || secrets.MACOS_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ matrix.os == 'windows-latest' && secrets.WINDOWS_CSC_KEY_PASSWORD || secrets.MACOS_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          package_json_file: apps/desktop/package.json
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify Electron runtime
+        run: node node_modules/electron/install.js
+
+      - name: Verify source
+        run: pnpm check
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Apply release version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: node scripts/set-release-version.mjs
+
+      - name: Validate release signing secrets
+        if: startsWith(github.ref, 'refs/tags/')
+        run: >-
+          node -e "const required=process.platform==='win32'?['CSC_LINK','CSC_KEY_PASSWORD']:['CSC_LINK','CSC_KEY_PASSWORD','APPLE_ID','APPLE_APP_SPECIFIC_PASSWORD','APPLE_TEAM_ID'];const missing=required.filter((key)=>!process.env[key]);if(missing.length)throw new Error('Missing release secrets: '+missing.join(', '))"
+
+      - name: Build and publish signed package
+        if: startsWith(github.ref, 'refs/tags/')
+        run: pnpm run ${{ matrix.release_script }}
+
+      - name: Build unsigned verification package
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: pnpm run ${{ matrix.verify_script }}
+
+      - name: Upload verification artifacts
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: xnovel-${{ matrix.name }}
+          path: apps/desktop/dist/*
+          if-no-files-found: error
