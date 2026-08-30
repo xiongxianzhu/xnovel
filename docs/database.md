@@ -190,31 +190,31 @@ erDiagram
 
 ## 5. 表清单
 
-| 表                        | 阶段 | 职责                              |
-| ------------------------- | ---- | --------------------------------- |
-| `users`                   | P0   | Web 本地登录身份、角色与个人资料  |
-| `user_sessions`           | P0   | 可撤销的 Web 多设备登录会话       |
-| `user_session_tokens`     | P0   | Refresh Token 哈希与轮换历史      |
-| `auth_tokens`             | 后续 | 验证和密码找回的一次性令牌哈希    |
-| `user_preferences`        | P0   | 用户语言与主题偏好                |
-| `site_settings`           | P0   | 动态注册开关与 Web 全局 Logo      |
-| `admin_audit_events`      | P0   | 管理员敏感操作审计                |
-| `auth_rate_limit_buckets` | P0   | 认证入口的隐私固定窗口计数        |
-| `skills`                  | P1   | Web 私有 Skill 当前状态与版本指针 |
-| `skill_versions`          | P1   | Web Skill 不可变版本与存储元数据  |
-| `projects`                | P0   | 作品聚合根与归档状态              |
-| `documents`               | P0   | 作品内可排序的文档树              |
-| `document_contents`       | P0   | 文档当前正文与并发版本号          |
-| `characters`              | P0   | 人物资料与扩展属性                |
-| `world_entries`           | P0   | 世界设定分类与层级内容            |
-| `document_character_links` | P0  | 正文与同作品人物的显式引用        |
-| `document_world_entry_links` | P0 | 正文与同作品世界设定的显式引用    |
-| `ai_credentials`          | P0   | Web 用户 Provider 加密凭据        |
-| `ai_provider_configs`     | P0   | Provider 连接、协议与凭据引用     |
-| `ai_provider_models`      | P0   | Provider 下的模型与能力边界       |
-| `ai_tasks`                | P0   | AI 请求状态、上下文清单与用量     |
-| `ai_results`              | P0   | AI 候选结果及作者决策             |
-| `document_revisions`      | P1   | 不可变正文快照与恢复来源          |
+| 表                           | 阶段 | 职责                              |
+| ---------------------------- | ---- | --------------------------------- |
+| `users`                      | P0   | Web 本地登录身份、角色与个人资料  |
+| `user_sessions`              | P0   | 可撤销的 Web 多设备登录会话       |
+| `user_session_tokens`        | P0   | Refresh Token 哈希与轮换历史      |
+| `auth_tokens`                | 后续 | 验证和密码找回的一次性令牌哈希    |
+| `user_preferences`           | P0   | 用户语言与主题偏好                |
+| `site_settings`              | P0   | 动态注册开关与 Web 全局 Logo      |
+| `admin_audit_events`         | P0   | 管理员敏感操作审计                |
+| `auth_rate_limit_buckets`    | P0   | 认证入口的隐私固定窗口计数        |
+| `skills`                     | P1   | Web 私有 Skill 当前状态与版本指针 |
+| `skill_versions`             | P1   | Web Skill 不可变版本与存储元数据  |
+| `projects`                   | P0   | 作品聚合根与归档状态              |
+| `documents`                  | P0   | 作品内可排序的文档树              |
+| `document_contents`          | P0   | 文档当前正文与并发版本号          |
+| `characters`                 | P0   | 人物资料与扩展属性                |
+| `world_entries`              | P0   | 世界设定分类与层级内容            |
+| `document_character_links`   | P0   | 正文与同作品人物的显式引用        |
+| `document_world_entry_links` | P0   | 正文与同作品世界设定的显式引用    |
+| `ai_credentials`             | P0   | Web 用户 Provider 加密凭据        |
+| `ai_provider_configs`        | P0   | Provider 连接、协议与凭据引用     |
+| `ai_provider_models`         | P0   | Provider 下的模型与能力边界       |
+| `ai_tasks`                   | P0   | AI 请求状态、上下文清单与用量     |
+| `ai_results`                 | P0   | AI 候选结果及作者决策             |
+| `document_revisions`         | P1   | 不可变正文快照与恢复来源          |
 
 ## 6. 表设计
 
@@ -224,30 +224,30 @@ Phase 4 已实现账户、会话、站点设置、作品、文档、正文、人
 
 Web 首版采用本地账号。第三方身份以后通过独立映射表扩展，不向本表继续增加通用 Provider 字段。
 
-| 字段                 | 类型        | 必填 | 默认值   | 说明                                                |
-| -------------------- | ----------- | ---- | -------- | --------------------------------------------------- |
-| `id`                 | uuid        | 是   | 应用生成 | UUID v7 主键                                        |
-| `username`           | text        | 是   | -        | NFKC 与 Unicode 大小写折叠后的用户名，长度 `3`–`32` |
-| `email`              | text        | 否   | `null`   | 去除首尾空格并转为小写的可选唯一邮箱                |
-| `email_verified_at`  | timestamptz | 否   | `null`   | 邮箱验证时间                                        |
-| `phone_e164`         | text        | 否   | `null`   | 包含 `+` 和国家码的完整 E.164 手机号                |
-| `phone_verified_at`  | timestamptz | 否   | `null`   | 手机验证时间                                        |
-| `password_hash`      | text        | 是   | -        | Argon2 密码哈希                                     |
-| `nickname`           | text        | 是   | -        | 可重复展示昵称，长度 `1`–`100`                      |
-| `must_change_password` | boolean   | 是   | `false`  | 是否必须完成首次密码修改                            |
-| `role`               | text        | 是   | `user`   | `user` 或 `admin`                                   |
-| `avatar_source`      | text        | 是   | `none`   | `none`、`upload` 或 `url`                           |
-| `avatar_storage_key` | text        | 否   | `null`   | 上传头像随机存储键                                  |
-| `avatar_mime_type`   | text        | 否   | `null`   | 上传头像解码确认后的 MIME                           |
-| `avatar_size_bytes`  | bigint      | 否   | `null`   | 上传头像字节数                                      |
-| `avatar_url`         | text        | 否   | `null`   | HTTPS 绝对 URL                                      |
-| `avatar_updated_at`  | timestamptz | 否   | `null`   | 头像来源最后更新时间                                |
-| `address`            | text        | 否   | `null`   | 私密现住址                                          |
-| `birthday`           | date        | 否   | `null`   | 私密生日                                            |
-| `status`             | text        | 是   | `active` | `active` 或 `disabled`                              |
-| `last_login_at`      | timestamptz | 否   | `null`   | 最近一次完整认证成功时间                            |
-| `created_at`         | timestamptz | 是   | `now()`  | 创建时间                                            |
-| `updated_at`         | timestamptz | 是   | `now()`  | 最后更新时间                                        |
+| 字段                   | 类型        | 必填 | 默认值   | 说明                                                |
+| ---------------------- | ----------- | ---- | -------- | --------------------------------------------------- |
+| `id`                   | uuid        | 是   | 应用生成 | UUID v7 主键                                        |
+| `username`             | text        | 是   | -        | NFKC 与 Unicode 大小写折叠后的用户名，长度 `3`–`32` |
+| `email`                | text        | 否   | `null`   | 去除首尾空格并转为小写的可选唯一邮箱                |
+| `email_verified_at`    | timestamptz | 否   | `null`   | 邮箱验证时间                                        |
+| `phone_e164`           | text        | 否   | `null`   | 包含 `+` 和国家码的完整 E.164 手机号                |
+| `phone_verified_at`    | timestamptz | 否   | `null`   | 手机验证时间                                        |
+| `password_hash`        | text        | 是   | -        | Argon2 密码哈希                                     |
+| `nickname`             | text        | 是   | -        | 可重复展示昵称，长度 `1`–`100`                      |
+| `must_change_password` | boolean     | 是   | `false`  | 是否必须完成首次密码修改                            |
+| `role`                 | text        | 是   | `user`   | `user` 或 `admin`                                   |
+| `avatar_source`        | text        | 是   | `none`   | `none`、`upload` 或 `url`                           |
+| `avatar_storage_key`   | text        | 否   | `null`   | 上传头像随机存储键                                  |
+| `avatar_mime_type`     | text        | 否   | `null`   | 上传头像解码确认后的 MIME                           |
+| `avatar_size_bytes`    | bigint      | 否   | `null`   | 上传头像字节数                                      |
+| `avatar_url`           | text        | 否   | `null`   | HTTPS 绝对 URL                                      |
+| `avatar_updated_at`    | timestamptz | 否   | `null`   | 头像来源最后更新时间                                |
+| `address`              | text        | 否   | `null`   | 私密现住址                                          |
+| `birthday`             | date        | 否   | `null`   | 私密生日                                            |
+| `status`               | text        | 是   | `active` | `active` 或 `disabled`                              |
+| `last_login_at`        | timestamptz | 否   | `null`   | 最近一次完整认证成功时间                            |
+| `created_at`           | timestamptz | 是   | `now()`  | 创建时间                                            |
+| `updated_at`           | timestamptz | 是   | `now()`  | 最后更新时间                                        |
 
 约束与索引：
 
@@ -262,6 +262,8 @@ Web 首版采用本地账号。第三方身份以后通过独立映射表扩展�
 邮箱和手机号均可为空；非空值占用唯一值，首版可以用于登录，但不用于找回密码。修改邮箱或手机号时同时清除相应验证时间。`address` 与 `birthday` 只允许本人接口读取，管理员列表和详情均不返回。
 
 管理员初始化使用一次性引导密码 `123456`，并将 `must_change_password` 设为 `true`。首次改密前只允许读取本人资料、修改密码、刷新会话和退出登录；其他受保护业务请求由服务端拒绝。
+
+除一次性引导密码外，注册、首次改密、主动改密和管理员创建用户统一要求 8–32 位，并满足大写、小写、数字、特殊字符四类中的至少两类；同时拒绝常见弱密码以及包含用户名或邮箱本地部分的密码。
 
 ### 6.2 `user_sessions`
 
@@ -365,6 +367,8 @@ Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。
 
 为 `(admin_id, created_at DESC)` 和 `(target_type, target_id, created_at DESC)` 建立索引。
 
+Web 管理端的操作日志直接只读查询本表，不提供更新或删除能力。用户创建、资料/角色/状态修改与停用必须追加脱敏事件。用户删除采用 `users.status = disabled` 的软停用语义，并撤销该用户尚未撤销的 `user_sessions`，因此不会级联删除作品、偏好或历史审计。登录日志只读查询 `user_sessions`；会话记录不保存登录密码或 Refresh Token 明文。
+
 ### 6.7 `skills`
 
 | 字段                 | 类型        | 必填 | 默认值   | 说明                                 |
@@ -414,18 +418,24 @@ Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。
 
 作品是业务聚合根。篇幅不决定表结构，短篇与长篇只通过文档组织方式区分。
 
-| 字段             | 类型        | 必填 | 默认值   | 说明                        |
-| ---------------- | ----------- | ---- | -------- | --------------------------- |
-| `id`             | uuid        | 是   | 应用生成 | 主键                        |
-| `owner_id`       | uuid        | 是   | -        | 外键 → `users.id`           |
-| `title`          | text        | 是   | -        | 作品名，长度 `1`–`200`      |
-| `description`    | text        | 是   | `''`     | 梗概或备注                  |
-| `structure_mode` | text        | 是   | `tree`   | `single_document` 或 `tree` |
-| `status`         | text        | 是   | `active` | `active` 或 `archived`      |
-| `archived_at`    | timestamptz | 否   | `null`   | 归档时间                    |
-| `deleted_at`     | timestamptz | 否   | `null`   | 回收站时间                  |
-| `created_at`     | timestamptz | 是   | `now()`  | 创建时间                    |
-| `updated_at`     | timestamptz | 是   | `now()`  | 最后更新时间                |
+| 字段                | 类型        | 必填 | 默认值        | 说明                                              |
+| ------------------- | ----------- | ---- | ------------- | ------------------------------------------------- |
+| `id`                | uuid        | 是   | 应用生成      | 主键                                              |
+| `owner_id`          | uuid        | 是   | -             | 外键 → `users.id`                                 |
+| `title`             | text        | 是   | -             | 作品名，长度 `1`–`100`                            |
+| `author`            | text        | 是   | `''`          | 独立作者署名，去除首尾空白，最多 100 字符，可留空 |
+| `description`       | text        | 是   | `''`          | 梗概或备注                                        |
+| `structure_mode`    | text        | 是   | `tree`        | `single_document` 或 `tree`                       |
+| `update_status`     | text        | 是   | `not_started` | `not_started`、`serializing` 或 `completed`       |
+| `status`            | text        | 是   | `active`      | `active` 或 `archived`                            |
+| `archived_at`       | timestamptz | 否   | `null`        | 归档时间                                          |
+| `cover_storage_key` | text        | 否   | `null`        | 作品封面随机存储键                                |
+| `cover_mime_type`   | text        | 否   | `null`        | 作品封面真实 MIME                                 |
+| `cover_size_bytes`  | bigint      | 否   | `null`        | 作品封面字节数                                    |
+| `cover_updated_at`  | timestamptz | 否   | `null`        | 封面更新时间                                      |
+| `deleted_at`        | timestamptz | 否   | `null`        | 回收站时间                                        |
+| `created_at`        | timestamptz | 是   | `now()`       | 创建时间                                          |
+| `updated_at`        | timestamptz | 是   | `now()`       | 最后更新时间                                      |
 
 约束与索引：
 
@@ -433,10 +443,15 @@ Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。
 - 唯一约束：`(owner_id, id)`，供 AI 任务的同所有者外键引用。
 - 检查约束：`structure_mode IN ('single_document', 'tree')`。
 - 检查约束：`status IN ('active', 'archived')`。
+- 检查约束：`update_status IN ('not_started', 'serializing', 'completed')`，封面四个元数据字段必须同时为空或同时存在。
 - 索引：`(owner_id)`，覆盖完整外键引用检查。
 - 部分索引：`(owner_id, status, updated_at DESC) WHERE deleted_at IS NULL`。
 
 同一用户可以创建同名作品，不设置标题唯一约束。
+
+作者署名不是账号外键，不随账号昵称变化。迁移 `20260830_0010` 将旧作品的作者设为空串，不修改已有正文与其他资料；`ck_projects_author_length` 约束长度不超过 100。
+
+作品章节数和字数不冗余保存：列表与详情只汇总未删除、未归档的 `manuscript` 文档，章节数为文档数量，字数为对应 `document_contents.word_count` 之和。
 
 ### 6.10 `documents`
 
@@ -643,30 +658,30 @@ AAD 绑定 `owner_id`、`id` 与 `master_key_version`。API 不提供读取明�
 
 AI 任务记录调度状态和最小必要上下文清单。它不复制完整作品正文作为日志。
 
-| 字段                 | 类型        | 必填 | 默认值   | 说明                                                      |
-| -------------------- | ----------- | ---- | -------- | --------------------------------------------------------- |
-| `id`                 | uuid        | 是   | 应用生成 | 主键                                                      |
-| `owner_id`           | uuid        | 是   | -        | 外键 → `users.id`，使用 `ON DELETE RESTRICT`              |
-| `project_id`         | uuid        | 否   | `null`   | 正式任务的作品外键；连接测试必须为空                      |
-| `document_id`        | uuid        | 否   | `null`   | 可选上下文文档                                            |
-| `provider_config_id` | uuid        | 否   | `null`   | 使用的配置引用；配置停用后历史任务仍保留该引用            |
-| `task_type`          | text        | 是   | -        | 任务类型                                                  |
-| `provider`           | text        | 是   | -        | 实际 Provider 快照                                        |
-| `model`              | text        | 是   | -        | 实际模型快照                                              |
-| `instruction`        | text        | 是   | -        | 用户明确提交的指令                                        |
-| `context_manifest`   | jsonb       | 是   | `{}`     | 文档范围与 Skill 标量快照，不含完整正文或完整 Skill 内容  |
-| `status`             | text        | 是   | `queued` | `queued`、`running`、`succeeded`、`failed` 或 `cancelled` |
-| `error_code`         | text        | 否   | `null`   | 稳定错误标识                                              |
-| `error_message`      | text        | 否   | `null`   | 脱敏错误说明                                              |
-| `input_tokens`       | integer     | 否   | `null`   | Provider 返回的输入 Token 数                              |
-| `output_tokens`      | integer     | 否   | `null`   | Provider 返回的输出 Token 数                              |
-| `cache_read_tokens`  | integer     | 否   | `null`   | Provider 返回的缓存读取 Token 数                          |
-| `reasoning_tokens`   | integer     | 否   | `null`   | Provider 返回的推理 Token 数                              |
+| 字段                  | 类型        | 必填 | 默认值   | 说明                                                      |
+| --------------------- | ----------- | ---- | -------- | --------------------------------------------------------- |
+| `id`                  | uuid        | 是   | 应用生成 | 主键                                                      |
+| `owner_id`            | uuid        | 是   | -        | 外键 → `users.id`，使用 `ON DELETE RESTRICT`              |
+| `project_id`          | uuid        | 否   | `null`   | 正式任务的作品外键；连接测试必须为空                      |
+| `document_id`         | uuid        | 否   | `null`   | 可选上下文文档                                            |
+| `provider_config_id`  | uuid        | 否   | `null`   | 使用的配置引用；配置停用后历史任务仍保留该引用            |
+| `task_type`           | text        | 是   | -        | 任务类型                                                  |
+| `provider`            | text        | 是   | -        | 实际 Provider 快照                                        |
+| `model`               | text        | 是   | -        | 实际模型快照                                              |
+| `instruction`         | text        | 是   | -        | 用户明确提交的指令                                        |
+| `context_manifest`    | jsonb       | 是   | `{}`     | 文档范围与 Skill 标量快照，不含完整正文或完整 Skill 内容  |
+| `status`              | text        | 是   | `queued` | `queued`、`running`、`succeeded`、`failed` 或 `cancelled` |
+| `error_code`          | text        | 否   | `null`   | 稳定错误标识                                              |
+| `error_message`       | text        | 否   | `null`   | 脱敏错误说明                                              |
+| `input_tokens`        | integer     | 否   | `null`   | Provider 返回的输入 Token 数                              |
+| `output_tokens`       | integer     | 否   | `null`   | Provider 返回的输出 Token 数                              |
+| `cache_read_tokens`   | integer     | 否   | `null`   | Provider 返回的缓存读取 Token 数                          |
+| `reasoning_tokens`    | integer     | 否   | `null`   | Provider 返回的推理 Token 数                              |
 | `cancel_requested_at` | timestamptz | 否   | `null`   | 用户请求取消的时间；执行器据此丢弃迟到流                  |
-| `started_at`         | timestamptz | 否   | `null`   | 开始执行时间                                              |
-| `finished_at`        | timestamptz | 否   | `null`   | 终止时间                                                  |
-| `created_at`         | timestamptz | 是   | `now()`  | 创建时间                                                  |
-| `updated_at`         | timestamptz | 是   | `now()`  | 最后更新时间                                              |
+| `started_at`          | timestamptz | 否   | `null`   | 开始执行时间                                              |
+| `finished_at`         | timestamptz | 否   | `null`   | 终止时间                                                  |
+| `created_at`          | timestamptz | 是   | `now()`  | 创建时间                                                  |
+| `updated_at`          | timestamptz | 是   | `now()`  | 最后更新时间                                              |
 
 `task_type` 首版允许 `provider_connection_test`、`brainstorm`、`outline`、`rewrite`、`expand`、`compress`、`consistency` 和 `extract_settings`。
 
@@ -874,7 +889,9 @@ make migrate
 
 Desktop 使用独立的单向版本迁移链。主进程在开放写入前读取 Schema 版本，并在事务中按顺序升级。破坏性迁移前先创建数据库备份；迁移失败时回滚事务、保留原文件并停止写入。
 
-当前 Desktop Schema v2 包含 `schema_migrations`、`projects`、`documents`、`document_contents`、`document_revisions`、`app_settings`、`local_skill_preferences`、`ai_provider_configs`、`ai_tasks` 和 `ai_results`。所有表与字段在迁移元数据 `SCHEMA_COMMENTS` 中保存简体中文注释，并由测试逐表逐字段比对。v2 增加不可变正文历史表；每次正文保存和 AI 候选应用都在同一事务先写入旧版本快照。
+当前 Desktop Schema v3 包含 `schema_migrations`、`projects`、`documents`、`document_contents`、`document_revisions`、`editor_drafts`、`app_settings`、`local_skill_preferences`、`ai_provider_configs`、`ai_tasks` 和 `ai_results`。所有表与字段在迁移元数据 `SCHEMA_COMMENTS` 中保存简体中文注释，并由测试逐表逐字段比对。v2 增加不可变正文历史表；v3 增加独立编辑草稿。每次正文保存和 AI 候选应用都在同一事务先写入旧版本快照。
+
+`editor_drafts` 以 `document_id` 为主键并级联引用文档，保存 `base_version`、未保存 `content`、`created_at` 和 `updated_at`。草稿只用于崩溃恢复和显式“保留草稿并继续”，不能自动覆盖 `document_contents`；正式保存成功后删除对应草稿。
 
 Desktop 数据测试至少覆盖：
 

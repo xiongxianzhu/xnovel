@@ -24,10 +24,30 @@ describe("projectsApi", () => {
     await createProjectRequest({ title: "新作品" });
 
     expect(generated.listProjects).toHaveBeenCalledWith(
-      expect.objectContaining({ query: { page: 1, page_size: 100 } }),
+      expect.objectContaining({
+        query: {
+          page: 1,
+          page_size: 50,
+          q: undefined,
+          view: "active",
+          update_status: undefined,
+        },
+      }),
     );
     expect(generated.createProject).toHaveBeenCalledWith(
       expect.objectContaining({ body: { title: "新作品" } }),
+    );
+    await listProjectsRequest("archived", 2, 50, "林墨", "completed");
+    expect(generated.listProjects).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        query: {
+          page: 2,
+          page_size: 50,
+          q: "林墨",
+          view: "archived",
+          update_status: "completed",
+        },
+      }),
     );
   });
 });

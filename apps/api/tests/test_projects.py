@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import AsyncIterator
+from io import BytesIO
+from pathlib import Path
 from uuid import UUID, uuid7
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from PIL import Image
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -29,7 +32,11 @@ PASSWORD = "correct horse battery staple"
 @pytest.fixture
 async def client(
     session_factory: async_sessionmaker[AsyncSession],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> AsyncIterator[AsyncClient]:
+    monkeypatch.setenv("MEDIA_ROOT", str(tmp_path / "media"))
+    get_settings.cache_clear()
     async def override_get_db() -> AsyncIterator[AsyncSession]:
         async with session_factory() as session:
             try:
@@ -44,6 +51,12 @@ async def client(
         yield test_client
     app.dependency_overrides.clear()
     get_settings.cache_clear()
+
+
+def _png_bytes() -> bytes:
+    output = BytesIO()
+    Image.new("RGB", (48, 64), "white").save(output, format="PNG")
+    return output.getvalue()
 
 
 async def _create_user(
@@ -108,6 +121,84 @@ async def test_create_list_and_open_project(
 
 
 @pytest.mark.anyio
+async def test_project_metadata_statistics_cover_and_crud(
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    user = await _create_user(session_factory, suffix="crud")
+    token = await _login(client, user)
+    headers = {"Authorization": f"Bearer {token}"}
+    created = await client.post(
+        "/api/v1/projects",
+        headers=headers,
+        json={
+            "title": "长篇作品",
+            "description": "作品简介",
+            "structure_mode": "tree",
+            "update_status": "serializing",
+        },
+    )
+    data = created.json()["data"]
+    project_id = data["id"]
+    initial_id = data["initial_document"]["id"]
+    await client.put(
+        f"/api/v1/projects/{project_id}/documents/{initial_id}/content",
+        headers=headers,
+        json={"content": "第一章 雨落", "content_format": "plain_text", "version": 1},
+    )
+    second = await client.post(
+        f"/api/v1/projects/{project_id}/documents",
+        headers=headers,
+        json={"title": "第二章", "kind": "manuscript", "parent_id": None},
+    )
+    await client.put(
+        f"/api/v1/projects/{project_id}/documents/{second.json()['data']['id']}/content",
+        headers=headers,
+        json={"content": "第二章 风起", "content_format": "plain_text", "version": 1},
+    )
+    cover = await client.post(
+        f"/api/v1/projects/{project_id}/cover",
+        headers=headers,
+        files={"file": ("cover.png", _png_bytes(), "image/png")},
+    )
+    listed = await client.get("/api/v1/projects?view=active", headers=headers)
+    summary = listed.json()["data"]["items"][0]
+    assert summary["book_number"] == project_id
+    assert summary["description"] == "作品简介"
+    assert summary["update_status"] == "serializing"
+    assert summary["chapter_count"] == 2
+    assert summary["word_count"] > 0
+    assert cover.status_code == 200
+    assert (await client.get(cover.json()["data"]["url"])).status_code == 200
+    await client.post("/api/v1/projects", headers=headers, json={"title": "另一部作品"})
+    searched = await client.get("/api/v1/projects?q=长篇&page=1&page_size=1", headers=headers)
+    assert searched.json()["data"]["total"] == 1
+    paged = await client.get("/api/v1/projects?page=1&page_size=1", headers=headers)
+    assert paged.json()["data"]["pages"] == 2
+    assert len(paged.json()["data"]["items"]) == 1
+
+    updated = await client.patch(
+        f"/api/v1/projects/{project_id}",
+        headers=headers,
+        json={
+            "title": "完结作品",
+            "description": "新的简介",
+            "update_status": "completed",
+            "status": "archived",
+        },
+    )
+    assert updated.json()["data"]["title"] == "完结作品"
+    assert (await client.get("/api/v1/projects?view=active", headers=headers)).json()["data"]["total"] == 1
+    assert (await client.get("/api/v1/projects?view=archived", headers=headers)).json()["data"]["total"] == 1
+
+    deleted = await client.delete(f"/api/v1/projects/{project_id}", headers=headers)
+    assert deleted.json()["data"]["deleted"] is True
+    assert (await client.get("/api/v1/projects?view=deleted", headers=headers)).json()["data"]["total"] == 1
+    restored = await client.post(f"/api/v1/projects/{project_id}/restore", headers=headers)
+    assert restored.json()["data"]["status"] == "active"
+
+
+@pytest.mark.anyio
 async def test_project_access_is_scoped_to_owner_and_soft_delete(
     client: AsyncClient,
     session_factory: async_sessionmaker[AsyncSession],
@@ -159,6 +250,72 @@ async def test_project_title_validation(client: AsyncClient, session_factory: as
 
     assert empty.status_code == 422
     assert too_long.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_author_search_status_filter_and_owner_boundaries(
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    owner = await _create_user(session_factory, suffix="author-search")
+    headers = {"Authorization": f"Bearer {await _login(client, owner)}"}
+    ids = []
+    for title, author, progress in (
+        ("雨城", "  林墨  ", "completed"),
+        ("海港", "Lin Mo", "serializing"),
+        ("风起", "", "not_started"),
+    ):
+        response = await client.post(
+            "/api/v1/projects",
+            headers=headers,
+            json={"title": title, "author": author, "description": "仅简介命中林墨"},
+        )
+        assert response.status_code == 201
+        data = response.json()["data"]
+        assert data["author"] == author.strip()
+        ids.append(data["id"])
+        await client.patch(
+            f"/api/v1/projects/{data['id']}", headers=headers, json={"update_status": progress}
+        )
+    other = await _create_user(session_factory, suffix="author-other")
+    other_headers = {"Authorization": f"Bearer {await _login(client, other)}"}
+    await client.post("/api/v1/projects", headers=other_headers, json={"title": "雨城", "author": "林墨"})
+
+    search_cases = (
+        ("林墨", [ids[0]]), ("雨城", [ids[0]]), ("lin", [ids[1]]), ("仅简介", []), (ids[0], []), ("%", [])
+    )
+    for query, expected in search_cases:
+        response = await client.get("/api/v1/projects", headers=headers, params={"q": query})
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["data"]["items"]] == expected
+
+    combined = await client.get(
+        "/api/v1/projects", headers=headers, params={"q": "林墨", "update_status": "completed", "page_size": 1}
+    )
+    assert combined.json()["data"]["total"] == combined.json()["data"]["pages"] == 1
+    mismatch = await client.get(
+        "/api/v1/projects", headers=headers, params={"q": "林墨", "update_status": "serializing"}
+    )
+    assert mismatch.json()["data"]["total"] == 0
+    assert (await client.get("/api/v1/projects?update_status=invalid", headers=headers)).status_code == 422
+    detail = await client.get(f"/api/v1/projects/{ids[0]}", headers=headers)
+    assert detail.json()["data"]["author"] == "林墨"
+    updated = await client.patch(f"/api/v1/projects/{ids[0]}", headers=headers, json={"author": "  新笔名  "})
+    assert updated.json()["data"]["author"] == "新笔名"
+    invalid = await client.patch(f"/api/v1/projects/{ids[0]}", headers=headers, json={"author": "字" * 101})
+    assert invalid.status_code == 422
+    await client.patch(f"/api/v1/projects/{ids[1]}", headers=headers, json={"status": "archived"})
+    archived = await client.get(
+        "/api/v1/projects", headers=headers, params={"view": "archived", "q": "lin", "update_status": "serializing"}
+    )
+    assert archived.json()["data"]["total"] == 1
+    await client.delete(f"/api/v1/projects/{ids[0]}", headers=headers)
+    deleted = await client.get(
+        "/api/v1/projects", headers=headers, params={"view": "deleted", "q": "新笔名", "update_status": "completed"}
+    )
+    assert deleted.json()["data"]["total"] == 1
+    forbidden = await client.patch(f"/api/v1/projects/{ids[1]}", headers=other_headers, json={"author": "冒用"})
+    assert forbidden.status_code == 404
 
 
 @pytest.mark.anyio

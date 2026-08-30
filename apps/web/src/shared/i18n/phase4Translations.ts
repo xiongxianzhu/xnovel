@@ -4,6 +4,10 @@ export const phase4Translations = {
       eyebrow: "AI 辅助",
       providersTitle: "模型连接",
       providersDescription: "密钥仅加密保存在服务端，不会返回浏览器。",
+      providerSearchPlaceholder: "搜索名称、Provider ID 或地址",
+      details: "详情",
+      deleteProviderTitle: "删除 AI 模型连接",
+      deleteProviderDescription: "连接配置将删除，历史任务保留脱敏快照。",
       addConnection: "添加连接",
       retry: "重试",
       providerLoadFailed: "模型连接加载失败",
@@ -75,6 +79,7 @@ export const phase4Translations = {
         "这会用候选内容替换服务端当前文档；若正文版本已变化，系统会拒绝操作。",
       applyConfirm: "确认应用",
       applyToDocument: "应用到正文",
+      saveBeforeAi: "请先保存正文；AI 候选只能基于已保存版本生成和应用。",
       taskFailed: "AI 任务失败：{{error}}",
     },
     skills: {
@@ -125,6 +130,10 @@ export const phase4Translations = {
       eyebrow: "AI 輔助",
       providersTitle: "模型連線",
       providersDescription: "金鑰只會加密保存在伺服器，不會回傳瀏覽器。",
+      providerSearchPlaceholder: "搜尋名稱、Provider ID 或位址",
+      details: "詳情",
+      deleteProviderTitle: "刪除 AI 模型連線",
+      deleteProviderDescription: "連線設定將刪除，歷史任務保留脫敏快照。",
       addConnection: "新增連線",
       retry: "重試",
       providerLoadFailed: "模型連線載入失敗",
@@ -195,6 +204,7 @@ export const phase4Translations = {
         "這會用候選內容替換伺服器目前文件；若正文版本已變更，系統會拒絕操作。",
       applyConfirm: "確認套用",
       applyToDocument: "套用到正文",
+      saveBeforeAi: "請先儲存正文；AI 候選只能依據已儲存版本生成與套用。",
       taskFailed: "AI 任務失敗：{{error}}",
     },
     skills: {
@@ -245,6 +255,11 @@ export const phase4Translations = {
       providersTitle: "Model connections",
       providersDescription:
         "Keys are encrypted on the server and never returned to the browser.",
+      providerSearchPlaceholder: "Search name, Provider ID, or URL",
+      details: "Details",
+      deleteProviderTitle: "Delete AI model connection",
+      deleteProviderDescription:
+        "The connection is deleted while historical tasks retain sanitized snapshots.",
       addConnection: "Add connection",
       retry: "Retry",
       providerLoadFailed: "Could not load model connections",
@@ -320,6 +335,8 @@ export const phase4Translations = {
         "This replaces the current server document with the candidate. The operation is rejected if the manuscript version changed.",
       applyConfirm: "Apply",
       applyToDocument: "Apply to manuscript",
+      saveBeforeAi:
+        "Save the manuscript first. AI candidates can only use and replace a saved version.",
       taskFailed: "AI task failed: {{error}}",
     },
     skills: {

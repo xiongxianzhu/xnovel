@@ -10,7 +10,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
-import type { DesktopProject, XnovelDesktopApi } from "../src/shared/contracts";
+import type {
+  DesktopContent,
+  DesktopProject,
+  XnovelDesktopApi,
+} from "../src/shared/contracts";
 import { App } from "../src/renderer/src/App";
 
 afterEach(() => {
@@ -28,13 +32,26 @@ it("completes the local create-open flow and keeps credential input masked", asy
   const documentItem = {
     id: "01900000-0000-7000-8000-000000000002",
     projectId: project.id,
+    parentId: null,
     title: "未命名文档",
     kind: "manuscript" as const,
     position: 0,
+    status: "active" as const,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
   let projects: DesktopProject[] = [];
+  let resolveFirstSave:
+    | ((value: {
+        documentId: string;
+        content: string;
+        version: number;
+        wordCount: number;
+        createdAt: string;
+        updatedAt: string;
+      }) => void)
+    | undefined;
+  let saveCount = 0;
   const api: XnovelDesktopApi = {
     projects: {
       list: vi.fn(async () => projects),
@@ -43,6 +60,11 @@ it("completes the local create-open flow and keeps credential input masked", asy
         return { project, document: documentItem };
       }),
       documents: vi.fn(async () => [documentItem]),
+      archivedDocuments: vi.fn(async () => []),
+      createDocument: vi.fn(),
+      renameDocument: vi.fn(),
+      moveDocument: vi.fn(),
+      setDocumentArchived: vi.fn(),
       content: vi.fn(async () => ({
         documentId: documentItem.id,
         content: "",
@@ -51,7 +73,26 @@ it("completes the local create-open flow and keeps credential input masked", asy
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
       })),
+      save: vi.fn((_documentId, text) => {
+        saveCount += 1;
+        if (saveCount === 1)
+          return new Promise<DesktopContent>((resolve) => {
+            resolveFirstSave = resolve;
+          });
+        return Promise.resolve({
+          documentId: documentItem.id,
+          content: text,
+          version: 3,
+          wordCount: text.length,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+        });
+      }),
+    },
+    drafts: {
+      get: vi.fn(async () => null),
       save: vi.fn(),
+      remove: vi.fn(),
     },
     preferences: {
       get: vi.fn(async () => ({
@@ -98,4 +139,21 @@ it("completes the local create-open flow and keeps credential input masked", asy
   const keyInput = screen.getByLabelText("API Key");
   expect(keyInput).toHaveAttribute("type", "password");
   await waitFor(() => expect(api.projects.create).toHaveBeenCalledWith("雾城"));
+
+  fireEvent.click(screen.getByRole("button", { name: "关闭 AI 工具" }));
+  const editor = screen.getByLabelText("正文编辑器");
+  fireEvent.change(editor, { target: { value: "第一版" } });
+  fireEvent.keyDown(editor, { ctrlKey: true, key: "s" });
+  fireEvent.change(editor, { target: { value: "第二版" } });
+  resolveFirstSave?.({
+    documentId: documentItem.id,
+    content: "第一版",
+    version: 2,
+    wordCount: 3,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  });
+  await waitFor(() => expect(api.projects.save).toHaveBeenCalledTimes(2));
+  expect(editor).toHaveValue("第二版");
+  await waitFor(() => expect(screen.getByText("刚刚保存")).toBeVisible());
 });

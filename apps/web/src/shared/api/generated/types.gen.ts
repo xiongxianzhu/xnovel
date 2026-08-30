@@ -332,6 +332,156 @@ export type AdminSkillResponse = {
 };
 
 /**
+ * AdminUserCreateRequest
+ */
+export type AdminUserCreateRequest = {
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Nickname
+     */
+    nickname: string;
+    /**
+     * Role
+     */
+    role?: 'user' | 'admin';
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * AdminUserData
+ */
+export type AdminUserData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Email Masked
+     */
+    email_masked: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Last Login At
+     */
+    last_login_at: string | null;
+    /**
+     * Must Change Password
+     */
+    must_change_password: boolean;
+    /**
+     * Nickname
+     */
+    nickname: string;
+    /**
+     * Phone Masked
+     */
+    phone_masked: string | null;
+    /**
+     * Role
+     */
+    role: 'user' | 'admin';
+    /**
+     * Status
+     */
+    status: 'active' | 'disabled';
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * AdminUserListData
+ */
+export type AdminUserListData = {
+    /**
+     * Items
+     */
+    items: Array<AdminUserData>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * AdminUserListResponse
+ */
+export type AdminUserListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AdminUserListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * AdminUserResponse
+ */
+export type AdminUserResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AdminUserData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * AdminUserUpdateRequest
+ */
+export type AdminUserUpdateRequest = {
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Nickname
+     */
+    nickname?: string | null;
+    /**
+     * Role
+     */
+    role?: 'user' | 'admin' | null;
+    /**
+     * Status
+     */
+    status?: 'active' | 'disabled' | null;
+    /**
+     * Username
+     */
+    username?: string | null;
+};
+
+/**
  * AuthTokenData
  */
 export type AuthTokenData = {
@@ -354,6 +504,10 @@ export type AuthTokenData = {
  * AuthenticatedUserData
  */
 export type AuthenticatedUserData = {
+    /**
+     * Avatar Url
+     */
+    avatar_url: string | null;
     /**
      * Email
      */
@@ -438,6 +592,16 @@ export type AvatarUrlRequest = {
  * Body_uploadCurrentUserAvatar
  */
 export type BodyUploadCurrentUserAvatar = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_uploadProjectCover
+ */
+export type BodyUploadProjectCover = {
     /**
      * File
      */
@@ -1071,6 +1235,97 @@ export type InvalidCredentialsErrorResponse = {
 };
 
 /**
+ * LoginAuditData
+ */
+export type LoginAuditData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Created Ip
+     */
+    created_ip: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Last Ip
+     */
+    last_ip: string;
+    /**
+     * Last Used At
+     */
+    last_used_at: string;
+    /**
+     * Nickname
+     */
+    nickname: string;
+    /**
+     * Revoke Reason
+     */
+    revoke_reason: string | null;
+    /**
+     * Revoked At
+     */
+    revoked_at: string | null;
+    /**
+     * User Agent
+     */
+    user_agent: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * LoginAuditListData
+ */
+export type LoginAuditListData = {
+    /**
+     * Items
+     */
+    items: Array<LoginAuditData>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * LoginAuditListResponse
+ */
+export type LoginAuditListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: LoginAuditListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * LoginRateLimitedErrorResponse
  */
 export type LoginRateLimitedErrorResponse = {
@@ -1228,6 +1483,87 @@ export type NotFoundErrorResponse = {
 };
 
 /**
+ * OperationAuditData
+ */
+export type OperationAuditData = {
+    /**
+     * Action
+     */
+    action: string;
+    /**
+     * Actor Type
+     */
+    actor_type: 'admin' | 'system';
+    /**
+     * Admin Id
+     */
+    admin_id: string | null;
+    /**
+     * Admin Username
+     */
+    admin_username: string | null;
+    /**
+     * Change Summary
+     */
+    change_summary: {
+        [key: string]: unknown;
+    };
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Target Id
+     */
+    target_id: string | null;
+    /**
+     * Target Type
+     */
+    target_type: string;
+};
+
+/**
+ * OperationAuditListData
+ */
+export type OperationAuditListData = {
+    /**
+     * Items
+     */
+    items: Array<OperationAuditData>;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * OperationAuditListResponse
+ */
+export type OperationAuditListResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: OperationAuditListData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * OrderedResourceItem
  */
 export type OrderedResourceItem = {
@@ -1268,13 +1604,54 @@ export type PasswordChangedData = {
 export type ProfileValidationErrorResponse = ValidationErrorResponse | CurrentPasswordInvalidErrorResponse;
 
 /**
+ * ProjectCoverData
+ */
+export type ProjectCoverData = {
+    /**
+     * Url
+     */
+    url: string | null;
+};
+
+/**
+ * ProjectCoverResponse
+ */
+export type ProjectCoverResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProjectCoverData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ProjectCreateRequest
  */
 export type ProjectCreateRequest = {
     /**
+     * Author
+     */
+    author?: string;
+    /**
+     * Description
+     */
+    description?: string;
+    /**
+     * Structure Mode
+     */
+    structure_mode?: 'single_document' | 'tree';
+    /**
      * Title
      */
     title: string;
+    /**
+     * Update Status
+     */
+    update_status?: 'not_started' | 'serializing' | 'completed';
 };
 
 /**
@@ -1293,13 +1670,62 @@ export type ProjectCreateResponse = {
 };
 
 /**
+ * ProjectDeleteData
+ */
+export type ProjectDeleteData = {
+    /**
+     * Deleted
+     */
+    deleted: true;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * ProjectDeleteResponse
+ */
+export type ProjectDeleteResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProjectDeleteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ProjectDetailData
  */
 export type ProjectDetailData = {
     /**
+     * Author
+     */
+    author: string;
+    /**
+     * Book Number
+     */
+    book_number: string;
+    /**
+     * Chapter Count
+     */
+    chapter_count: number;
+    /**
+     * Cover Url
+     */
+    cover_url: string | null;
+    /**
      * Created At
      */
     created_at: string;
+    /**
+     * Description
+     */
+    description: string;
     /**
      * Id
      */
@@ -1318,9 +1744,17 @@ export type ProjectDetailData = {
      */
     title: string;
     /**
+     * Update Status
+     */
+    update_status: 'not_started' | 'serializing' | 'completed';
+    /**
      * Updated At
      */
     updated_at: string;
+    /**
+     * Word Count
+     */
+    word_count: number;
 };
 
 /**
@@ -1380,13 +1814,48 @@ export type ProjectListResponse = {
 };
 
 /**
+ * ProjectMutationResponse
+ */
+export type ProjectMutationResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProjectDetailData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ProjectSummary
  */
 export type ProjectSummary = {
     /**
+     * Author
+     */
+    author: string;
+    /**
+     * Book Number
+     */
+    book_number: string;
+    /**
+     * Chapter Count
+     */
+    chapter_count: number;
+    /**
+     * Cover Url
+     */
+    cover_url: string | null;
+    /**
      * Created At
      */
     created_at: string;
+    /**
+     * Description
+     */
+    description: string;
     /**
      * Id
      */
@@ -1404,9 +1873,43 @@ export type ProjectSummary = {
      */
     title: string;
     /**
+     * Update Status
+     */
+    update_status: 'not_started' | 'serializing' | 'completed';
+    /**
      * Updated At
      */
     updated_at: string;
+    /**
+     * Word Count
+     */
+    word_count: number;
+};
+
+/**
+ * ProjectUpdateRequest
+ */
+export type ProjectUpdateRequest = {
+    /**
+     * Author
+     */
+    author?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Status
+     */
+    status?: 'active' | 'archived' | null;
+    /**
+     * Title
+     */
+    title?: string | null;
+    /**
+     * Update Status
+     */
+    update_status?: 'not_started' | 'serializing' | 'completed' | null;
 };
 
 /**
@@ -1561,6 +2064,35 @@ export type ProviderConfigData = {
 };
 
 /**
+ * ProviderConfigDeleteData
+ */
+export type ProviderConfigDeleteData = {
+    /**
+     * Deleted
+     */
+    deleted: true;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * ProviderConfigDeleteResponse
+ */
+export type ProviderConfigDeleteResponse = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ProviderConfigDeleteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * ProviderConfigListData
  */
 export type ProviderConfigListData = {
@@ -1568,6 +2100,22 @@ export type ProviderConfigListData = {
      * Items
      */
     items: Array<ProviderConfigData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
 };
 
 /**
@@ -2683,6 +3231,32 @@ export type WorldEntryUpdateRequest = {
 };
 
 /**
+ * AdminUserCreateRequest
+ */
+export type AdminUserCreateRequestWritable = {
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Nickname
+     */
+    nickname: string;
+    /**
+     * Password
+     */
+    password: string;
+    /**
+     * Role
+     */
+    role?: 'user' | 'admin';
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequestWritable = {
@@ -2831,6 +3405,82 @@ export type UpdateProfileRequestWritable = {
      */
     username?: string | null;
 };
+
+export type ListAdminLoginAuditsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Query
+         */
+        query?: string | null;
+    };
+    url: '/api/admin/v1/audit/login';
+};
+
+export type ListAdminLoginAuditsErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAdminLoginAuditsError = ListAdminLoginAuditsErrors[keyof ListAdminLoginAuditsErrors];
+
+export type ListAdminLoginAuditsResponses = {
+    /**
+     * Successful Response
+     */
+    200: LoginAuditListResponse;
+};
+
+export type ListAdminLoginAuditsResponse = ListAdminLoginAuditsResponses[keyof ListAdminLoginAuditsResponses];
+
+export type ListAdminOperationAuditsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Action
+         */
+        action?: string | null;
+    };
+    url: '/api/admin/v1/audit/operations';
+};
+
+export type ListAdminOperationAuditsErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAdminOperationAuditsError = ListAdminOperationAuditsErrors[keyof ListAdminOperationAuditsErrors];
+
+export type ListAdminOperationAuditsResponses = {
+    /**
+     * Successful Response
+     */
+    200: OperationAuditListResponse;
+};
+
+export type ListAdminOperationAuditsResponse = ListAdminOperationAuditsResponses[keyof ListAdminOperationAuditsResponses];
 
 export type GetAdminHealthData = {
     body?: never;
@@ -3060,10 +3710,184 @@ export type ReleaseSkillQuarantineResponses = {
 
 export type ReleaseSkillQuarantineResponse = ReleaseSkillQuarantineResponses[keyof ReleaseSkillQuarantineResponses];
 
+export type ListAdminUsersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Query
+         */
+        query?: string | null;
+        /**
+         * Role
+         */
+        role?: 'user' | 'admin' | null;
+        /**
+         * Status
+         */
+        status?: 'active' | 'disabled' | null;
+    };
+    url: '/api/admin/v1/users';
+};
+
+export type ListAdminUsersErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAdminUsersError = ListAdminUsersErrors[keyof ListAdminUsersErrors];
+
+export type ListAdminUsersResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminUserListResponse;
+};
+
+export type ListAdminUsersResponse = ListAdminUsersResponses[keyof ListAdminUsersResponses];
+
+export type CreateAdminUserData = {
+    body: AdminUserCreateRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/api/admin/v1/users';
+};
+
+export type CreateAdminUserErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateAdminUserError = CreateAdminUserErrors[keyof CreateAdminUserErrors];
+
+export type CreateAdminUserResponses = {
+    /**
+     * Successful Response
+     */
+    201: AdminUserResponse;
+};
+
+export type CreateAdminUserResponse = CreateAdminUserResponses[keyof CreateAdminUserResponses];
+
+export type DisableAdminUserData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/admin/v1/users/{user_id}';
+};
+
+export type DisableAdminUserErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DisableAdminUserError = DisableAdminUserErrors[keyof DisableAdminUserErrors];
+
+export type DisableAdminUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminUserResponse;
+};
+
+export type DisableAdminUserResponse = DisableAdminUserResponses[keyof DisableAdminUserResponses];
+
+export type GetAdminUserData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/admin/v1/users/{user_id}';
+};
+
+export type GetAdminUserErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAdminUserError = GetAdminUserErrors[keyof GetAdminUserErrors];
+
+export type GetAdminUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminUserResponse;
+};
+
+export type GetAdminUserResponse = GetAdminUserResponses[keyof GetAdminUserResponses];
+
+export type UpdateAdminUserData = {
+    body: AdminUserUpdateRequest;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/admin/v1/users/{user_id}';
+};
+
+export type UpdateAdminUserErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateAdminUserError = UpdateAdminUserErrors[keyof UpdateAdminUserErrors];
+
+export type UpdateAdminUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminUserResponse;
+};
+
+export type UpdateAdminUserResponse = UpdateAdminUserResponses[keyof UpdateAdminUserResponses];
+
 export type ListAiProviderConfigsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string | null;
+    };
     url: '/api/v1/ai/providers';
 };
 
@@ -3166,6 +3990,48 @@ export type GetAiProviderCatalogResponses = {
 };
 
 export type GetAiProviderCatalogResponse = GetAiProviderCatalogResponses[keyof GetAiProviderCatalogResponses];
+
+export type DeleteAiProviderConfigData = {
+    body?: never;
+    path: {
+        /**
+         * Config Id
+         */
+        config_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/providers/{config_id}';
+};
+
+export type DeleteAiProviderConfigErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteAiProviderConfigError = DeleteAiProviderConfigErrors[keyof DeleteAiProviderConfigErrors];
+
+export type DeleteAiProviderConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProviderConfigDeleteResponse;
+};
+
+export type DeleteAiProviderConfigResponse = DeleteAiProviderConfigResponses[keyof DeleteAiProviderConfigResponses];
 
 export type GetAiProviderConfigData = {
     body?: never;
@@ -3829,6 +4695,18 @@ export type ListProjectsData = {
          * Page Size
          */
         page_size?: number;
+        /**
+         * Q
+         */
+        q?: string | null;
+        /**
+         * View
+         */
+        view?: 'active' | 'archived' | 'deleted';
+        /**
+         * Update Status
+         */
+        update_status?: 'not_started' | 'serializing' | 'completed' | null;
     };
     url: '/api/v1/projects';
 };
@@ -3900,6 +4778,48 @@ export type CreateProjectResponses = {
 
 export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
 
+export type DeleteProjectData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}';
+};
+
+export type DeleteProjectErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteProjectError = DeleteProjectErrors[keyof DeleteProjectErrors];
+
+export type DeleteProjectResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectDeleteResponse;
+};
+
+export type DeleteProjectResponse = DeleteProjectResponses[keyof DeleteProjectResponses];
+
 export type GetProjectData = {
     body?: never;
     path: {
@@ -3945,6 +4865,52 @@ export type GetProjectResponses = {
 };
 
 export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];
+
+export type UpdateProjectData = {
+    body: ProjectUpdateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}';
+};
+
+export type UpdateProjectErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateProjectError = UpdateProjectErrors[keyof UpdateProjectErrors];
+
+export type UpdateProjectResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectMutationResponse;
+};
+
+export type UpdateProjectResponse = UpdateProjectResponses[keyof UpdateProjectResponses];
 
 export type ListProjectCharactersData = {
     body?: never;
@@ -4199,6 +5165,98 @@ export type UpdateProjectCharacterResponses = {
 };
 
 export type UpdateProjectCharacterResponse = UpdateProjectCharacterResponses[keyof UpdateProjectCharacterResponses];
+
+export type DeleteProjectCoverData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/cover';
+};
+
+export type DeleteProjectCoverErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteProjectCoverError = DeleteProjectCoverErrors[keyof DeleteProjectCoverErrors];
+
+export type DeleteProjectCoverResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectCoverResponse;
+};
+
+export type DeleteProjectCoverResponse = DeleteProjectCoverResponses[keyof DeleteProjectCoverResponses];
+
+export type UploadProjectCoverData = {
+    body: BodyUploadProjectCover;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/cover';
+};
+
+export type UploadProjectCoverErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Content Too Large
+     */
+    413: MediaTooLargeErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: MediaValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UploadProjectCoverError = UploadProjectCoverErrors[keyof UploadProjectCoverErrors];
+
+export type UploadProjectCoverResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectCoverResponse;
+};
+
+export type UploadProjectCoverResponse = UploadProjectCoverResponses[keyof UploadProjectCoverResponses];
 
 export type ListProjectDocumentsData = {
     body?: never;
@@ -4717,6 +5775,48 @@ export type ExportProjectResponses = {
 };
 
 export type ExportProjectResponse = ExportProjectResponses[keyof ExportProjectResponses];
+
+export type RestoreProjectData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/restore';
+};
+
+export type RestoreProjectErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Not Found
+     */
+    404: NotFoundErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type RestoreProjectError = RestoreProjectErrors[keyof RestoreProjectErrors];
+
+export type RestoreProjectResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectMutationResponse;
+};
+
+export type RestoreProjectResponse = RestoreProjectResponses[keyof RestoreProjectResponses];
 
 export type ListProjectWorldEntriesData = {
     body?: never;

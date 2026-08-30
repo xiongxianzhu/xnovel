@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 
 import type { DocumentSummary } from "../../shared/api/generated/types.gen";
 import { streamSse } from "../../shared/api/sse";
-import { getDocumentContentRequest } from "../editor/editorApi";
 import { documentContentQueryKey } from "../editor/editorState";
 import { listSkillsRequest } from "../skills/skillsApi";
 import {
@@ -23,11 +22,13 @@ type PanelStatus =
 
 export function ProjectAiPanel({
   document,
+  editorBlocked = false,
   onClose,
   open,
   projectId,
 }: {
   document?: DocumentSummary;
+  editorBlocked?: boolean;
   onClose: () => void;
   open: boolean;
   projectId: string;
@@ -43,13 +44,14 @@ export function ProjectAiPanel({
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const [taskId, setTaskId] = useState<string>();
   const [resultId, setResultId] = useState<string>();
+  const [generationVersion, setGenerationVersion] = useState<number>();
   const [candidate, setCandidate] = useState("");
   const [status, setStatus] = useState<PanelStatus>("idle");
   const [error, setError] = useState<string>();
   const providers = useQuery({
     enabled: open,
     queryKey: ["ai", "providers"],
-    queryFn: listProviderConfigsRequest,
+    queryFn: () => listProviderConfigsRequest(),
   });
   const skills = useQuery({
     enabled: open,
@@ -62,11 +64,11 @@ export function ProjectAiPanel({
   const apply = useMutation({
     mutationFn: async () => {
       if (!document || !resultId) throw new Error("missing result");
-      const current = await getDocumentContentRequest(projectId, document.id);
+      if (!generationVersion) throw new Error("missing generation version");
       return applyAiResultRequest(resultId, {
         content: candidate,
         document_id: document.id,
-        version: current.version,
+        version: generationVersion,
       });
     },
     onSuccess: async () => {
@@ -76,7 +78,9 @@ export function ProjectAiPanel({
         });
       setStatus("idle");
       setResultId(undefined);
+      setGenerationVersion(undefined);
     },
+    onError: () => setError("CONTENT_VERSION_CONFLICT"),
   });
 
   const enabledProviders =
@@ -94,6 +98,7 @@ export function ProjectAiPanel({
     setCandidate("");
     setError(undefined);
     setResultId(undefined);
+    setGenerationVersion(undefined);
     setStatus("queued");
     try {
       const task = await create.mutateAsync({
@@ -127,6 +132,10 @@ export function ProjectAiPanel({
       setStatus(latest.status);
       const result = latest.results?.[0];
       setResultId(result?.id);
+      const manifestVersion = latest.context_manifest?.document_version;
+      setGenerationVersion(
+        typeof manifestVersion === "number" ? manifestVersion : undefined,
+      );
       if (result) setCandidate(result.content);
       if (latest.error_code) setError(latest.error_code);
     } catch (reason) {
@@ -147,6 +156,7 @@ export function ProjectAiPanel({
     if (!resultId) return;
     await reject.mutateAsync(resultId);
     setResultId(undefined);
+    setGenerationVersion(undefined);
     setCandidate("");
     setStatus("idle");
   }
@@ -262,7 +272,7 @@ export function ProjectAiPanel({
               ) : null}
               <Button
                 block
-                disabled={!instruction.trim()}
+                disabled={!instruction.trim() || editorBlocked}
                 icon={<Send aria-hidden size={16} />}
                 loading={status === "queued"}
                 onClick={() => void generate()}
@@ -270,6 +280,9 @@ export function ProjectAiPanel({
               >
                 {t("generate")}
               </Button>
+              {editorBlocked ? (
+                <Alert showIcon title={t("saveBeforeAi")} type="warning" />
+              ) : null}
             </>
           )}
           {status === "running" || candidate ? (
@@ -313,6 +326,7 @@ export function ProjectAiPanel({
                   </Button>
                   {document && document.kind !== "folder" ? (
                     <Button
+                      disabled={editorBlocked || !generationVersion}
                       icon={<Check aria-hidden size={15} />}
                       loading={apply.isPending}
                       onClick={() =>

@@ -82,6 +82,38 @@ export function registerIpc(
   handle("projects:documents", (projectId) =>
     services.store.listDocuments(stringValue(projectId, 64)),
   );
+  handle("projects:documents-archived", (projectId) =>
+    services.store.listDocuments(stringValue(projectId, 64), "archived"),
+  );
+  handle("projects:documents-create", (raw) => {
+    const input = objectValue(raw);
+    return services.store.createDocument({
+      projectId: stringValue(input.projectId, 64),
+      parentId:
+        input.parentId === null ? null : stringValue(input.parentId, 64),
+      title: stringValue(input.title, 200),
+      kind: stringValue(input.kind, 20) as "folder" | "manuscript" | "outline",
+    });
+  });
+  handle("projects:documents-rename", (documentId, title) =>
+    services.store.renameDocument(
+      stringValue(documentId, 64),
+      stringValue(title, 200),
+    ),
+  );
+  handle("projects:documents-move", (documentId, parentId, position) =>
+    services.store.moveDocument(
+      stringValue(documentId, 64),
+      parentId === null ? null : stringValue(parentId, 64),
+      integerValue(position),
+    ),
+  );
+  handle("projects:documents-archive", (documentId, archived) =>
+    services.store.setDocumentArchived(
+      stringValue(documentId, 64),
+      Boolean(archived),
+    ),
+  );
   handle("projects:content", (documentId) =>
     services.store.getContent(stringValue(documentId, 64)),
   );
@@ -91,6 +123,19 @@ export function registerIpc(
       stringValue(content, 2_000_000, true),
       integerValue(version),
     ),
+  );
+  handle("drafts:get", (documentId) =>
+    services.store.getEditorDraft(stringValue(documentId, 64)),
+  );
+  handle("drafts:save", (documentId, content, baseVersion) =>
+    services.store.saveEditorDraft(
+      stringValue(documentId, 64),
+      stringValue(content, 2_000_000, true),
+      integerValue(baseVersion),
+    ),
+  );
+  handle("drafts:remove", (documentId) =>
+    services.store.removeEditorDraft(stringValue(documentId, 64)),
   );
   handle("preferences:get", () => services.store.getPreferences());
   handle("preferences:set", (value) =>

@@ -1,6 +1,9 @@
 import { createContext } from "react";
 
-import type { AuthenticatedUserData } from "../../shared/api/generated/types.gen";
+import type {
+  AuthenticatedUserData,
+  UserProfileData,
+} from "../../shared/api/generated/types.gen";
 
 export type AuthStatus = "bootstrapping" | "anonymous" | "authenticated";
 
@@ -11,6 +14,7 @@ export interface AuthContextValue {
   ) => Promise<void>;
   login: (identifier: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<UserProfileData>;
   status: AuthStatus;
   user: AuthenticatedUserData | null;
 }

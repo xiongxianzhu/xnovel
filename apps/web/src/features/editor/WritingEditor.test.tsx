@@ -203,4 +203,26 @@ describe("WritingEditor", () => {
     expect(editor).toHaveValue("标签页草稿");
     expect(screen.getByText("尚未保存")).toBeVisible();
   });
+
+  it("finds and replaces plain text with keyboard shortcuts", async () => {
+    api.getDocumentContentRequest.mockResolvedValueOnce({
+      ...initial,
+      content: "雨夜归来，雨夜未停。",
+      word_count: 9,
+    });
+    renderEditor();
+    const editor = await screen.findByRole("textbox", { name: "正文编辑器" });
+
+    fireEvent.keyDown(editor, { ctrlKey: true, key: "h" });
+    fireEvent.change(screen.getByRole("textbox", { name: "查找" }), {
+      target: { value: "雨夜" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "替换为" }), {
+      target: { value: "清晨" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "全部替换" }));
+
+    expect(editor).toHaveValue("清晨归来，清晨未停。");
+    expect(screen.getByText("尚未保存")).toBeVisible();
+  });
 });

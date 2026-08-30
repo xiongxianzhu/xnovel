@@ -1,75 +1,44 @@
 import {
   Alert,
   Button,
-  Form,
   Input,
-  InputNumber,
   Modal,
-  Select,
+  Pagination,
   Skeleton,
   Switch,
 } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, KeyRound, Plus, RefreshCw, Server } from "lucide-react";
-import { useState } from "react";
+import { Eye, Pencil, Plus, RefreshCw, Server, Trash2 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import type {
-  ProviderCatalogItem,
-  ProviderConfigCreateRequestWritable,
-} from "../../shared/api/generated/types.gen";
 import {
-  createProviderConfigRequest,
-  getProviderCatalogRequest,
+  deleteProviderConfigRequest,
   listProviderConfigsRequest,
   testProviderConnectionRequest,
   updateProviderConfigRequest,
 } from "../../features/ai/aiApi";
-
-const providerQueryKey = ["ai", "providers"] as const;
-
-type ProviderFormValues = {
-  apiKey?: string;
-  baseUrl: string;
-  contextWindow: number;
-  displayName: string;
-  maxOutputTokens: number;
-  modelDisplayName: string;
-  modelId: string;
-  providerId: string;
-  customProviderId?: string;
-  protocol?: "openai_chat" | "openai_responses" | "anthropic" | "google";
-};
+import { useDebouncedValue } from "../../features/admin/useDebouncedValue";
 
 export function ProviderPage() {
   const { t } = useTranslation("ai");
   const client = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [form] = Form.useForm<ProviderFormValues>();
-  const selectedCatalogId = Form.useWatch("providerId", form);
-  const customProvider = selectedCatalogId === "__custom__";
+  const [params, setParams] = useSearchParams();
+  const page = Math.max(1, Number(params.get("page") ?? 1));
+  const query = params.get("q") ?? "";
+  const debounced = useDebouncedValue(query, 300);
   const providers = useQuery({
-    queryKey: providerQueryKey,
-    queryFn: listProviderConfigsRequest,
+    queryKey: ["ai", "providers", page, debounced],
+    queryFn: () => listProviderConfigsRequest(page, 50, debounced),
   });
-  const catalog = useQuery({
-    queryKey: ["ai", "provider-catalog"],
-    queryFn: getProviderCatalogRequest,
-  });
-  const create = useMutation({
-    mutationFn: createProviderConfigRequest,
-    onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: providerQueryKey });
-      setOpen(false);
-      form.resetFields();
-    },
-  });
+  const refresh = () =>
+    client.invalidateQueries({ queryKey: ["ai", "providers"] });
   const toggle = useMutation({
     mutationFn: ({
-      config: item,
+      item,
       enabled,
     }: {
-      config: NonNullable<typeof providers.data>["items"][number];
+      item: NonNullable<typeof providers.data>["items"][number];
       enabled: boolean;
     }) =>
       updateProviderConfigRequest(item.id, {
@@ -88,274 +57,119 @@ export function ProviderPage() {
           supports_streaming: model.supports_streaming,
         })),
       }),
-    onSuccess: () => client.invalidateQueries({ queryKey: providerQueryKey }),
+    onSuccess: refresh,
   });
   const test = useMutation({
     mutationFn: (configId: string) => testProviderConnectionRequest(configId),
   });
-
-  function selectCatalog(providerId: string) {
-    if (providerId === "__custom__") {
-      form.setFieldsValue({ displayName: "", baseUrl: "" });
-      return;
-    }
-    const item = catalog.data?.items.find(
-      (entry) => entry.provider_id === providerId,
-    );
-    if (item)
-      form.setFieldsValue({
-        baseUrl: item.base_url,
-        displayName: item.display_name,
-      });
-  }
-
-  async function submit(values: ProviderFormValues) {
-    const preset = catalog.data?.items.find(
-      (item) => item.provider_id === values.providerId,
-    );
-    if (!preset && !customProvider) return;
-    const providerId = customProvider
-      ? values.customProviderId?.trim()
-      : preset?.provider_id;
-    const protocol = customProvider ? values.protocol : preset?.protocol;
-    if (!providerId || !protocol) return;
-    const payload: ProviderConfigCreateRequestWritable = {
-      api_key: values.apiKey || null,
-      base_url: values.baseUrl,
-      default_model_id: values.modelId,
-      display_name: values.displayName,
-      enabled: true,
-      models: [
-        {
-          context_window: values.contextWindow,
-          display_name: values.modelDisplayName,
-          max_output_tokens: values.maxOutputTokens,
-          model_id: values.modelId,
-          supports_streaming: true,
-        },
-      ],
-      protocol,
-      provider_id: providerId,
-      source: customProvider ? "custom" : "builtin",
-    };
-    await create.mutateAsync(payload);
-  }
+  const remove = useMutation({
+    mutationFn: deleteProviderConfigRequest,
+    onSuccess: refresh,
+  });
 
   return (
     <main className="tool-page" aria-labelledby="provider-title">
       <header className="tool-page-heading">
         <div>
-          <span className="page-eyebrow">{t("eyebrow")}</span>
           <h1 id="provider-title">{t("providersTitle")}</h1>
           <p>{t("providersDescription")}</p>
         </div>
-        <Button
-          icon={<Plus aria-hidden size={17} />}
-          onClick={() => setOpen(true)}
-          type="primary"
-        >
-          {t("addConnection")}
-        </Button>
+        <Link to="/ai-models/new">
+          <Button icon={<Plus aria-hidden size={17} />} type="primary">
+            {t("addConnection")}
+          </Button>
+        </Link>
       </header>
-      {providers.isPending ? (
-        <Skeleton active paragraph={{ rows: 5 }} />
-      ) : providers.isError ? (
-        <Alert
-          action={
-            <Button onClick={() => void providers.refetch()}>
-              {t("retry")}
-            </Button>
-          }
-          showIcon
-          title={t("providerLoadFailed")}
-          type="error"
-        />
-      ) : providers.data.items.length === 0 ? (
-        <section className="tool-empty">
-          <Server aria-hidden size={30} />
-          <h2>{t("noProviders")}</h2>
-          <p>{t("noProvidersDescription")}</p>
-        </section>
-      ) : (
-        <div className="tool-list">
-          {providers.data.items.map((item) => (
-            <article className="tool-row" key={item.id}>
-              <div className="tool-row-icon">
-                <Server aria-hidden size={19} />
+      <Input.Search
+        allowClear
+        className="tool-search"
+        onChange={(event) =>
+          setParams((current) => {
+            if (event.target.value) current.set("q", event.target.value);
+            else current.delete("q");
+            current.set("page", "1");
+            return current;
+          })
+        }
+        placeholder={t("providerSearchPlaceholder")}
+        value={query}
+      />
+      {providers.isPending ? <Skeleton active paragraph={{ rows: 5 }} /> : null}
+      {providers.isError ? (
+        <Alert showIcon title={t("providerLoadFailed")} type="error" />
+      ) : null}
+      <div className="tool-list">
+        {providers.data?.items.map((item) => (
+          <article className="tool-row" key={item.id}>
+            <div className="tool-row-icon">
+              <Server aria-hidden size={19} />
+            </div>
+            <div className="tool-row-content">
+              <div className="tool-row-title">
+                <h2>{item.display_name}</h2>
+                <span className="status-label">
+                  {item.enabled ? t("enabled") : t("disabled")}
+                </span>
               </div>
-              <div className="tool-row-content">
-                <div className="tool-row-title">
-                  <h2>{item.display_name}</h2>
-                  <span className="status-label">
-                    {item.enabled ? t("enabled") : t("disabled")}
-                  </span>
-                  {item.unauthenticated_warning ? (
-                    <span className="status-label status-danger">
-                      {t("unauthenticatedWarning")}
-                    </span>
-                  ) : null}
-                </div>
-                <p>
-                  {item.provider_id} ·{" "}
-                  {t("modelsCount", { count: item.models.length })} ·{" "}
-                  {item.key_hint ?? t("noKey")}
-                </p>
-                <code>{item.base_url}</code>
-              </div>
-              <div className="tool-row-actions">
-                <Switch
-                  aria-label={t("enableStatus", { name: item.display_name })}
-                  checked={item.enabled}
-                  loading={toggle.isPending}
-                  onChange={(enabled) =>
-                    toggle.mutate({ config: item, enabled })
-                  }
-                />
-                <Button
-                  icon={<RefreshCw aria-hidden size={16} />}
-                  loading={test.isPending}
-                  onClick={() => test.mutate(item.id)}
-                >
-                  {t("test")}
+              <p>
+                {item.provider_id} ·{" "}
+                {t("modelsCount", { count: item.models.length })}
+              </p>
+              <code>{item.base_url}</code>
+            </div>
+            <div className="tool-row-actions">
+              <Switch
+                checked={item.enabled}
+                onChange={(enabled) => toggle.mutate({ item, enabled })}
+              />
+              <Link to={`/ai-models/${item.id}`}>
+                <Button icon={<Eye aria-hidden size={16} />}>
+                  {t("details")}
                 </Button>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-      {test.data ? (
-        <Alert
-          className="tool-feedback"
-          showIcon
-          icon={<CheckCircle2 />}
-          title={
-            test.data.status === "succeeded"
-              ? t("testPassed")
-              : t("testFailed", {
-                  error: test.data.error_code ?? t("unknownError"),
-                })
+              </Link>
+              <Link to={`/ai-models/${item.id}/edit`}>
+                <Button icon={<Pencil aria-hidden size={16} />}>
+                  {t("edit")}
+                </Button>
+              </Link>
+              <Button
+                icon={<RefreshCw aria-hidden size={16} />}
+                onClick={() => test.mutate(item.id)}
+              >
+                {t("test")}
+              </Button>
+              <Button
+                danger
+                icon={<Trash2 aria-hidden size={16} />}
+                onClick={() =>
+                  Modal.confirm({
+                    title: t("deleteProviderTitle"),
+                    content: t("deleteProviderDescription"),
+                    onOk: () => remove.mutateAsync(item.id),
+                  })
+                }
+              >
+                {t("delete")}
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      {providers.data?.total ? (
+        <Pagination
+          current={providers.data.page}
+          onChange={(next) =>
+            setParams((current) => {
+              current.set("page", String(next));
+              return current;
+            })
           }
-          type={test.data.status === "succeeded" ? "success" : "error"}
+          pageSize={providers.data.page_size}
+          showQuickJumper
+          showSizeChanger={false}
+          total={providers.data.total}
         />
       ) : null}
-      <Modal
-        destroyOnHidden
-        footer={null}
-        onCancel={() => setOpen(false)}
-        open={open}
-        title={t("addProviderTitle")}
-      >
-        <Form
-          form={form}
-          initialValues={{ contextWindow: 128000, maxOutputTokens: 4096 }}
-          layout="vertical"
-          onFinish={(values) => void submit(values)}
-        >
-          <Form.Item
-            label="Provider"
-            name="providerId"
-            rules={[{ required: true, message: t("providerRequired") }]}
-          >
-            <Select
-              loading={catalog.isPending}
-              onChange={selectCatalog}
-              options={catalog.data?.items
-                .map((item: ProviderCatalogItem) => ({
-                  label: item.display_name,
-                  value: item.provider_id,
-                }))
-                .concat([{ label: t("customProvider"), value: "__custom__" }])}
-            />
-          </Form.Item>
-          {customProvider ? (
-            <div className="tool-form-grid">
-              <Form.Item
-                label={t("customProviderId")}
-                name="customProviderId"
-                rules={[
-                  { required: true, message: t("customProviderIdRequired") },
-                  {
-                    pattern: /^[a-z][a-z0-9-]{1,62}$/,
-                    message: t("customProviderIdRequired"),
-                  },
-                ]}
-              >
-                <Input placeholder="my-provider" />
-              </Form.Item>
-              <Form.Item
-                label={t("protocol")}
-                name="protocol"
-                rules={[{ required: true, message: t("protocolRequired") }]}
-              >
-                <Select
-                  options={[
-                    { label: "OpenAI Chat Completions", value: "openai_chat" },
-                    { label: "OpenAI Responses", value: "openai_responses" },
-                    { label: "Anthropic Messages", value: "anthropic" },
-                    { label: "Google Generative AI", value: "google" },
-                  ]}
-                />
-              </Form.Item>
-            </div>
-          ) : null}
-          <Form.Item
-            label={t("displayName")}
-            name="displayName"
-            rules={[{ required: true, message: t("displayNameRequired") }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label={t("baseUrl")}
-            name="baseUrl"
-            rules={[
-              { required: true, message: t("baseUrlRequired") },
-              { type: "url", message: t("validUrl") },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label={t("apiKey")} name="apiKey">
-            <Input.Password
-              prefix={<KeyRound aria-hidden size={16} />}
-              autoComplete="new-password"
-            />
-          </Form.Item>
-          <div className="tool-form-grid">
-            <Form.Item
-              label={t("modelId")}
-              name="modelId"
-              rules={[{ required: true, message: t("modelIdRequired") }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              label={t("modelName")}
-              name="modelDisplayName"
-              rules={[{ required: true, message: t("modelNameRequired") }]}
-            >
-              <Input />
-            </Form.Item>
-          </div>
-          <div className="tool-form-grid">
-            <Form.Item label={t("contextWindow")} name="contextWindow">
-              <InputNumber min={1} />
-            </Form.Item>
-            <Form.Item label={t("maxOutputTokens")} name="maxOutputTokens">
-              <InputNumber min={1} />
-            </Form.Item>
-          </div>
-          {create.isError ? (
-            <Alert showIcon title={t("saveFailed")} type="error" />
-          ) : null}
-          <div className="modal-actions">
-            <Button onClick={() => setOpen(false)}>{t("cancel")}</Button>
-            <Button htmlType="submit" loading={create.isPending} type="primary">
-              {t("saveConnection")}
-            </Button>
-          </div>
-        </Form>
-      </Modal>
     </main>
   );
 }

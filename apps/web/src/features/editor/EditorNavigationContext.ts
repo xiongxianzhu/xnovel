@@ -7,7 +7,9 @@ export type EditorLeaveGuard = {
 };
 
 export type EditorNavigationContextValue = {
+  blocked: boolean;
   registerGuard: (guard: EditorLeaveGuard) => () => void;
+  setBlocked: (blocked: boolean) => void;
   requestDocumentChange: () => Promise<boolean>;
 };
 

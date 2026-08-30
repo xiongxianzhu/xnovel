@@ -611,6 +611,294 @@
         "title": "AdminSkillResponse",
         "type": "object"
       },
+      "AdminUserCreateRequest": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "role": {
+            "default": "user",
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "nickname",
+          "password"
+        ],
+        "title": "AdminUserCreateRequest",
+        "type": "object"
+      },
+      "AdminUserData": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Masked"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "must_change_password": {
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "phone_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Masked"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email_masked",
+          "phone_masked",
+          "nickname",
+          "role",
+          "status",
+          "must_change_password",
+          "last_login_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AdminUserData",
+        "type": "object"
+      },
+      "AdminUserListData": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminUserData"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "AdminUserListData",
+        "type": "object"
+      },
+      "AdminUserListResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminUserListData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "AdminUserListResponse",
+        "type": "object"
+      },
+      "AdminUserResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminUserData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "AdminUserResponse",
+        "type": "object"
+      },
+      "AdminUserUpdateRequest": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "user",
+                  "admin"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "disabled"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "title": "AdminUserUpdateRequest",
+        "type": "object"
+      },
       "AuthTokenData": {
         "properties": {
           "access_token": {
@@ -642,6 +930,17 @@
       },
       "AuthenticatedUserData": {
         "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
           "email": {
             "anyOf": [
               {
@@ -702,6 +1001,7 @@
           "must_change_password",
           "phone_e164",
           "nickname",
+          "avatar_url",
           "role",
           "status"
         ],
@@ -799,6 +1099,20 @@
           "file"
         ],
         "title": "Body_uploadCurrentUserAvatar",
+        "type": "object"
+      },
+      "Body_uploadProjectCover": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_uploadProjectCover",
         "type": "object"
       },
       "Body_uploadSiteLogo": {
@@ -1853,6 +2167,149 @@
         "title": "InvalidCredentialsErrorResponse",
         "type": "object"
       },
+      "LoginAuditData": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_ip": {
+            "title": "Created Ip",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_ip": {
+            "title": "Last Ip",
+            "type": "string"
+          },
+          "last_used_at": {
+            "format": "date-time",
+            "title": "Last Used At",
+            "type": "string"
+          },
+          "nickname": {
+            "title": "Nickname",
+            "type": "string"
+          },
+          "revoke_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoke Reason"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "user_agent": {
+            "title": "User Agent",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "username",
+          "nickname",
+          "created_ip",
+          "last_ip",
+          "user_agent",
+          "created_at",
+          "last_used_at",
+          "expires_at",
+          "revoked_at",
+          "revoke_reason"
+        ],
+        "title": "LoginAuditData",
+        "type": "object"
+      },
+      "LoginAuditListData": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LoginAuditData"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "LoginAuditListData",
+        "type": "object"
+      },
+      "LoginAuditListResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LoginAuditListData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "LoginAuditListResponse",
+        "type": "object"
+      },
       "LoginRateLimitedErrorResponse": {
         "properties": {
           "code": {
@@ -2082,6 +2539,143 @@
         "title": "NotFoundErrorResponse",
         "type": "object"
       },
+      "OperationAuditData": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_type": {
+            "enum": [
+              "admin",
+              "system"
+            ],
+            "title": "Actor Type",
+            "type": "string"
+          },
+          "admin_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Id"
+          },
+          "admin_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Username"
+          },
+          "change_summary": {
+            "additionalProperties": true,
+            "title": "Change Summary",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "target_type": {
+            "title": "Target Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actor_type",
+          "admin_id",
+          "admin_username",
+          "action",
+          "target_type",
+          "target_id",
+          "change_summary",
+          "created_at"
+        ],
+        "title": "OperationAuditData",
+        "type": "object"
+      },
+      "OperationAuditListData": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OperationAuditData"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "OperationAuditListData",
+        "type": "object"
+      },
+      "OperationAuditListResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/OperationAuditListData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "OperationAuditListResponse",
+        "type": "object"
+      },
       "OrderedResourceItem": {
         "properties": {
           "id": {
@@ -2143,12 +2737,87 @@
         "description": "资料或密码修改校验失败。",
         "title": "ProfileValidationErrorResponse"
       },
+      "ProjectCoverData": {
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "ProjectCoverData",
+        "type": "object"
+      },
+      "ProjectCoverResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectCoverData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProjectCoverResponse",
+        "type": "object"
+      },
       "ProjectCreateRequest": {
         "properties": {
+          "author": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Author",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Description",
+            "type": "string"
+          },
+          "structure_mode": {
+            "default": "tree",
+            "enum": [
+              "single_document",
+              "tree"
+            ],
+            "title": "Structure Mode",
+            "type": "string"
+          },
           "title": {
-            "maxLength": 200,
+            "maxLength": 100,
             "minLength": 1,
             "title": "Title",
+            "type": "string"
+          },
+          "update_status": {
+            "default": "not_started",
+            "enum": [
+              "not_started",
+              "serializing",
+              "completed"
+            ],
+            "title": "Update Status",
             "type": "string"
           }
         },
@@ -2182,11 +2851,83 @@
         "title": "ProjectCreateResponse",
         "type": "object"
       },
+      "ProjectDeleteData": {
+        "properties": {
+          "deleted": {
+            "const": true,
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
+        ],
+        "title": "ProjectDeleteData",
+        "type": "object"
+      },
+      "ProjectDeleteResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectDeleteData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProjectDeleteResponse",
+        "type": "object"
+      },
       "ProjectDetailData": {
         "properties": {
+          "author": {
+            "title": "Author",
+            "type": "string"
+          },
+          "book_number": {
+            "format": "uuid",
+            "title": "Book Number",
+            "type": "string"
+          },
+          "chapter_count": {
+            "title": "Chapter Count",
+            "type": "integer"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
             "type": "string"
           },
           "id": {
@@ -2217,17 +2958,37 @@
             "title": "Title",
             "type": "string"
           },
+          "update_status": {
+            "enum": [
+              "not_started",
+              "serializing",
+              "completed"
+            ],
+            "title": "Update Status",
+            "type": "string"
+          },
           "updated_at": {
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
           }
         },
         "required": [
           "id",
+          "book_number",
           "title",
+          "author",
+          "description",
+          "cover_url",
+          "chapter_count",
+          "word_count",
           "structure_mode",
           "status",
+          "update_status",
           "created_at",
           "updated_at",
           "initial_document"
@@ -2319,11 +3080,63 @@
         "title": "ProjectListResponse",
         "type": "object"
       },
+      "ProjectMutationResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProjectDetailData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProjectMutationResponse",
+        "type": "object"
+      },
       "ProjectSummary": {
         "properties": {
+          "author": {
+            "title": "Author",
+            "type": "string"
+          },
+          "book_number": {
+            "format": "uuid",
+            "title": "Book Number",
+            "type": "string"
+          },
+          "chapter_count": {
+            "title": "Chapter Count",
+            "type": "integer"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
             "type": "string"
           },
           "id": {
@@ -2351,21 +3164,115 @@
             "title": "Title",
             "type": "string"
           },
+          "update_status": {
+            "enum": [
+              "not_started",
+              "serializing",
+              "completed"
+            ],
+            "title": "Update Status",
+            "type": "string"
+          },
           "updated_at": {
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
           }
         },
         "required": [
           "id",
+          "book_number",
           "title",
+          "author",
+          "description",
+          "cover_url",
+          "chapter_count",
+          "word_count",
           "structure_mode",
           "status",
+          "update_status",
           "created_at",
           "updated_at"
         ],
         "title": "ProjectSummary",
+        "type": "object"
+      },
+      "ProjectUpdateRequest": {
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "update_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "not_started",
+                  "serializing",
+                  "completed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Status"
+          }
+        },
+        "title": "ProjectUpdateRequest",
         "type": "object"
       },
       "ProviderCatalogData": {
@@ -2638,6 +3545,50 @@
         "title": "ProviderConfigData",
         "type": "object"
       },
+      "ProviderConfigDeleteData": {
+        "properties": {
+          "deleted": {
+            "const": true,
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
+        ],
+        "title": "ProviderConfigDeleteData",
+        "type": "object"
+      },
+      "ProviderConfigDeleteResponse": {
+        "properties": {
+          "code": {
+            "const": 0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProviderConfigDeleteData"
+          },
+          "msg": {
+            "const": "SUCCESS",
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "title": "ProviderConfigDeleteResponse",
+        "type": "object"
+      },
       "ProviderConfigListData": {
         "properties": {
           "items": {
@@ -2646,9 +3597,29 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "pages": {
+            "title": "Pages",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
+          "page",
+          "page_size",
+          "total",
+          "pages",
           "items"
         ],
         "title": "ProviderConfigListData",
@@ -4606,6 +5577,162 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/admin/v1/audit/login": {
+      "get": {
+        "operationId": "listAdminLoginAudits",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginAuditListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Login Audits",
+        "tags": [
+          "admin-management"
+        ]
+      }
+    },
+    "/api/admin/v1/audit/operations": {
+      "get": {
+        "operationId": "listAdminOperationAudits",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationAuditListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Operation Audits",
+        "tags": [
+          "admin-management"
+        ]
+      }
+    },
     "/api/admin/v1/health": {
       "get": {
         "operationId": "getAdminHealth",
@@ -5068,9 +6195,363 @@
         ]
       }
     },
+    "/api/admin/v1/users": {
+      "get": {
+        "operationId": "listAdminUsers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "user",
+                    "admin"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "disabled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Users",
+        "tags": [
+          "admin-management"
+        ]
+      },
+      "post": {
+        "operationId": "createAdminUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post User",
+        "tags": [
+          "admin-management"
+        ]
+      }
+    },
+    "/api/admin/v1/users/{user_id}": {
+      "delete": {
+        "operationId": "disableAdminUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete User",
+        "tags": [
+          "admin-management"
+        ]
+      },
+      "get": {
+        "operationId": "getAdminUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get User Detail",
+        "tags": [
+          "admin-management"
+        ]
+      },
+      "patch": {
+        "operationId": "updateAdminUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch User",
+        "tags": [
+          "admin-management"
+        ]
+      }
+    },
     "/api/v1/ai/providers": {
       "get": {
         "operationId": "listAIProviderConfigs",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5289,6 +6770,90 @@
       }
     },
     "/api/v1/ai/providers/{config_id}": {
+      "delete": {
+        "operationId": "deleteAIProviderConfig",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Config Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderConfigDeleteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Config",
+        "tags": [
+          "ai-providers"
+        ]
+      },
       "get": {
         "operationId": "getAIProviderConfig",
         "parameters": [
@@ -6666,11 +8231,64 @@
             "name": "page_size",
             "required": false,
             "schema": {
-              "default": 20,
+              "default": 50,
               "maximum": 100,
               "minimum": 1,
               "title": "Page Size",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "enum": [
+                "active",
+                "archived",
+                "deleted"
+              ],
+              "title": "View",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "update_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "not_started",
+                    "serializing",
+                    "completed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Update Status"
             }
           }
         ],
@@ -6828,6 +8446,90 @@
       }
     },
     "/api/v1/projects/{project_id}": {
+      "delete": {
+        "operationId": "deleteProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDeleteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Project",
+        "tags": [
+          "projects"
+        ]
+      },
       "get": {
         "operationId": "getProject",
         "parameters": [
@@ -6918,6 +8620,110 @@
           }
         ],
         "summary": "Get Project Detail",
+        "tags": [
+          "projects"
+        ]
+      },
+      "patch": {
+        "operationId": "updateProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectMutationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Project",
         "tags": [
           "projects"
         ]
@@ -7486,6 +9292,206 @@
         "summary": "Patch Character",
         "tags": [
           "planning"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/cover": {
+      "delete": {
+        "operationId": "deleteProjectCover",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCoverResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Project Cover",
+        "tags": [
+          "projects"
+        ]
+      },
+      "post": {
+        "operationId": "uploadProjectCover",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_uploadProjectCover"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCoverResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaTooLargeErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Project Cover",
+        "tags": [
+          "projects"
         ]
       }
     },
@@ -8642,6 +10648,92 @@
         "summary": "Get Export",
         "tags": [
           "planning"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/restore": {
+      "post": {
+        "operationId": "restoreProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectMutationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "客户端应使用 Bearer 认证方案",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Post Restore Project",
+        "tags": [
+          "projects"
         ]
       }
     },

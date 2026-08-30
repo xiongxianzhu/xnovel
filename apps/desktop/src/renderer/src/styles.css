@@ -168,7 +168,7 @@ button {
   display: inline-flex;
   gap: 8px;
   justify-content: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 7px 12px;
 }
 button:hover {
@@ -197,9 +197,9 @@ button:disabled {
 .icon-button {
   background: transparent;
   border: 0;
-  height: 40px;
+  height: 44px;
   padding: 8px;
-  width: 40px;
+  width: 44px;
 }
 .icon-button svg {
   height: 18px;
@@ -265,6 +265,7 @@ button:disabled {
   bottom: 0;
   width: 256px;
   z-index: 20;
+  overflow-y: auto;
 }
 .sidebar-heading {
   align-items: center;
@@ -276,6 +277,115 @@ button:disabled {
   display: grid;
   gap: 4px;
   margin-top: 16px;
+}
+
+.back-to-projects {
+  justify-content: flex-start;
+  margin-bottom: 12px;
+}
+
+.document-create-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.document-create-actions button {
+  min-width: 0;
+  padding-inline: 6px;
+}
+
+.desktop-document-tree {
+  display: grid;
+  gap: 2px;
+}
+
+.archived-toggle {
+  margin-bottom: 8px;
+}
+
+.archived-document-list {
+  display: grid;
+  gap: 4px;
+}
+
+.archived-document-list > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.archived-document-list span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-document-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  min-width: 0;
+  align-items: center;
+  border: 1px solid transparent;
+}
+
+.desktop-document-row:hover,
+.desktop-document-row:focus-within,
+.desktop-document-row.selected {
+  border-color: var(--border);
+  background: var(--muted);
+}
+
+.tree-expander,
+.document-title-button,
+.document-row-actions button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  padding: 6px;
+}
+
+.tree-expander {
+  width: 32px;
+}
+
+.tree-expander svg,
+.document-row-actions svg {
+  width: 15px;
+  height: 15px;
+}
+
+.document-title-button {
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.document-title-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.document-row-actions {
+  position: absolute;
+  inset-inline-end: 0;
+  display: flex;
+  background: var(--muted);
+  opacity: 0;
+}
+
+.desktop-document-row:hover .document-row-actions,
+.desktop-document-row:focus-within .document-row-actions {
+  opacity: 1;
+}
+
+.document-row-actions button {
+  width: 32px;
 }
 .project-link {
   background: transparent;
@@ -354,6 +464,9 @@ button:disabled {
   margin: 4px 0;
 }
 .back-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   border: 0;
   color: var(--soft);
@@ -372,6 +485,78 @@ button:disabled {
   text-align: right;
 }
 .save-state.failed {
+  color: var(--danger);
+}
+
+.draft-banner,
+.desktop-find-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 820px;
+  margin: 0 auto 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.draft-banner > div {
+  display: grid;
+  flex: 1;
+  min-width: 180px;
+}
+
+.draft-banner span {
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.draft-banner.error {
+  border-color: var(--danger);
+}
+
+.desktop-find-bar input {
+  min-width: 160px;
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px;
+}
+
+.dialog-scrim {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 35%);
+}
+
+.unsaved-dialog {
+  width: min(100%, 512px);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 24px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 18%);
+}
+
+.unsaved-dialog h2,
+.unsaved-dialog p {
+  margin-top: 0;
+}
+
+.unsaved-dialog > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dialog-error {
   color: var(--danger);
 }
 .editor-surface {
@@ -645,6 +830,10 @@ button:disabled {
   font-size: 12px;
 }
 .error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   background: var(--surface);
   border-left: 3px solid var(--danger);
   color: var(--danger);
@@ -675,7 +864,7 @@ button:disabled {
     font-size: 0;
     gap: 0;
     padding: 8px;
-    width: 40px;
+    width: 44px;
   }
   .topbar-actions button svg {
     height: 18px;
@@ -724,6 +913,15 @@ button:disabled {
   .writing-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+  .document-row-actions {
+    position: static;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    opacity: 1;
+  }
+  .desktop-find-bar > * {
+    width: 100%;
   }
   .writing-actions .save-state {
     grid-column: 1/-1;

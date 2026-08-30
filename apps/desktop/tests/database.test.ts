@@ -69,13 +69,13 @@ describe("DesktopDatabase", () => {
           .prepare("SELECT MAX(version) AS version FROM schema_migrations")
           .get() as { version: number }
       ).version,
-    ).toBe(2);
+    ).toBe(3);
     expect((await readdir(backups)).length).toBeGreaterThan(0);
     store.close();
     await expect(
       DesktopDatabase.open(path, backups, [
         ...DESKTOP_MIGRATIONS,
-        { version: 3, destructive: true, sql: "CREATE TABLE broken (" },
+        { version: 4, destructive: true, sql: "CREATE TABLE broken (" },
       ]),
     ).rejects.toThrow();
     const raw = new DatabaseSync(path);
@@ -85,7 +85,7 @@ describe("DesktopDatabase", () => {
           .prepare("SELECT MAX(version) AS version FROM schema_migrations")
           .get() as { version: number }
       ).version,
-    ).toBe(2);
+    ).toBe(3);
     expect(
       (
         raw.prepare("SELECT COUNT(*) AS count FROM projects").get() as {
@@ -148,7 +148,10 @@ describe("DesktopDatabase", () => {
       documentId: created.document.id,
       providerId: provider.id,
       instruction: "改写",
-      contextManifest: { document_version: 1 },
+      contextManifest: {
+        document_id: created.document.id,
+        document_version: 1,
+      },
     });
     const candidate = store.finishAiTask(taskId, "新的正文");
     expect(store.getContent(created.document.id).content).toBe("");
@@ -168,6 +171,59 @@ describe("DesktopDatabase", () => {
         documentId: created.document.id,
       }),
     ).toThrow("AI_RESULT_ALREADY_DECIDED");
+
+    const staleTaskId = store.createAiTask({
+      projectId: created.project.id,
+      documentId: created.document.id,
+      providerId: provider.id,
+      instruction: "再次改写",
+      contextManifest: {
+        document_id: created.document.id,
+        document_version: 2,
+      },
+    });
+    const staleCandidate = store.finishAiTask(staleTaskId, "过期候选");
+    store.saveContent(created.document.id, "作者的新正文", 2);
+    expect(() =>
+      store.decideAiResult({
+        resultId: staleCandidate.resultId,
+        decision: "apply",
+        documentId: created.document.id,
+        version: 3,
+      }),
+    ).toThrow("CONTENT_VERSION_CONFLICT");
+    store.close();
+  });
+
+  it("persists recoverable drafts and manages a multi-document tree", async () => {
+    const root = await workspace();
+    const store = await DesktopDatabase.open(join(root, "xnovel.db"));
+    const created = store.createProject("长篇");
+    const folder = store.createDocument({
+      projectId: created.project.id,
+      parentId: null,
+      title: "第一卷",
+      kind: "folder",
+    });
+    const chapter = store.createDocument({
+      projectId: created.project.id,
+      parentId: folder.id,
+      title: "第一章",
+      kind: "manuscript",
+    });
+    store.saveEditorDraft(chapter.id, "尚未保存", 1);
+    expect(store.getEditorDraft(chapter.id)?.content).toBe("尚未保存");
+    expect(() => store.moveDocument(folder.id, folder.id, 0)).toThrow(
+      "DOCUMENT_CYCLE",
+    );
+    expect(store.listDocuments(created.project.id)).toHaveLength(3);
+    store.setDocumentArchived(chapter.id, true);
+    expect(store.listDocuments(created.project.id, "archived")[0]?.id).toBe(
+      chapter.id,
+    );
+    store.setDocumentArchived(chapter.id, false);
+    store.removeEditorDraft(chapter.id);
+    expect(store.getEditorDraft(chapter.id)).toBeNull();
     store.close();
   });
 });

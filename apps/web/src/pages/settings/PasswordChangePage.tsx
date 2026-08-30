@@ -13,7 +13,7 @@ interface PasswordChangeValues {
 }
 
 export function PasswordChangePage() {
-  const { changePassword, logout } = useAuth();
+  const { changePassword, logout, user } = useAuth();
   const { t } = useTranslation(["common", "settings"]);
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,9 @@ export function PasswordChangePage() {
     setError(null);
     try {
       await changePassword(values.currentPassword, values.newPassword);
-      await navigate("/", { replace: true });
+      await navigate(user?.must_change_password ? "/" : "/settings/profile", {
+        replace: true,
+      });
     } catch (reason) {
       setError(
         isApiError(reason) && reason.code === 10001
@@ -42,10 +44,19 @@ export function PasswordChangePage() {
       className="password-change-page"
     >
       <section className="password-change-panel">
-        <p className="eyebrow">{t("settings:securityEyebrow")}</p>
-        <h1 id="password-change-title">{t("settings:passwordChangeTitle")}</h1>
+        <h1 id="password-change-title">
+          {t(
+            user?.must_change_password
+              ? "settings:passwordChangeTitle"
+              : "settings:passwordMenu",
+          )}
+        </h1>
         <p className="page-description">
-          {t("settings:passwordChangeDescription")}
+          {t(
+            user?.must_change_password
+              ? "settings:passwordChangeDescription"
+              : "settings:passwordVoluntaryDescription",
+          )}
         </p>
         <Alert
           className="password-rules"
@@ -84,7 +95,7 @@ export function PasswordChangePage() {
               },
               {
                 min: 8,
-                max: 128,
+                max: 32,
                 message: t("settings:passwordLength"),
               },
               {
@@ -96,7 +107,7 @@ export function PasswordChangePage() {
                     /\d/.test(value),
                     /[^A-Za-z0-9]/.test(value),
                   ].filter(Boolean).length;
-                  return categories >= 3
+                  return categories >= 2
                     ? Promise.resolve()
                     : Promise.reject(new Error(t("settings:passwordStrength")));
                 },
@@ -128,17 +139,23 @@ export function PasswordChangePage() {
           <Button block htmlType="submit" loading={submitting} type="primary">
             {submitting
               ? t("settings:passwordChanging")
-              : t("settings:changePassword")}
+              : t(
+                  user?.must_change_password
+                    ? "settings:changePassword"
+                    : "settings:passwordMenu",
+                )}
           </Button>
         </Form>
-        <Button
-          className="password-logout-button"
-          disabled={submitting}
-          onClick={() => void logout()}
-          type="link"
-        >
-          {t("settings:signOutInstead")}
-        </Button>
+        {user?.must_change_password ? (
+          <Button
+            className="password-logout-button"
+            disabled={submitting}
+            onClick={() => void logout()}
+            type="link"
+          >
+            {t("settings:signOutInstead")}
+          </Button>
+        ) : null}
       </section>
     </main>
   );

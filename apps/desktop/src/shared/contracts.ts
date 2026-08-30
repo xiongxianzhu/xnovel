@@ -10,9 +10,11 @@ export type DesktopProject = {
 export type DesktopDocument = {
   id: string;
   projectId: string;
+  parentId: string | null;
   title: string;
   kind: "folder" | "manuscript" | "outline";
   position: number;
+  status: "active" | "archived";
   createdAt: string;
   updatedAt: string;
 };
@@ -21,6 +23,13 @@ export type DesktopContent = {
   content: string;
   version: number;
   wordCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type DesktopDraft = {
+  documentId: string;
+  baseVersion: number;
+  content: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -68,12 +77,38 @@ export type XnovelDesktopApi = {
       title: string,
     ): Promise<{ project: DesktopProject; document: DesktopDocument }>;
     documents(projectId: string): Promise<DesktopDocument[]>;
+    archivedDocuments(projectId: string): Promise<DesktopDocument[]>;
+    createDocument(input: {
+      projectId: string;
+      parentId: string | null;
+      title: string;
+      kind: DesktopDocument["kind"];
+    }): Promise<DesktopDocument>;
+    renameDocument(documentId: string, title: string): Promise<DesktopDocument>;
+    moveDocument(
+      documentId: string,
+      parentId: string | null,
+      position: number,
+    ): Promise<DesktopDocument[]>;
+    setDocumentArchived(
+      documentId: string,
+      archived: boolean,
+    ): Promise<DesktopDocument>;
     content(documentId: string): Promise<DesktopContent>;
     save(
       documentId: string,
       content: string,
       version: number,
     ): Promise<DesktopContent>;
+  };
+  drafts: {
+    get(documentId: string): Promise<DesktopDraft | null>;
+    save(
+      documentId: string,
+      content: string,
+      baseVersion: number,
+    ): Promise<DesktopDraft>;
+    remove(documentId: string): Promise<void>;
   };
   preferences: {
     get(): Promise<DesktopPreferences>;

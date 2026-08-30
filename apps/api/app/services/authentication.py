@@ -138,6 +138,11 @@ async def login_user(
                 email=user.email,
                 phone_e164=user.phone_e164,
                 nickname=user.nickname,
+                avatar_url=(
+                    f"/api/v1/media/{user.avatar_storage_key}"
+                    if user.avatar_source == "upload" and user.avatar_storage_key
+                    else user.avatar_url
+                ),
                 role=user.role,
                 status="active",
                 must_change_password=user.must_change_password,

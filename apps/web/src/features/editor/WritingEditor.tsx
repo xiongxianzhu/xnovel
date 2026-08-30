@@ -1,6 +1,17 @@
-import { Alert, Button, Skeleton } from "antd";
+import { Alert, Button, Input, Skeleton, type InputRef } from "antd";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, Copy, GitCompare, Save } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  GitCompare,
+  Replace,
+  Save,
+  Search,
+  X,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -107,7 +118,7 @@ function WritingEditorSession({
 }) {
   const { t } = useTranslation(["common", "projects"]);
   const queryClient = useQueryClient();
-  const { registerGuard } = useEditorNavigation();
+  const { registerGuard, setBlocked } = useEditorNavigation();
   const [content, setContent] = useState(initial.content);
   const [confirmedContent, setConfirmedContent] = useState(initial.content);
   const [saveState, setSaveState] = useState<SaveState>("clean");
@@ -121,6 +132,11 @@ function WritingEditorSession({
   );
   const [conflict, setConflict] = useState<ConflictState | null>(null);
   const [conflictVisible, setConflictVisible] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [replacementText, setReplacementText] = useState("");
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
   const contentRef = useRef(initial.content);
   const confirmedRef = useRef(initial.content);
   const versionRef = useRef(initial.version);
@@ -128,6 +144,8 @@ function WritingEditorSession({
   const inFlightRef = useRef<Promise<boolean> | null>(null);
   const autoSaveTimerRef = useRef<number | null>(null);
   const saveNowRef = useRef<() => Promise<boolean>>(async () => false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const searchInputRef = useRef<InputRef>(null);
 
   const stash = useCallback(() => {
     if (contentRef.current === confirmedRef.current) return;
@@ -244,6 +262,12 @@ function WritingEditorSession({
   );
 
   useEffect(() => {
+    setBlocked(
+      contentRef.current !== confirmedRef.current || Boolean(conflict),
+    );
+  }, [conflict, content, confirmedContent, setBlocked]);
+
+  useEffect(() => {
     if (content === confirmedRef.current || conflictRef.current) return;
     autoSaveTimerRef.current = window.setTimeout(() => {
       autoSaveTimerRef.current = null;
@@ -333,7 +357,86 @@ function WritingEditorSession({
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
       void saveNow();
+    } else if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === "f"
+    ) {
+      event.preventDefault();
+      setSearchOpen(true);
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    } else if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === "h"
+    ) {
+      event.preventDefault();
+      setSearchOpen(true);
+      setReplaceOpen(true);
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    } else if (event.key === "Escape" && searchOpen) {
+      event.preventDefault();
+      setSearchOpen(false);
+      textareaRef.current?.focus();
     }
+  }
+
+  function selectMatch(direction: "next" | "previous") {
+    if (!searchText) return;
+    const haystack = content.toLocaleLowerCase();
+    const needle = searchText.toLocaleLowerCase();
+    let index =
+      direction === "next"
+        ? haystack.indexOf(needle, selection.end)
+        : haystack.lastIndexOf(needle, Math.max(0, selection.start - 1));
+    if (index < 0) {
+      index =
+        direction === "next"
+          ? haystack.indexOf(needle)
+          : haystack.lastIndexOf(needle);
+    }
+    if (index < 0) return;
+    const next = { start: index, end: index + searchText.length };
+    setSelection(next);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(next.start, next.end);
+    });
+  }
+
+  function replaceCurrent() {
+    const selected = content.slice(selection.start, selection.end);
+    if (
+      !searchText ||
+      selected.toLocaleLowerCase() !== searchText.toLocaleLowerCase()
+    ) {
+      selectMatch("next");
+      return;
+    }
+    const nextContent =
+      content.slice(0, selection.start) +
+      replacementText +
+      content.slice(selection.end);
+    const nextSelection = {
+      start: selection.start,
+      end: selection.start + replacementText.length,
+    };
+    updateContent(nextContent);
+    setSelection(nextSelection);
+    requestAnimationFrame(() =>
+      textareaRef.current?.setSelectionRange(
+        nextSelection.start,
+        nextSelection.end,
+      ),
+    );
+  }
+
+  function replaceAll() {
+    if (!searchText) return;
+    const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const nextContent = content.replace(
+      new RegExp(escaped, "giu"),
+      replacementText,
+    );
+    if (nextContent !== content) updateContent(nextContent);
   }
 
   const displayedWordCount =
@@ -349,7 +452,24 @@ function WritingEditorSession({
         <div className="writing-editor-meta">
           <span className="writing-word-count">
             {t("projects:wordCount", { count: displayedWordCount })}
+            {selection.end > selection.start
+              ? ` · ${t("projects:selectedWordCount", {
+                  count: estimateDocumentWords(
+                    content.slice(selection.start, selection.end),
+                  ),
+                })}`
+              : ""}
           </span>
+          <Button
+            aria-pressed={searchOpen}
+            icon={<Search aria-hidden size={17} />}
+            onClick={() => {
+              setSearchOpen((value) => !value);
+              requestAnimationFrame(() => searchInputRef.current?.focus());
+            }}
+          >
+            {t("projects:find")}
+          </Button>
           <SaveStatus state={saveState} />
           <Button
             disabled={
@@ -365,6 +485,64 @@ function WritingEditorSession({
           </Button>
         </div>
       </header>
+      {searchOpen ? (
+        <div className="editor-find-bar" role="search">
+          <Input
+            aria-label={t("projects:find")}
+            onChange={(event) => setSearchText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                selectMatch(event.shiftKey ? "previous" : "next");
+              }
+            }}
+            placeholder={t("projects:findPlaceholder")}
+            ref={searchInputRef}
+            value={searchText}
+          />
+          {replaceOpen ? (
+            <Input
+              aria-label={t("projects:replaceWith")}
+              onChange={(event) => setReplacementText(event.target.value)}
+              placeholder={t("projects:replacePlaceholder")}
+              value={replacementText}
+            />
+          ) : null}
+          <Button
+            aria-label={t("projects:previousMatch")}
+            icon={<ChevronUp aria-hidden size={16} />}
+            onClick={() => selectMatch("previous")}
+          />
+          <Button
+            aria-label={t("projects:nextMatch")}
+            icon={<ChevronDown aria-hidden size={16} />}
+            onClick={() => selectMatch("next")}
+          />
+          {replaceOpen ? (
+            <>
+              <Button
+                icon={<Replace aria-hidden size={16} />}
+                onClick={replaceCurrent}
+              >
+                {t("projects:replace")}
+              </Button>
+              <Button onClick={replaceAll}>{t("projects:replaceAll")}</Button>
+            </>
+          ) : (
+            <Button onClick={() => setReplaceOpen(true)}>
+              {t("projects:showReplace")}
+            </Button>
+          )}
+          <Button
+            aria-label={t("common:close")}
+            icon={<X aria-hidden size={16} />}
+            onClick={() => {
+              setSearchOpen(false);
+              textareaRef.current?.focus();
+            }}
+          />
+        </div>
+      ) : null}
       {draftCandidate ? (
         <Alert
           action={
@@ -429,6 +607,13 @@ function WritingEditorSession({
         className="manuscript-editor"
         onChange={(event) => updateContent(event.target.value)}
         onKeyDown={handleShortcut}
+        onSelect={(event) =>
+          setSelection({
+            start: event.currentTarget.selectionStart,
+            end: event.currentTarget.selectionEnd,
+          })
+        }
+        ref={textareaRef}
         placeholder={t("projects:manuscriptPlaceholder")}
         spellCheck
         value={content}

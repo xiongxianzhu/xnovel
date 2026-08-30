@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import math
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -28,11 +29,17 @@ from app.schemas.projects import (
     DocumentSummary,
     DocumentTreeStatus,
     DocumentUpdateRequest,
+    ProjectCoverData,
     ProjectCreateRequest,
+    ProjectDeleteData,
     ProjectDetailData,
     ProjectListData,
     ProjectSummary,
+    ProjectUpdateRequest,
+    ProjectUpdateStatus,
+    ProjectView,
 )
+from app.services.media import ValidatedImage, delete_stored_image, store_image
 
 DEFAULT_DOCUMENT_TITLE = "未命名文档"
 
@@ -103,20 +110,71 @@ def count_document_words(content: str) -> int:
     return count
 
 
-def project_summary(project: Project) -> ProjectSummary:
+def project_summary(
+    project: Project,
+    *,
+    chapter_count: int = 0,
+    word_count: int = 0,
+) -> ProjectSummary:
     created_at, updated_at = _timestamps(project)
     return ProjectSummary(
         id=project.id,
+        book_number=project.id,
         title=project.title,
+        author=project.author,
+        description=project.description,
+        cover_url=(f"/api/v1/media/{project.cover_storage_key}" if project.cover_storage_key else None),
+        chapter_count=chapter_count,
+        word_count=word_count,
         structure_mode=project.structure_mode,
         status=project.status,
+        update_status=project.update_status,
         created_at=created_at,
         updated_at=updated_at,
     )
 
 
-def project_detail(project: Project, document: Document) -> ProjectDetailData:
-    return ProjectDetailData(**project_summary(project).model_dump(), initial_document=document_summary(document))
+def project_detail(
+    project: Project,
+    document: Document,
+    *,
+    chapter_count: int = 0,
+    word_count: int = 0,
+) -> ProjectDetailData:
+    return ProjectDetailData(
+        **project_summary(
+            project,
+            chapter_count=chapter_count,
+            word_count=word_count,
+        ).model_dump(),
+        initial_document=document_summary(document),
+    )
+
+
+async def _project_statistics(
+    session: AsyncSession,
+    project_ids: list[UUID],
+) -> dict[UUID, tuple[int, int]]:
+    if not project_ids:
+        return {}
+    rows = (
+        await session.exec(
+            select(
+                col(Document.project_id),
+                func.count(col(Document.id)),
+                func.coalesce(func.sum(DocumentContent.word_count), 0),
+            )
+            .join(DocumentContent, col(DocumentContent.document_id) == col(Document.id))
+            .where(
+                col(Document.project_id).in_(project_ids),
+                col(Document.kind) == "manuscript",
+                col(Document.status) == "active",
+                col(Document.deleted_at).is_(None),
+            )
+            .group_by(col(Document.project_id))
+        )
+    ).all()
+    return {project_id: (int(chapters), int(words)) for project_id, chapters, words in rows}
 
 
 async def list_projects(
@@ -125,33 +183,53 @@ async def list_projects(
     owner_id: UUID,
     page: int,
     page_size: int,
+    query: str | None,
+    view: ProjectView,
+    update_status: ProjectUpdateStatus | None = None,
 ) -> ProjectListData:
     offset = (page - 1) * page_size
+    filters = [col(Project.owner_id) == owner_id]
+    if view == "deleted":
+        filters.append(col(Project.deleted_at).is_not(None))
+    else:
+        filters.extend(
+            [
+                col(Project.deleted_at).is_(None),
+                col(Project.status) == view,
+            ]
+        )
+    normalized_query = query.strip() if query else ""
+    if normalized_query:
+        escaped_query = normalized_query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped_query}%"
+        filters.append(
+            or_(
+                col(Project.title).ilike(pattern, escape="\\"),
+                col(Project.author).ilike(pattern, escape="\\"),
+            )
+        )
+    if update_status is not None:
+        filters.append(col(Project.update_status) == update_status)
     try:
         total = int(
             (
                 await session.exec(
                     select(func.count())
                     .select_from(Project)
-                    .where(
-                        col(Project.owner_id) == owner_id,
-                        col(Project.deleted_at).is_(None),
-                    )
+                    .where(*filters)
                 )
             ).one()
         )
         projects = (
             await session.exec(
                 select(Project)
-                .where(
-                    col(Project.owner_id) == owner_id,
-                    col(Project.deleted_at).is_(None),
-                )
+                .where(*filters)
                 .order_by(col(Project.updated_at).desc(), col(Project.id).desc())
                 .offset(offset)
                 .limit(page_size)
             )
         ).all()
+        statistics = await _project_statistics(session, [project.id for project in projects])
     except SQLAlchemyError as exc:
         raise _service_unavailable() from exc
 
@@ -160,7 +238,14 @@ async def list_projects(
         page_size=page_size,
         total=total,
         pages=math.ceil(total / page_size) if total else 0,
-        items=[project_summary(project) for project in projects],
+        items=[
+            project_summary(
+                project,
+                chapter_count=statistics.get(project.id, (0, 0))[0],
+                word_count=statistics.get(project.id, (0, 0))[1],
+            )
+            for project in projects
+        ],
     )
 
 
@@ -170,7 +255,14 @@ async def create_project(
     owner_id: UUID,
     payload: ProjectCreateRequest,
 ) -> ProjectDetailData:
-    project = Project(owner_id=owner_id, title=payload.title)
+    project = Project(
+        owner_id=owner_id,
+        title=payload.title,
+        author=payload.author,
+        description=payload.description,
+        structure_mode=payload.structure_mode,
+        update_status=payload.update_status,
+    )
     document = Document(project_id=project.id, title=DEFAULT_DOCUMENT_TITLE, kind="manuscript", position=0)
     content = DocumentContent(
         document_id=document.id,
@@ -191,7 +283,7 @@ async def create_project(
     except SQLAlchemyError as exc:
         await session.rollback()
         raise _service_unavailable() from exc
-    return project_detail(project, document)
+    return project_detail(project, document, chapter_count=1)
 
 
 async def get_project(
@@ -229,7 +321,184 @@ async def get_project(
         raise _service_unavailable() from exc
     if document is None:
         raise APIException(status_code=500, code=ErrorCode.INTERNAL_ERROR, msg=ErrorMessage.INTERNAL_ERROR)
-    return project_detail(project, document)
+    statistics = await _project_statistics(session, [project.id])
+    chapter_count, word_count = statistics.get(project.id, (0, 0))
+    return project_detail(
+        project,
+        document,
+        chapter_count=chapter_count,
+        word_count=word_count,
+    )
+
+
+async def update_project(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    project_id: UUID,
+    payload: ProjectUpdateRequest,
+) -> ProjectDetailData:
+    try:
+        project = await _owned_project(
+            session,
+            owner_id=owner_id,
+            project_id=project_id,
+            lock=True,
+        )
+        fields = payload.model_fields_set
+        if "title" in fields and payload.title is not None:
+            project.title = payload.title
+        if "author" in fields and payload.author is not None:
+            project.author = payload.author
+        if "description" in fields and payload.description is not None:
+            project.description = payload.description.strip()
+        if "update_status" in fields and payload.update_status is not None:
+            project.update_status = payload.update_status
+        if "status" in fields and payload.status is not None:
+            project.status = payload.status
+            project.archived_at = datetime.now(UTC) if payload.status == "archived" else None
+        project.updated_at = datetime.now(UTC)
+        session.add(project)
+        await session.commit()
+    except APIException:
+        await session.rollback()
+        raise
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise _service_unavailable() from exc
+    return await get_project(
+        session,
+        owner_id=owner_id,
+        project_id=project_id,
+    )
+
+
+async def delete_project(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    project_id: UUID,
+) -> ProjectDeleteData:
+    try:
+        project = await _owned_project(
+            session,
+            owner_id=owner_id,
+            project_id=project_id,
+            lock=True,
+        )
+        now = datetime.now(UTC)
+        project.deleted_at = now
+        project.updated_at = now
+        session.add(project)
+        await session.commit()
+    except APIException:
+        await session.rollback()
+        raise
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise _service_unavailable() from exc
+    return ProjectDeleteData(id=project_id, deleted=True)
+
+
+async def restore_project(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    project_id: UUID,
+) -> ProjectDetailData:
+    try:
+        project = (
+            await session.exec(
+                select(Project)
+                .where(
+                    col(Project.id) == project_id,
+                    col(Project.owner_id) == owner_id,
+                    col(Project.deleted_at).is_not(None),
+                )
+                .with_for_update()
+            )
+        ).one_or_none()
+        if project is None:
+            raise _not_found()
+        project.deleted_at = None
+        project.status = "active"
+        project.archived_at = None
+        project.updated_at = datetime.now(UTC)
+        session.add(project)
+        await session.commit()
+    except APIException:
+        await session.rollback()
+        raise
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise _service_unavailable() from exc
+    return await get_project(
+        session,
+        owner_id=owner_id,
+        project_id=project_id,
+    )
+
+
+async def set_project_cover(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    project_id: UUID,
+    media_root: Path,
+    image: ValidatedImage,
+) -> ProjectCoverData:
+    project = await _owned_project(
+        session,
+        owner_id=owner_id,
+        project_id=project_id,
+        lock=True,
+    )
+    new_key = await store_image(media_root, "covers", image)
+    old_key = project.cover_storage_key
+    now = datetime.now(UTC)
+    project.cover_storage_key = new_key
+    project.cover_mime_type = image.mime_type
+    project.cover_size_bytes = len(image.content)
+    project.cover_updated_at = now
+    project.updated_at = now
+    try:
+        session.add(project)
+        await session.commit()
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        await delete_stored_image(media_root, new_key)
+        raise _service_unavailable() from exc
+    await delete_stored_image(media_root, old_key)
+    return ProjectCoverData(url=f"/api/v1/media/{new_key}")
+
+
+async def clear_project_cover(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    project_id: UUID,
+    media_root: Path,
+) -> ProjectCoverData:
+    project = await _owned_project(
+        session,
+        owner_id=owner_id,
+        project_id=project_id,
+        lock=True,
+    )
+    old_key = project.cover_storage_key
+    project.cover_storage_key = None
+    project.cover_mime_type = None
+    project.cover_size_bytes = None
+    project.cover_updated_at = None
+    project.updated_at = datetime.now(UTC)
+    try:
+        session.add(project)
+        await session.commit()
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise _service_unavailable() from exc
+    await delete_stored_image(media_root, old_key)
+    return ProjectCoverData(url=None)
 
 
 async def _owned_project(

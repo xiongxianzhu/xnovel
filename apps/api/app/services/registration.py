@@ -16,7 +16,7 @@ from app.models.site import SiteSetting
 from app.schemas.auth import RegisteredUserData, RegisterRequest
 from app.services.identity import (
     IdentityValidationError,
-    hash_password,
+    hash_strong_password,
     normalize_email,
     normalize_username,
     validate_account_email,
@@ -103,7 +103,12 @@ async def register_user(
         email = validate_account_email(payload.email) if payload.email else None
         phone = validate_phone_e164(payload.phone_e164)
         nickname = validate_nickname(payload.nickname)
-        password_digest = await run_in_threadpool(hash_password, payload.password)
+        password_digest = await run_in_threadpool(
+            hash_strong_password,
+            payload.password,
+            username=username,
+            email=email,
+        )
     except IdentityValidationError as exc:
         raise _validation_error(exc) from exc
 

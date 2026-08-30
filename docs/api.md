@@ -91,25 +91,25 @@ HTTP 状态码表达协议层结果，`code` 表达应用层结果。失败响�
 
 当前稳定错误码：
 
-| code    | msg                              | 默认 HTTP | 含义                     |
-| ------- | -------------------------------- | --------- | ------------------------ |
-| `-1`    | `INTERNAL_ERROR`                 | `500`     | 未分类内部错误           |
-| `10001` | `VALIDATION_ERROR`               | `422`     | 请求或业务校验失败       |
-| `10002` | `UNAUTHORIZED`                   | `401`     | 缺少或无效认证           |
-| `10003` | `FORBIDDEN`                      | `403`     | 已认证但无权限           |
-| `10004` | `NOT_FOUND`                      | `404`     | 资源不存在               |
-| `10005` | `CONFLICT`                       | `409`     | 通用状态或版本冲突       |
-| `10006` | `RATE_LIMITED`                   | `429`     | 通用请求限流             |
-| `10007` | `SERVICE_UNAVAILABLE`            | `503`     | 数据库或依赖暂时不可用   |
-| `11001` | `REGISTRATION_DISABLED`          | `403`     | 公开注册已关闭           |
-| `11002` | `ACCOUNT_IDENTIFIER_UNAVAILABLE` | `409`     | 一个或多个账户标识已占用 |
-| `11003` | `REGISTRATION_RATE_LIMITED`      | `429`     | 注册固定窗口已超限       |
-| `11004` | `INVALID_CREDENTIALS`            | `401`     | 登录标识或密码无效       |
-| `11005` | `LOGIN_RATE_LIMITED`             | `429`     | 登录固定窗口已超限       |
-| `11006` | `SESSION_INVALID`                | `401`     | 会话无效、过期或已撤销   |
-| `11007` | `CURRENT_PASSWORD_INVALID`       | `422`     | 当前密码不正确           |
-| `12001` | `MEDIA_INVALID`                  | `422`     | 图片格式、内容或地址无效 |
-| `12002` | `MEDIA_TOO_LARGE`                | `413`     | 上传图片超过 5 MiB       |
+| code    | msg                              | 默认 HTTP | 含义                               |
+| ------- | -------------------------------- | --------- | ---------------------------------- |
+| `-1`    | `INTERNAL_ERROR`                 | `500`     | 未分类内部错误                     |
+| `10001` | `VALIDATION_ERROR`               | `422`     | 请求或业务校验失败                 |
+| `10002` | `UNAUTHORIZED`                   | `401`     | 缺少或无效认证                     |
+| `10003` | `FORBIDDEN`                      | `403`     | 已认证但无权限                     |
+| `10004` | `NOT_FOUND`                      | `404`     | 资源不存在                         |
+| `10005` | `CONFLICT`                       | `409`     | 通用状态或版本冲突                 |
+| `10006` | `RATE_LIMITED`                   | `429`     | 通用请求限流                       |
+| `10007` | `SERVICE_UNAVAILABLE`            | `503`     | 数据库或依赖暂时不可用             |
+| `11001` | `REGISTRATION_DISABLED`          | `403`     | 公开注册已关闭                     |
+| `11002` | `ACCOUNT_IDENTIFIER_UNAVAILABLE` | `409`     | 一个或多个账户标识已占用           |
+| `11003` | `REGISTRATION_RATE_LIMITED`      | `429`     | 注册固定窗口已超限                 |
+| `11004` | `INVALID_CREDENTIALS`            | `401`     | 登录标识或密码无效                 |
+| `11005` | `LOGIN_RATE_LIMITED`             | `429`     | 登录固定窗口已超限                 |
+| `11006` | `SESSION_INVALID`                | `401`     | 会话无效、过期或已撤销             |
+| `11007` | `CURRENT_PASSWORD_INVALID`       | `422`     | 当前密码不正确                     |
+| `12001` | `MEDIA_INVALID`                  | `422`     | 图片格式、内容或地址无效           |
+| `12002` | `MEDIA_TOO_LARGE`                | `413`     | 头像超过 10 MiB 或 Logo 超过 5 MiB |
 
 ### 3.3 成功响应
 
@@ -450,13 +450,13 @@ curl http://127.0.0.1:8000/api/v1/site-config
 
 `request json` 参数：
 
-| 参数         | 类型   | 必填 | 默认值 | 备注                                       |
-| ------------ | ------ | ---- | ------ | ------------------------------------------ |
-| `username`   | string | 是   | -      | 规范化后长度 `3`–`32`                      |
-| `email`      | string | 否   | `null` | 有效邮箱；保存前去除首尾空格并转为小写     |
-| `password`   | string | 是   | -      | `8`–`128` 位；新密码需满足四类字符中的至少三类 |
-| `nickname`   | string | 是   | -      | 展示昵称，长度 `1`–`100`                   |
-| `phone_e164` | string | 否   | `null` | 带 `+` 和国家码的规范 E.164 手机号         |
+| 参数         | 类型   | 必填 | 默认值 | 备注                                              |
+| ------------ | ------ | ---- | ------ | ------------------------------------------------- |
+| `username`   | string | 是   | -      | 规范化后长度 `3`–`32`                             |
+| `email`      | string | 否   | `null` | 有效邮箱；保存前去除首尾空格并转为小写            |
+| `password`   | string | 是   | -      | `8`–`32` 位；正式新密码需满足四类字符中的至少两类 |
+| `nickname`   | string | 是   | -      | 展示昵称，长度 `1`–`100`                          |
+| `phone_e164` | string | 否   | `null` | 带 `+` 和国家码的规范 E.164 手机号                |
 
 下行参数：
 
@@ -537,11 +537,11 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 
 ### 8.1 认证与会话
 
-| 方法   | 路径                   | 上行参数                                                             | 成功 `data`                                                                                                  | 主要失败                  | 行为                                                                        |
-| ------ | ---------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------- | --------------------------------------------------------------------------- |
+| 方法   | 路径                   | 上行参数                                                             | 成功 `data`                                                                                                                       | 主要失败                  | 行为                                                                        |
+| ------ | ---------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------- |
 | `POST` | `/api/v1/auth/login`   | JSON：`identifier: string`、`password: string`                       | `access_token`、`token_type=Bearer`、`expires_at`、`user{id,username,email,phone_e164,nickname,role,status,must_change_password}` | `11004`、`11005`、`10007` | 创建独立会话；设置 Path=`/api/v1`、HttpOnly、SameSite=Lax 的 Refresh Cookie |
-| `POST` | `/api/v1/auth/refresh` | Header：`Origin`；配置的 Refresh Cookie，默认 `xnovel_refresh_token` | `access_token`、`token_type=Bearer`、`expires_at`                                                            | `10003`、`11006`、`10007` | 原子轮换 Refresh Token；旧令牌重放撤销会话                                  |
-| `POST` | `/api/v1/auth/logout`  | Header：`Origin`；配置的 Refresh Cookie 可缺省                       | `{}`                                                                                                         | `10003`、`10007`          | 幂等撤销当前会话并清除 Cookie                                               |
+| `POST` | `/api/v1/auth/refresh` | Header：`Origin`；配置的 Refresh Cookie，默认 `xnovel_refresh_token` | `access_token`、`token_type=Bearer`、`expires_at`                                                                                 | `10003`、`11006`、`10007` | 原子轮换 Refresh Token；旧令牌重放撤销会话                                  |
+| `POST` | `/api/v1/auth/logout`  | Header：`Origin`；配置的 Refresh Cookie 可缺省                       | `{}`                                                                                                                              | `10003`、`10007`          | 幂等撤销当前会话并清除 Cookie                                               |
 
 登录请求示例：
 
@@ -588,15 +588,15 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 
 本人资料响应可以包含：`id`、`username`、`email`、`email_verified_at`、`phone_e164`、`phone_verified_at`、`nickname`、头像来源、`address`、`birthday`、`last_login_at`、`must_change_password`、`created_at` 和 `updated_at`。响应中的 `username` 和 `email` 是数据库保存的规范化值；用户展示名称使用 `nickname`。管理员用户查询不返回 `address`、`birthday`、完整邮箱或完整手机号。
 
-| 方法    | 路径                        | 上行参数                                                                                            | 成功 `data`                                                                                                        | 主要失败                                             | 行为                                     |
-| ------- | --------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ---------------------------------------- |
-| `GET`   | `/api/v1/users/me`          | Header：`Authorization`                                                                             | `id`、`username`、`email`、验证时间、`phone_e164`、`nickname`、`role`、头像、`address`、`birthday`、状态、首次改密状态和时间字段 | `10002`、`11006`、`10007`                            | 只返回当前用户                           |
-| `PATCH` | `/api/v1/users/me`          | JSON 可选：`username`、`email`、`phone_e164`、`nickname`、`address`、`birthday`、`current_password` | 更新后的完整本人资料                                                                                               | `10001`、`10002`、`11002`、`11006`、`11007`、`10007` | 完成首次改密后可用；修改敏感标识必须提交当前密码 |
-| `PUT`   | `/api/v1/users/me/password` | JSON：`current_password`、`new_password`；配置的 Refresh Cookie                                     | `access_token`、`token_type=Bearer`、`expires_at`、更新后的 `user`                                                  | `10001`、`10002`、`11006`、`11007`、`10007`          | 撤销其他会话、清除首次改密状态并轮换当前会话令牌 |
+| 方法    | 路径                        | 上行参数                                                                                            | 成功 `data`                                                                                                                      | 主要失败                                             | 行为                                             |
+| ------- | --------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------ |
+| `GET`   | `/api/v1/users/me`          | Header：`Authorization`                                                                             | `id`、`username`、`email`、验证时间、`phone_e164`、`nickname`、`role`、头像、`address`、`birthday`、状态、首次改密状态和时间字段 | `10002`、`11006`、`10007`                            | 只返回当前用户                                   |
+| `PATCH` | `/api/v1/users/me`          | JSON 可选：`username`、`email`、`phone_e164`、`nickname`、`address`、`birthday`、`current_password` | 更新后的完整本人资料                                                                                                             | `10001`、`10002`、`11002`、`11006`、`11007`、`10007` | 完成首次改密后可用；修改敏感标识必须提交当前密码 |
+| `PUT`   | `/api/v1/users/me/password` | JSON：`current_password`、`new_password`；配置的 Refresh Cookie                                     | `access_token`、`token_type=Bearer`、`expires_at`、更新后的 `user`                                                               | `10001`、`10002`、`11006`、`11007`、`10007`          | 撤销其他会话、清除首次改密状态并轮换当前会话令牌 |
 
 首次改密账号在完成密码修改前，作品、偏好、头像等其他受保护业务接口返回 `403 / 10003`，`data.reason` 为 `must_change_password`。
 
-`PATCH` 中显式传入 `phone_e164: null`、`address: null` 或 `birthday: null` 表示清空字段。省略字段表示不修改。
+`PATCH` 中显式传入 `email: null`、`phone_e164: null`、`address: null` 或 `birthday: null` 表示清空字段。省略字段表示不修改。
 
 ### 8.3 用户偏好
 
@@ -727,29 +727,45 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 | `POST`   | `/api/admin/v1/site-settings/logo` | Admin Bearer；multipart `file` | `url`                              | `10002`、`10003`、`11006`、`12001`、`12002`、`10007` | 替换 Logo，不幂等并写管理员审计                      |
 | `DELETE` | `/api/admin/v1/site-settings/logo` | Admin Bearer                   | `url=null`                         | `10002`、`10003`、`11006`、`10007`                   | 幂等并写管理员审计                                   |
 
-- 上传头像和 Web 全局 Logo 使用 `multipart/form-data`，单文件最大 5 MiB；仅接受解码确认的 PNG、JPEG 或 WebP。Logo 只允许管理员修改。
+- 上传头像和 Web 全局 Logo 使用 `multipart/form-data`；头像单文件最大 10 MiB，Logo 最大 5 MiB，仅接受解码确认的 PNG、JPEG 或 WebP。Logo 只允许管理员修改。
 - 上传头像最大宽高为 2048×2048，总像素不超过 4,194,304；Web Logo 最大宽高为 4096×4096，总像素不超过 16,777,216。API 必须实际解码后校验，不能只信任文件头或尺寸声明。
 - URL 头像只接受 HTTPS 绝对 URL，并拒绝 userinfo、`localhost`、环回地址和字面量私网 IP。API 不抓取远程文件，也不承诺检查其大小；上传文件与 URL 字段互斥。
 - API 不返回存储键、管理员 ID 或服务器路径。
 
-### 8.5 Web Skill
+### 8.5 管理员用户与审计
+
+以下接口全部要求有效 Admin Bearer。普通用户返回 `403 / 10003`。管理员用户响应只返回脱敏邮箱、脱敏手机号以及管理所需账户字段，不返回地址、生日、密码哈希、会话令牌或完整联系方式。
+
+| 方法     | 路径                             | 用途与行为                                                     |
+| -------- | -------------------------------- | -------------------------------------------------------------- |
+| `GET`    | `/api/admin/v1/users`            | 按 `query`、`role`、`status` 筛选并通过 `offset`、`limit` 分页 |
+| `POST`   | `/api/admin/v1/users`            | 创建用户与默认偏好，设置首次强制改密并追加 `user.created` 审计 |
+| `GET`    | `/api/admin/v1/users/{user_id}`  | 读取单个用户的脱敏管理资料                                     |
+| `PATCH`  | `/api/admin/v1/users/{user_id}`  | 修改用户名、邮箱、昵称、角色或状态并追加 `user.updated` 审计   |
+| `DELETE` | `/api/admin/v1/users/{user_id}`  | 软停用用户、撤销有效会话并保留作品和历史                       |
+| `GET`    | `/api/admin/v1/audit/login`      | 只读分页查询登录会话，支持按用户名或昵称搜索                   |
+| `GET`    | `/api/admin/v1/audit/operations` | 只读分页查询不可变操作审计，支持按稳定动作标识搜索             |
+
+创建密码必须满足强密码策略，创建后 `must_change_password = true`。管理员不能通过更新或删除接口停用、降级自己，冲突返回 `409 / 10005` 且 `data.reason = cannot_modify_self_access`。显式停用会撤销该用户所有未撤销会话；恢复不会恢复旧会话。审计接口不提供 `POST`、`PATCH` 或 `DELETE`。
+
+### 8.6 Web Skill
 
 所有普通 Skill 请求都以当前用户为所有权边界。不存在与无权访问对外使用一致的 `404` 行为，避免通过 ID 探测其他用户资源。
 
 管理员普通 Skill 接口只返回名称、所有者标识、状态、大小、文件数、哈希和校验摘要等非内容安全元数据，不得返回 `SKILL.md` 或资源正文。安全事件处置可以把 Skill 设为 `quarantined` 或解除隔离；两种操作都要求管理员身份、稳定原因码、可选脱敏备注和管理员审计事件。隔离立即禁用 Skill，解除隔离只恢复为 `ready`，不会自动启用。
 
-| 方法     | 路径                                           | 用途                              |
-| -------- | ---------------------------------------------- | --------------------------------- |
-| `GET`    | `/api/v1/skills`                               | 列出当前用户 Skill                |
-| `POST`   | `/api/v1/skills`                               | 上传并校验 Skill ZIP              |
-| `GET`    | `/api/v1/skills/{skill_id}`                    | 读取当前投影和版本摘要            |
-| `PUT`    | `/api/v1/skills/{skill_id}/skill-md`           | 编辑 `SKILL.md` 并创建不可变版本  |
-| `PATCH`  | `/api/v1/skills/{skill_id}/enabled`            | 启用或禁用                        |
-| `GET`    | `/api/v1/skills/{skill_id}/resource?path=...`  | 读取允许的当前版本文本资源        |
-| `DELETE` | `/api/v1/skills/{skill_id}`                    | 删除 Skill 与版本存储             |
-| `GET`    | `/api/admin/v1/skills`                         | 管理员读取非内容安全元数据        |
-| `POST`   | `/api/admin/v1/skills/{skill_id}/quarantine`   | 隔离并写管理员审计                |
-| `POST`   | `/api/admin/v1/skills/{skill_id}/release`      | 解除隔离并写管理员审计            |
+| 方法     | 路径                                          | 用途                             |
+| -------- | --------------------------------------------- | -------------------------------- |
+| `GET`    | `/api/v1/skills`                              | 列出当前用户 Skill               |
+| `POST`   | `/api/v1/skills`                              | 上传并校验 Skill ZIP             |
+| `GET`    | `/api/v1/skills/{skill_id}`                   | 读取当前投影和版本摘要           |
+| `PUT`    | `/api/v1/skills/{skill_id}/skill-md`          | 编辑 `SKILL.md` 并创建不可变版本 |
+| `PATCH`  | `/api/v1/skills/{skill_id}/enabled`           | 启用或禁用                       |
+| `GET`    | `/api/v1/skills/{skill_id}/resource?path=...` | 读取允许的当前版本文本资源       |
+| `DELETE` | `/api/v1/skills/{skill_id}`                   | 删除 Skill 与版本存储            |
+| `GET`    | `/api/admin/v1/skills`                        | 管理员读取非内容安全元数据       |
+| `POST`   | `/api/admin/v1/skills/{skill_id}/quarantine`  | 隔离并写管理员审计               |
+| `POST`   | `/api/admin/v1/skills/{skill_id}/release`     | 解除隔离并写管理员审计           |
 
 - 上传使用 `multipart/form-data`，只接受单个 `.zip` 或 `.skill` 文件；压缩包最大 10 MiB，解压累计最大 50 MiB，最多 500 个文件，`SKILL.md` 最大 1 MiB。
 - 列表使用第 4 节页码分页，支持名称搜索和启用状态筛选；默认按 `updated_at DESC, id DESC` 排序。
@@ -762,31 +778,31 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 
 归档路径、碰撞或压缩预算失败使用 `422`；同用户名称冲突、编辑版本冲突使用 `409`；文件清理失败不把删除响应伪装成完整成功，资源保持 `deleting` 并提供可查询状态。
 
-### 8.6 AI Provider 与模型
+### 8.7 AI Provider 与模型
 
 Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定义 Provider、四种协议、模型和默认模型的详细范围见 [`ai-integration.md`](ai-integration.md)。
 
-| 方法   | 路径                                       | 用途                                     |
-| ------ | ------------------------------------------ | ---------------------------------------- |
-| `GET`  | `/api/v1/ai/providers/catalog`             | 读取 16 个内置 Provider 目录             |
-| `GET`  | `/api/v1/ai/providers`                     | 列出当前用户连接                         |
-| `POST` | `/api/v1/ai/providers`                     | 创建连接、模型与加密凭据                 |
-| `GET`  | `/api/v1/ai/providers/{config_id}`         | 读取非敏感连接详情                       |
-| `PUT`  | `/api/v1/ai/providers/{config_id}`         | 更新连接、模型和可选密钥                 |
-| `POST` | `/api/v1/ai/providers/{config_id}/test`    | 发起最多 1 token 的连接测试              |
+| 方法   | 路径                                    | 用途                         |
+| ------ | --------------------------------------- | ---------------------------- |
+| `GET`  | `/api/v1/ai/providers/catalog`          | 读取 16 个内置 Provider 目录 |
+| `GET`  | `/api/v1/ai/providers`                  | 列出当前用户连接             |
+| `POST` | `/api/v1/ai/providers`                  | 创建连接、模型与加密凭据     |
+| `GET`  | `/api/v1/ai/providers/{config_id}`      | 读取非敏感连接详情           |
+| `PUT`  | `/api/v1/ai/providers/{config_id}`      | 更新连接、模型和可选密钥     |
+| `POST` | `/api/v1/ai/providers/{config_id}/test` | 发起最多 1 token 的连接测试  |
 
-### 8.7 AI 任务与候选
+### 8.8 AI 任务与候选
 
-| 方法   | 路径                                  | 用途                                      |
-| ------ | ------------------------------------- | ----------------------------------------- |
-| `POST` | `/api/v1/ai/tasks`                    | 创建任务并返回 `202`                      |
-| `GET`  | `/api/v1/ai/tasks/{task_id}`          | 读取状态、用量、错误和候选                |
-| `GET`  | `/api/v1/ai/tasks/{task_id}/events`   | Bearer 鉴权 SSE 状态、增量、用量与终态流  |
-| `POST` | `/api/v1/ai/tasks/{task_id}/cancel`   | 幂等请求取消                              |
-| `POST` | `/api/v1/ai/results/{result_id}/apply`| 以正文版本锁显式应用候选                  |
-| `POST` | `/api/v1/ai/results/{result_id}/reject`| 显式舍弃候选                             |
+| 方法   | 路径                                    | 用途                                     |
+| ------ | --------------------------------------- | ---------------------------------------- |
+| `POST` | `/api/v1/ai/tasks`                      | 创建任务并返回 `202`                     |
+| `GET`  | `/api/v1/ai/tasks/{task_id}`            | 读取状态、用量、错误和候选               |
+| `GET`  | `/api/v1/ai/tasks/{task_id}/events`     | Bearer 鉴权 SSE 状态、增量、用量与终态流 |
+| `POST` | `/api/v1/ai/tasks/{task_id}/cancel`     | 幂等请求取消                             |
+| `POST` | `/api/v1/ai/results/{result_id}/apply`  | 以正文版本锁显式应用候选                 |
+| `POST` | `/api/v1/ai/results/{result_id}/reject` | 显式舍弃候选                             |
 
-任务请求只接受当前用户拥有的作品、文档、Provider、模型和明确选择的已启用 Skill。`context_manifest` 只保存范围、版本和哈希等标量快照，不返回完整上下文。应用候选提交目标文档、当前正文版本和最终确认内容；版本变化返回 `409 / 10005`，不会自动覆盖。
+任务请求只接受当前用户拥有的作品、文档、Provider、模型和明确选择的已启用 Skill。`context_manifest` 只保存范围、生成时文档版本和哈希等标量快照，不返回完整上下文。应用候选提交目标文档、生成时正文版本和最终确认内容；服务端同时校验任务目标、清单版本、请求版本和数据库当前版本，任一变化返回 `409 / 10005`，不会自动覆盖。
 
 - Provider 配置响应只返回非敏感字段、`configured` 和脱敏 `key_hint`，不得提供读取密钥明文的接口。
 - 同一用户的 `provider_id` 唯一；内置 ID 是保留字，自定义 ID 创建后不可修改。
@@ -801,25 +817,29 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 
 所有作品请求都以当前用户为所有权边界。不存在、已删除或属于其他用户的作品统一返回 `404 / 10004`。
 
-| 方法   | 路径                         | 上行参数                                  | 成功 `data`                                      | 主要失败                  |
-| ------ | ---------------------------- | ----------------------------------------- | ------------------------------------------------ | ------------------------- |
-| `GET`  | `/api/v1/projects`            | Query：`page`、`page_size`                 | 分页作品摘要                                     | `10002`、`11006`、`10007` |
-| `POST` | `/api/v1/projects`            | JSON：`title: string`，长度 `1`–`200`     | 作品摘要与自动创建的“未命名文档”元数据           | `10002`、`11006`、`10007` |
-| `GET`  | `/api/v1/projects/{project_id}` | Path：作品 UUID                         | 作品详情与初始文档元数据，不返回正文             | `10002`、`10004`、`11006`、`10007` |
+| 方法   | 路径                            | 上行参数                                                                              | 成功 `data`                          | 主要失败                           |
+| ------ | ------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------- |
+| `GET`  | `/api/v1/projects`              | Query：`page`、`page_size`、`view`、`q`、`update_status`                              | 分页作品摘要                         | `10001`、`10002`、`11006`、`10007` |
+| `POST` | `/api/v1/projects`              | JSON：`title` 长度 `1`–`100`、可选 `author` 最长 100、`description`、`structure_mode` | 作品摘要与初始文档                   | `10001`、`10002`、`11006`、`10007` |
+| `GET`  | `/api/v1/projects/{project_id}` | Path：作品 UUID                                                                       | 作品详情与初始文档元数据，不返回正文 | `10002`、`10004`、`11006`、`10007` |
 
-作品列表按 `updated_at DESC, id DESC` 排序，默认每页 `20` 条，最大 `100` 条。同一用户可以创建同名作品。创建作品时，`projects`、`documents` 和 `document_contents` 在同一事务中生成；失败时整体回滚。
+作品列表按 `updated_at DESC, id DESC` 排序，默认每页 `50` 条，最大 `100` 条。同一用户可以创建同名作品，作品名称长度为 `1`–`100`。创建作品时更新状态固定为 `not_started`；`projects`、`documents` 和 `document_contents` 在同一事务中生成，失败时整体回滚。
+
+作品摘要和详情包含 `id`、等值的 `book_number`、封面 URL、名称、`author`、简介、章节数、字数、`status=active|archived`、`update_status=not_started|serializing|completed`、结构模式与时间字段。`GET /projects` 使用 `view=active|archived|deleted` 查看当前、归档或回收站；`PATCH /projects/{id}` 编辑属性（包括作者署名）与归档状态；`DELETE /projects/{id}` 软删除；`POST /projects/{id}/restore` 恢复；`POST/DELETE /projects/{id}/cover` 上传或移除 10 MiB 内封面。
+
+`q` 仅对子串匹配书名或作者署名，不检索简介、书号；首尾空白忽略，`%`、`_` 作为普通字符匹配。`update_status` 可选 `not_started`、`serializing`、`completed`，省略表示全部，非法值返回 422。筛选条件先于分页应用，并始终限定当前所有者与选定管理视图。`author` 默认空串，创建与编辑会去除首尾空白；传空串可清空，省略编辑字段表示不修改。
 
 ### 8.9 文档树
 
 所有文档端点先验证当前用户拥有路径中的作品。不存在、已删除、跨作品或跨用户的节点统一返回 `404 / 10004`。
 
-| 方法     | 路径                                                         | 上行参数                                              | 成功 `data`          | 主要失败                           |
-| -------- | ------------------------------------------------------------ | ----------------------------------------------------- | -------------------- | ---------------------------------- |
-| `GET`    | `/api/v1/projects/{project_id}/documents`                    | Query：`status=active\|archived\|all`，默认 `active` | `{items}` 扁平节点表 | `10002`、`10004`、`11006`、`10007` |
-| `POST`   | `/api/v1/projects/{project_id}/documents`                    | `title`、`kind=folder\|manuscript`、`parent_id`       | 新节点摘要           | `10002`、`10004`、`10005`、`10007` |
-| `PATCH`  | `/api/v1/projects/{project_id}/documents/{document_id}`      | 至少一个：`title`、`status=active\|archived`          | 更新后节点摘要       | `10002`、`10004`、`10005`、`10007` |
-| `POST`   | `/api/v1/projects/{project_id}/documents/reorder`            | 移动节点、目标父级、完整受影响同级组                  | 更新后的活动节点表   | `10002`、`10004`、`10005`、`10007` |
-| `DELETE` | `/api/v1/projects/{project_id}/documents/{document_id}`      | Path：作品与节点 UUID                                 | `id`、`deleted=true` | `10002`、`10004`、`10005`、`10007` |
+| 方法     | 路径                                                    | 上行参数                                             | 成功 `data`          | 主要失败                           |
+| -------- | ------------------------------------------------------- | ---------------------------------------------------- | -------------------- | ---------------------------------- |
+| `GET`    | `/api/v1/projects/{project_id}/documents`               | Query：`status=active\|archived\|all`，默认 `active` | `{items}` 扁平节点表 | `10002`、`10004`、`11006`、`10007` |
+| `POST`   | `/api/v1/projects/{project_id}/documents`               | `title`、`kind=folder\|manuscript`、`parent_id`      | 新节点摘要           | `10002`、`10004`、`10005`、`10007` |
+| `PATCH`  | `/api/v1/projects/{project_id}/documents/{document_id}` | 至少一个：`title`、`status=active\|archived`         | 更新后节点摘要       | `10002`、`10004`、`10005`、`10007` |
+| `POST`   | `/api/v1/projects/{project_id}/documents/reorder`       | 移动节点、目标父级、完整受影响同级组                 | 更新后的活动节点表   | `10002`、`10004`、`10005`、`10007` |
+| `DELETE` | `/api/v1/projects/{project_id}/documents/{document_id}` | Path：作品与节点 UUID                                | `id`、`deleted=true` | `10002`、`10004`、`10005`、`10007` |
 
 创建正文或大纲时在同一事务生成空 `document_contents`，文件夹不生成正文。父节点必须是同作品中未删除、未归档的文件夹。
 
@@ -831,10 +851,10 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 
 正文端点只允许当前用户访问自己作品中未删除、未归档的非文件夹节点。文件夹、归档节点、跨作品、跨用户和不存在资源统一返回 `404 / 10004`。
 
-| 方法  | 路径                                                                 | 上行参数                                        | 成功 `data`                                  | 主要失败                                      |
-| ----- | -------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------- | --------------------------------------------- |
-| `GET` | `/api/v1/projects/{project_id}/documents/{document_id}/content`      | Path：作品与文档 UUID                           | 正文、格式、版本、字数、校验和与时间戳       | `10002`、`10004`、`11006`、`10007`            |
-| `PUT` | `/api/v1/projects/{project_id}/documents/{document_id}/content`      | `content`、`content_format=plain_text`、`version` | 保存后的完整正文状态，版本递增               | `10002`、`10004`、`10005`、`11006`、`10007`   |
+| 方法  | 路径                                                            | 上行参数                                          | 成功 `data`                            | 主要失败                                    |
+| ----- | --------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- | ------------------------------------------- |
+| `GET` | `/api/v1/projects/{project_id}/documents/{document_id}/content` | Path：作品与文档 UUID                             | 正文、格式、版本、字数、校验和与时间戳 | `10002`、`10004`、`11006`、`10007`          |
+| `PUT` | `/api/v1/projects/{project_id}/documents/{document_id}/content` | `content`、`content_format=plain_text`、`version` | 保存后的完整正文状态，版本递增         | `10002`、`10004`、`10005`、`11006`、`10007` |
 
 保存使用请求 `version` 与当前 `document_contents.version` 执行乐观并发控制。版本不一致返回 `409 / 10005`，`data.reason=content_version_conflict`，数据库正文保持不变。客户端确认保留本地版本时必须先读取最新版本，再使用新的版本号重新提交；接口不提供无条件覆盖参数。
 
@@ -844,21 +864,21 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 
 人物、世界设定和正文引用均继承作品所有权。跨用户、跨作品、软删除和不存在资源统一返回 `404 / 10004`。
 
-| 方法     | 路径                                                                         | 用途                         |
-| -------- | ---------------------------------------------------------------------------- | ---------------------------- |
-| `GET`    | `/api/v1/projects/{project_id}/characters`                                   | 读取稳定排序人物列表         |
-| `POST`   | `/api/v1/projects/{project_id}/characters`                                   | 创建人物并追加到末尾         |
-| `PATCH`  | `/api/v1/projects/{project_id}/characters/{character_id}`                    | 更新人物资料                 |
-| `POST`   | `/api/v1/projects/{project_id}/characters/reorder`                           | 完整集合排序                 |
-| `DELETE` | `/api/v1/projects/{project_id}/characters/{character_id}`                    | 软删除人物并移除正文引用     |
-| `GET`    | `/api/v1/projects/{project_id}/world-entries`                                | 读取层级世界设定             |
-| `POST`   | `/api/v1/projects/{project_id}/world-entries`                                | 创建根级或子设定             |
-| `PATCH`  | `/api/v1/projects/{project_id}/world-entries/{entry_id}`                     | 更新设定                     |
-| `POST`   | `/api/v1/projects/{project_id}/world-entries/reorder`                        | 同级排序或跨父级移动         |
-| `DELETE` | `/api/v1/projects/{project_id}/world-entries/{entry_id}`                     | 软删除空节点并移除正文引用   |
-| `GET`    | `/api/v1/projects/{project_id}/documents/{document_id}/references`           | 读取正文显式引用             |
-| `PUT`    | `/api/v1/projects/{project_id}/documents/{document_id}/references`           | 完整替换人物与世界设定引用   |
-| `GET`    | `/api/v1/projects/{project_id}/export?format=markdown\|plain_text`           | 下载作品正文，默认 Markdown  |
+| 方法     | 路径                                                               | 用途                        |
+| -------- | ------------------------------------------------------------------ | --------------------------- |
+| `GET`    | `/api/v1/projects/{project_id}/characters`                         | 读取稳定排序人物列表        |
+| `POST`   | `/api/v1/projects/{project_id}/characters`                         | 创建人物并追加到末尾        |
+| `PATCH`  | `/api/v1/projects/{project_id}/characters/{character_id}`          | 更新人物资料                |
+| `POST`   | `/api/v1/projects/{project_id}/characters/reorder`                 | 完整集合排序                |
+| `DELETE` | `/api/v1/projects/{project_id}/characters/{character_id}`          | 软删除人物并移除正文引用    |
+| `GET`    | `/api/v1/projects/{project_id}/world-entries`                      | 读取层级世界设定            |
+| `POST`   | `/api/v1/projects/{project_id}/world-entries`                      | 创建根级或子设定            |
+| `PATCH`  | `/api/v1/projects/{project_id}/world-entries/{entry_id}`           | 更新设定                    |
+| `POST`   | `/api/v1/projects/{project_id}/world-entries/reorder`              | 同级排序或跨父级移动        |
+| `DELETE` | `/api/v1/projects/{project_id}/world-entries/{entry_id}`           | 软删除空节点并移除正文引用  |
+| `GET`    | `/api/v1/projects/{project_id}/documents/{document_id}/references` | 读取正文显式引用            |
+| `PUT`    | `/api/v1/projects/{project_id}/documents/{document_id}/references` | 完整替换人物与世界设定引用  |
+| `GET`    | `/api/v1/projects/{project_id}/export?format=markdown\|plain_text` | 下载作品正文，默认 Markdown |
 
 人物别名最多 20 项；`profile` 和 `attributes` 是最多 50 项的字符串键值对象。人物排序与世界设定移动都提交完整受影响集合及各项 `updated_at`，过期集合返回 `409 / 10005` 和 `planning_changed`。世界设定循环返回 `world_entry_cycle`，非空节点删除返回 `world_entry_not_empty`。
 
@@ -875,10 +895,10 @@ Desktop 不调用本 HTTP API，也不提供本地 HTTP 端点。renderer 通过
 | 日期       | 版本  | 变更                                                          |
 | ---------- | ----- | ------------------------------------------------------------- |
 | 2026-08-28 | 1.4.0 | 实现 Provider、流式 AI 任务、候选决策与 Web 私有 Skill API    |
-| 2026-08-28 | 1.3.0 | 实现大纲、人物、世界设定、正文引用和 Markdown/纯文本导出       |
-| 2026-08-27 | 1.2.0 | 实现纯文本正文读取、乐观锁保存、服务端字数与冲突响应           |
-| 2026-08-27 | 1.1.0 | 实现可排序文档树、归档恢复、完整同级并发校验和节点软删除       |
-| 2026-08-22 | 1.0.0 | 实现作品列表、创建、打开和自动创建初始文档                     |
+| 2026-08-28 | 1.3.0 | 实现大纲、人物、世界设定、正文引用和 Markdown/纯文本导出      |
+| 2026-08-27 | 1.2.0 | 实现纯文本正文读取、乐观锁保存、服务端字数与冲突响应          |
+| 2026-08-27 | 1.1.0 | 实现可排序文档树、归档恢复、完整同级并发校验和节点软删除      |
+| 2026-08-22 | 1.0.0 | 实现作品列表、创建、打开和自动创建初始文档                    |
 | 2026-08-21 | 0.9.0 | 实现 Web 用户偏好读取与部分更新契约                           |
 | 2026-08-21 | 0.8.0 | 实现登录会话、用户资料、头像、媒体读取与 Web 全局 Logo        |
 | 2026-08-16 | 0.7.0 | 实现统一响应、公开站点配置、注册、限流与生成客户端契约        |

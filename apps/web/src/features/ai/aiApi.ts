@@ -3,7 +3,9 @@ import {
   cancelAiTask,
   createAiProviderConfig,
   createAiTask,
+  deleteAiProviderConfig,
   getAiProviderCatalog,
+  getAiProviderConfig,
   getAiTask,
   listAiProviderConfigs,
   rejectAiResult,
@@ -28,8 +30,26 @@ export async function getProviderCatalogRequest(): Promise<ProviderCatalogData> 
   return (await getAiProviderCatalog({ client: apiClient })).data.data;
 }
 
-export async function listProviderConfigsRequest(): Promise<ProviderConfigListData> {
-  return (await listAiProviderConfigs({ client: apiClient })).data.data;
+export async function listProviderConfigsRequest(
+  page = 1,
+  pageSize = 50,
+  query = "",
+): Promise<ProviderConfigListData> {
+  return (
+    await listAiProviderConfigs({
+      client: apiClient,
+      query: { page, page_size: pageSize, q: query || undefined },
+    })
+  ).data.data;
+}
+
+export async function deleteProviderConfigRequest(
+  configId: string,
+): Promise<void> {
+  await deleteAiProviderConfig({
+    client: apiClient,
+    path: { config_id: configId },
+  });
 }
 
 export async function createProviderConfigRequest(
@@ -37,6 +57,17 @@ export async function createProviderConfigRequest(
 ): Promise<ProviderConfigData> {
   return (await createAiProviderConfig({ body: payload, client: apiClient }))
     .data.data;
+}
+
+export async function getProviderConfigRequest(
+  configId: string,
+): Promise<ProviderConfigData> {
+  return (
+    await getAiProviderConfig({
+      client: apiClient,
+      path: { config_id: configId },
+    })
+  ).data.data;
 }
 
 export async function updateProviderConfigRequest(

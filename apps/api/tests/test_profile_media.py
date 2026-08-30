@@ -53,14 +53,18 @@ async def _create_user(
     session_factory: async_sessionmaker[AsyncSession],
     *,
     role: str = "user",
+    suffix: str | None = None,
+    phone_e164: str | None = None,
 ) -> User:
     async with session_factory() as session:
         setting = await session.get(SiteSetting, 1)
         if setting is None:
             session.add(SiteSetting(id=1))
+        identity = suffix or role
         user = User(
-            username=f"{role}-writer",
-            email=f"{role}@example.com",
+            username=f"{identity}-writer",
+            email=f"{identity}@example.com",
+            phone_e164=phone_e164,
             password_hash=hash_password(PASSWORD),
             nickname="作者",
             role=role,
@@ -113,6 +117,11 @@ async def test_profile_updates_private_and_sensitive_fields(
         headers=headers,
         json={"email": " New@Example.COM ", "current_password": PASSWORD},
     )
+    cleared = await client.patch(
+        "/api/v1/users/me",
+        headers=headers,
+        json={"email": None, "current_password": PASSWORD},
+    )
 
     assert ordinary.status_code == 200
     assert ordinary.json()["data"]["address"] == "上海"
@@ -120,7 +129,37 @@ async def test_profile_updates_private_and_sensitive_fields(
     assert sensitive.status_code == 200
     assert sensitive.json()["data"]["email"] == "new@example.com"
     assert sensitive.json()["data"]["email_verified_at"] is None
+    assert cleared.status_code == 200
+    assert cleared.json()["data"]["email"] is None
     assert PASSWORD not in sensitive.text
+
+
+@pytest.mark.anyio
+async def test_profile_rejects_duplicate_username_email_and_phone(
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    user = await _create_user(session_factory, suffix="first")
+    other = await _create_user(
+        session_factory,
+        suffix="other",
+        phone_e164="+8613800138000",
+    )
+    token = await _login(client, user)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    for payload in (
+        {"username": other.username},
+        {"email": other.email},
+        {"phone_e164": other.phone_e164},
+    ):
+        response = await client.patch(
+            "/api/v1/users/me",
+            headers=headers,
+            json={**payload, "current_password": PASSWORD},
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == 11002
 
 
 @pytest.mark.anyio
@@ -215,6 +254,29 @@ async def test_avatar_upload_external_url_and_delete(
     assert removed_upload.status_code == 404
     assert removed_upload.json()["code"] == 10004
     assert deleted.json()["data"] == {"source": "none", "url": None}
+
+
+@pytest.mark.anyio
+async def test_avatar_upload_limit_is_ten_mebibytes(
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    user = await _create_user(session_factory)
+    token = await _login(client, user)
+    response = await client.post(
+        "/api/v1/users/me/avatar",
+        headers={"Authorization": f"Bearer {token}"},
+        files={
+            "file": (
+                "too-large.png",
+                b"x" * (10 * 1024 * 1024 + 1),
+                "image/png",
+            )
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json()["code"] == 12002
 
 
 @pytest.mark.anyio

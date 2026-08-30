@@ -6,12 +6,12 @@
 
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=20232A&style=for-the-badge)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.138%2B-009688?logo=fastapi&logoColor=white&style=for-the-badge)](https://fastapi.tiangolo.com/)
-[![Electron](https://img.shields.io/badge/Electron-planned-47848F?logo=electron&logoColor=white&style=for-the-badge)](https://www.electronjs.org/)
+[![Electron](https://img.shields.io/badge/Electron-44.0-47848F?logo=electron&logoColor=white&style=for-the-badge)](https://www.electronjs.org/)
 [![License](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)](./LICENSE)
 
 </div>
 
-xnovel 统一管理灵感、故事大纲、人物与世界设定、正文草稿和 AI 辅助流程。项目采用 Monorepo：Web 通过本地账号、FastAPI 和 PostgreSQL 提供登录后的云端工作区；Electron 将复用前端能力，并通过本地 SQLite 提供无需登录的离线工作区。
+xnovel 统一管理灵感、故事大纲、人物与世界设定、正文草稿和 AI 辅助流程。项目采用 Monorepo：Web 通过本地账号、FastAPI 和 PostgreSQL 提供登录后的云端工作区；Electron 复用稳定的前端能力，并通过本地 SQLite 提供无需登录的离线工作区。
 
 > **当前状态**：早期可用版本。Web 已覆盖写作、规划、AI Provider 与私有 Skill；Desktop 已覆盖离线写作、本地 Skill、加密 Provider 凭据、备份恢复与安装包配置。
 
@@ -84,6 +84,27 @@ DATABASE_URL=postgresql+asyncpg://xnovel_app:YOUR_PASSWORD@localhost:5432/xnovel
 ```
 
 密码包含特殊字符时，需要先进行 URL 编码。开发、正式与示例环境的数据库名固定为 `xnovel`；持续集成单独使用 `xnovel_test`。
+
+如果需要保存 Web AI Provider 密钥，先生成独立的凭据主密钥。在 Windows PowerShell 中运行：
+
+```powershell
+uv run --directory apps/api python -c "import base64,secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())"
+```
+
+在 macOS Terminal（zsh）中运行：
+
+```bash
+uv run --directory apps/api python -c 'import base64,secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())'
+```
+
+把输出写入 `apps/api/.env`，然后重启 API：
+
+```dotenv
+XNOVEL_CREDENTIAL_MASTER_KEY=GENERATED_BASE64_KEY
+CREDENTIAL_MASTER_KEY_VERSION=v1
+```
+
+不要使用 Provider API Key、GUID 或全零 Base64 值作为主密钥。完整说明见[部署文档的主密钥生成章节](docs/deployment.md#生成-web-ai-凭据主密钥)。
 
 ```bash
 uv run alembic upgrade head

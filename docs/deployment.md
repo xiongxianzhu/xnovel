@@ -58,6 +58,8 @@ uv run alembic upgrade head
 
 持续集成使用独立数据库 `xnovel_test`，不要将本地开发数据库配置为测试库。
 
+部署作品作者与筛选功能前须升级到 `20260830_0010`（或更新版本），再启动新版 API。该迁移为旧作品增加空作者署名，不推断姓名、不修改正文；跳过迁移会导致作品查询缺列。回滚应用时可保留新增兼容字段；降级数据库会移除作者字段，需先备份新增署名数据。
+
 ## 3. 环境变量
 
 ### Web
@@ -89,13 +91,50 @@ API 使用以下认证、数据库与媒体配置。开发与正式环境的 Pos
 
 Web AI 使用以下服务端 Secret/策略配置；这些变量不能使用 `VITE_` 前缀，也不能返回浏览器：
 
-| 变量                                   | 必填   | 说明                                               |
-| -------------------------------------- | ------ | -------------------------------------------------- |
-| `XNOVEL_CREDENTIAL_MASTER_KEY`         | 是     | 当前 Base64 编码的 32 字节 AES-256-GCM 主密钥      |
-| `CREDENTIAL_MASTER_KEY_VERSION`        | 是     | 当前主密钥的稳定版本标识，默认 `v1`                |
-| `PROVIDER_ALLOWED_ORIGINS`             | 否     | 显式允许的 HTTP、环回、私网或本机 Origin JSON 数组 |
-| `AI_CALL_TIMEOUT_SECONDS`              | 否     | Provider 整体调用超时，默认 `120`                  |
-| `AI_MAX_CONCURRENCY_PER_USER`          | 否     | 正式任务与连接测试共享的每用户并发数，默认 `2`     |
+| 变量                            | 必填 | 说明                                               |
+| ------------------------------- | ---- | -------------------------------------------------- |
+| `XNOVEL_CREDENTIAL_MASTER_KEY`  | 是   | 当前 Base64 编码的 32 字节 AES-256-GCM 主密钥      |
+| `CREDENTIAL_MASTER_KEY_VERSION` | 是   | 当前主密钥的稳定版本标识，默认 `v1`                |
+| `PROVIDER_ALLOWED_ORIGINS`      | 否   | 显式允许的 HTTP、环回、私网或本机 Origin JSON 数组 |
+| `AI_CALL_TIMEOUT_SECONDS`       | 否   | Provider 整体调用超时，默认 `120`                  |
+| `AI_MAX_CONCURRENCY_PER_USER`   | 否   | 正式任务与连接测试共享的每用户并发数，默认 `2`     |
+
+### 生成 Web AI 凭据主密钥
+
+`XNOVEL_CREDENTIAL_MASTER_KEY` 是 xnovel 用来加密用户 Provider API Key 的应用主密钥。它不是 Provider API Key，也不能与 `SECRET_KEY` 共用。
+
+从仓库根目录运行以下命令。命令使用 Python `secrets` 生成 32 个密码学安全随机字节，再编码为 Base64。
+
+#### Windows PowerShell
+
+```powershell
+uv run --directory apps/api python -c "import base64,secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())"
+```
+
+#### macOS Terminal
+
+macOS 默认 shell 为 zsh，使用单引号包住 Python 代码：
+
+```bash
+uv run --directory apps/api python -c 'import base64,secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())'
+```
+
+每次运行都会返回不同的 44 字符 Base64 文本。把本次生成的值写入 `apps/api/.env`：
+
+```dotenv
+XNOVEL_CREDENTIAL_MASTER_KEY=GENERATED_BASE64_KEY
+CREDENTIAL_MASTER_KEY_VERSION=v1
+```
+
+保存后完全重启 FastAPI。页面刷新不会让已运行的进程重新读取配置。
+
+以下值无效或不安全：
+
+- Provider API Key、数据库密码、JWT `SECRET_KEY` 或 GUID。
+- `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=`；这是 32 个全零字节的 Base64 表示。
+- 因随机数命令报错而产生的任何后续输出。
+
+主密钥必须与数据库分开备份。丢失或随意替换主密钥后，已保存的 Provider 凭据将无法解密。不要把真实值写入 Git、日志、截图或工单。
 
 默认策略只允许公网 HTTPS 和内置 Provider 官方 Origin。`PROVIDER_ALLOWED_ORIGINS` 只放行精确 Origin，不接受通配符、路径、userinfo 或任意 CIDR；加入本地 Origin 等于部署管理员接受对应无认证或内网访问风险。Provider HTTP 客户端在调用前校验 DNS 并禁止重定向；当前尚未固定解析结果到实际 socket peer，因此受控自定义域名的 DNS 仍须可信。
 

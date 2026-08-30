@@ -18,6 +18,7 @@ from app.services.provider_adapters import parse_provider_payload
 from app.services.providers import (
     _validated_config_values,
     create_provider_config,
+    delete_provider_config,
     list_provider_configs,
     update_provider_config,
 )
@@ -73,13 +74,28 @@ async def test_provider_config_encrypts_key_and_never_returns_plaintext(
             settings=_settings(),
         )
         credential = (await session.exec(select(AICredential))).one()
-        listed = await list_provider_configs(session, owner_id=user.id, settings=_settings())
+        listed = await list_provider_configs(
+            session,
+            owner_id=user.id,
+            settings=_settings(),
+            page=1,
+            page_size=20,
+            query=None,
+        )
 
         assert created.configured is True
         assert created.key_hint == "••••alue"
         assert credential.ciphertext != b"sk-secret-value"
         assert "sk-secret-value" not in listed.model_dump_json()
         assert listed.items[0].models[0].model_id == "model-a"
+        deleted = await delete_provider_config(
+            session,
+            owner_id=user.id,
+            config_id=created.id,
+            settings=_settings(),
+        )
+        assert deleted.deleted is True
+        assert (await session.exec(select(AICredential))).first() is None
 
 
 @pytest.mark.anyio

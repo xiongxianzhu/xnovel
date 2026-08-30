@@ -8,6 +8,7 @@ import type {
   AiCandidate,
   DesktopContent,
   DesktopDocument,
+  DesktopDraft,
   DesktopPreferences,
   DesktopProject,
   ProviderInput,
@@ -133,6 +134,16 @@ export const SCHEMA_COMMENTS = {
       updated_at: "与创建时间相等且不可修改",
     },
   },
+  editor_drafts: {
+    table: "尚未写入正式正文的本地编辑草稿",
+    columns: {
+      document_id: "所属文档",
+      base_version: "草稿基于的正文版本",
+      content: "未保存正文",
+      created_at: "创建时间",
+      updated_at: "最后写入时间",
+    },
+  },
 } as const;
 
 export type DesktopMigration = {
@@ -163,6 +174,13 @@ export const DESKTOP_MIGRATIONS: readonly DesktopMigration[] = [
     sql: `
       CREATE TABLE document_revisions (id TEXT PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, content TEXT NOT NULL, version INTEGER NOT NULL CHECK(version > 0), word_count INTEGER NOT NULL CHECK(word_count >= 0), created_at TEXT NOT NULL, updated_at TEXT NOT NULL CHECK(updated_at = created_at)) STRICT;
       CREATE UNIQUE INDEX uq_document_revisions_document_version ON document_revisions(document_id, version);
+    `,
+  },
+  {
+    version: 3,
+    destructive: false,
+    sql: `
+      CREATE TABLE editor_drafts (document_id TEXT PRIMARY KEY REFERENCES documents(id) ON DELETE CASCADE, base_version INTEGER NOT NULL CHECK(base_version > 0), content TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL) STRICT;
     `,
   },
 ] as const;
@@ -337,23 +355,245 @@ export class DesktopDatabase {
       document: {
         id: documentId,
         projectId,
+        parentId: null,
         title: "未命名文档",
         kind: "manuscript",
         position: 0,
+        status: "active",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
     };
   }
 
-  listDocuments(projectId: string): DesktopDocument[] {
+  listDocuments(
+    projectId: string,
+    status: "active" | "archived" = "active",
+  ): DesktopDocument[] {
     return (
       this.db
         .prepare(
-          "SELECT id, project_id, title, kind, position, created_at, updated_at FROM documents WHERE project_id=? AND deleted_at IS NULL ORDER BY position,id",
+          `SELECT id,project_id,parent_id,title,kind,position,deleted_at,created_at,updated_at
+           FROM documents WHERE project_id=? AND deleted_at IS ${status === "active" ? "NULL" : "NOT NULL"}
+           ORDER BY parent_id,position,id`,
         )
         .all(uuid(projectId)) as DocumentRow[]
     ).map(documentFromRow);
+  }
+
+  createDocument(input: {
+    projectId: string;
+    parentId: string | null;
+    title: string;
+    kind: DesktopDocument["kind"];
+  }): DesktopDocument {
+    const projectId = uuid(input.projectId);
+    const parentId = input.parentId ? uuid(input.parentId) : null;
+    if (!(["folder", "manuscript", "outline"] as const).includes(input.kind))
+      throw new Error("DOCUMENT_KIND_INVALID");
+    if (parentId) {
+      const parent = this.documentRow(parentId);
+      if (
+        parent.project_id !== projectId ||
+        parent.kind !== "folder" ||
+        parent.deleted_at
+      )
+        throw new Error("DOCUMENT_PARENT_INVALID");
+    }
+    const position = Number(
+      (
+        this.db
+          .prepare(
+            "SELECT COALESCE(MAX(position),-1)+1 AS position FROM documents WHERE project_id=? AND parent_id IS ? AND deleted_at IS NULL",
+          )
+          .get(projectId, parentId) as { position: number }
+      ).position,
+    );
+    const id = uuidv7();
+    const timestamp = now();
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.db
+        .prepare(
+          "INSERT INTO documents(id,project_id,parent_id,title,kind,position,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
+        )
+        .run(
+          id,
+          projectId,
+          parentId,
+          requiredText(input.title, 200, "title"),
+          input.kind,
+          position,
+          timestamp,
+          timestamp,
+        );
+      if (input.kind !== "folder") {
+        this.db
+          .prepare(
+            "INSERT INTO document_contents(document_id,content,version,word_count,created_at,updated_at) VALUES (?,'',1,0,?,?)",
+          )
+          .run(id, timestamp, timestamp);
+      }
+      this.db
+        .prepare("UPDATE projects SET updated_at=? WHERE id=?")
+        .run(timestamp, projectId);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    return documentFromRow(this.documentRow(id));
+  }
+
+  renameDocument(documentId: string, title: string): DesktopDocument {
+    const id = uuid(documentId);
+    const timestamp = now();
+    const result = this.db
+      .prepare(
+        "UPDATE documents SET title=?,updated_at=? WHERE id=? AND deleted_at IS NULL",
+      )
+      .run(requiredText(title, 200, "title"), timestamp, id);
+    if (result.changes !== 1) throw new Error("DOCUMENT_NOT_FOUND");
+    return documentFromRow(this.documentRow(id));
+  }
+
+  moveDocument(
+    documentId: string,
+    parentId: string | null,
+    position: number,
+  ): DesktopDocument[] {
+    const id = uuid(documentId);
+    const targetParentId = parentId ? uuid(parentId) : null;
+    if (!Number.isSafeInteger(position) || position < 0)
+      throw new Error("DOCUMENT_POSITION_INVALID");
+    const source = this.documentRow(id);
+    if (source.deleted_at) throw new Error("DOCUMENT_NOT_FOUND");
+    if (targetParentId) {
+      const parent = this.documentRow(targetParentId);
+      if (
+        parent.project_id !== source.project_id ||
+        parent.kind !== "folder" ||
+        parent.deleted_at
+      )
+        throw new Error("DOCUMENT_PARENT_INVALID");
+      let ancestor: string | null = targetParentId;
+      while (ancestor) {
+        if (ancestor === id) throw new Error("DOCUMENT_CYCLE");
+        ancestor = this.documentRow(ancestor).parent_id;
+      }
+    }
+    const documents = this.listDocuments(source.project_id);
+    const sourceSiblings = documents.filter(
+      (item) => item.parentId === source.parent_id && item.id !== id,
+    );
+    const targetSiblings =
+      source.parent_id === targetParentId
+        ? sourceSiblings
+        : documents.filter(
+            (item) => item.parentId === targetParentId && item.id !== id,
+          );
+    targetSiblings.splice(
+      Math.min(position, targetSiblings.length),
+      0,
+      documentFromRow(source),
+    );
+    const timestamp = now();
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      if (source.parent_id !== targetParentId) {
+        sourceSiblings.forEach((item, index) =>
+          this.db
+            .prepare("UPDATE documents SET position=?,updated_at=? WHERE id=?")
+            .run(index, timestamp, item.id),
+        );
+      }
+      targetSiblings.forEach((item, index) =>
+        this.db
+          .prepare(
+            "UPDATE documents SET parent_id=?,position=?,updated_at=? WHERE id=?",
+          )
+          .run(targetParentId, index, timestamp, item.id),
+      );
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    return this.listDocuments(source.project_id);
+  }
+
+  setDocumentArchived(documentId: string, archived: boolean): DesktopDocument {
+    const id = uuid(documentId);
+    const document = this.documentRow(id);
+    if (archived && document.kind === "folder") {
+      const child = this.db
+        .prepare(
+          "SELECT id FROM documents WHERE parent_id=? AND deleted_at IS NULL LIMIT 1",
+        )
+        .get(id);
+      if (child) throw new Error("DOCUMENT_FOLDER_NOT_EMPTY");
+    }
+    const timestamp = now();
+    const parentId =
+      !archived && document.parent_id
+        ? this.documentRow(document.parent_id).deleted_at
+          ? null
+          : document.parent_id
+        : document.parent_id;
+    this.db
+      .prepare(
+        "UPDATE documents SET parent_id=?,deleted_at=?,updated_at=? WHERE id=?",
+      )
+      .run(parentId, archived ? timestamp : null, timestamp, id);
+    return documentFromRow(this.documentRow(id));
+  }
+
+  getEditorDraft(documentId: string): DesktopDraft | null {
+    const row = this.db
+      .prepare(
+        "SELECT document_id,base_version,content,created_at,updated_at FROM editor_drafts WHERE document_id=?",
+      )
+      .get(uuid(documentId)) as DraftRow | undefined;
+    return row ? draftFromRow(row) : null;
+  }
+
+  saveEditorDraft(
+    documentId: string,
+    content: string,
+    baseVersion: number,
+  ): DesktopDraft {
+    const id = uuid(documentId);
+    if (
+      !Number.isSafeInteger(baseVersion) ||
+      baseVersion < 1 ||
+      content.length > 2_000_000
+    )
+      throw new Error("INVALID_CONTENT");
+    const timestamp = now();
+    this.db
+      .prepare(
+        `INSERT INTO editor_drafts(document_id,base_version,content,created_at,updated_at)
+         VALUES (?,?,?,?,?) ON CONFLICT(document_id) DO UPDATE SET
+         base_version=excluded.base_version,content=excluded.content,updated_at=excluded.updated_at`,
+      )
+      .run(id, baseVersion, content, timestamp, timestamp);
+    return this.getEditorDraft(id)!;
+  }
+
+  removeEditorDraft(documentId: string): void {
+    this.db
+      .prepare("DELETE FROM editor_drafts WHERE document_id=?")
+      .run(uuid(documentId));
+  }
+
+  private documentRow(documentId: string): DocumentRow {
+    const row = this.db
+      .prepare(
+        "SELECT id,project_id,parent_id,title,kind,position,deleted_at,created_at,updated_at FROM documents WHERE id=?",
+      )
+      .get(uuid(documentId)) as DocumentRow | undefined;
+    if (!row) throw new Error("DOCUMENT_NOT_FOUND");
+    return row;
   }
 
   getContent(documentId: string): DesktopContent {
@@ -645,7 +885,8 @@ export class DesktopDatabase {
   }): AiCandidate {
     const row = this.db
       .prepare(
-        "SELECT r.id,r.task_id,r.content,r.status FROM ai_results r WHERE r.id=?",
+        `SELECT r.id,r.task_id,r.content,r.status,t.document_id,t.context_manifest
+         FROM ai_results r JOIN ai_tasks t ON t.id=r.task_id WHERE r.id=?`,
       )
       .get(uuid(input.resultId)) as
       | {
@@ -653,6 +894,8 @@ export class DesktopDatabase {
           task_id: string;
           content: string;
           status: AiCandidate["status"];
+          document_id: string | null;
+          context_manifest: string;
         }
       | undefined;
     if (!row || row.status !== "candidate")
@@ -662,6 +905,16 @@ export class DesktopDatabase {
     try {
       if (input.decision === "apply") {
         if (!input.version) throw new Error("CONTENT_VERSION_REQUIRED");
+        const manifest = JSON.parse(row.context_manifest) as {
+          document_id?: unknown;
+          document_version?: unknown;
+        };
+        if (
+          row.document_id !== input.documentId ||
+          manifest.document_id !== input.documentId ||
+          manifest.document_version !== input.version
+        )
+          throw new Error("CONTENT_VERSION_CONFLICT");
         const current = this.getContent(input.documentId);
         if (current.version !== input.version)
           throw new Error("CONTENT_VERSION_CONFLICT");
@@ -742,9 +995,18 @@ type ProjectRow = {
 type DocumentRow = {
   id: string;
   project_id: string;
+  parent_id: string | null;
   title: string;
   kind: DesktopDocument["kind"];
   position: number;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+type DraftRow = {
+  document_id: string;
+  base_version: number;
+  content: string;
   created_at: string;
   updated_at: string;
 };
@@ -765,9 +1027,18 @@ const projectFromRow = (row: ProjectRow): DesktopProject => ({
 const documentFromRow = (row: DocumentRow): DesktopDocument => ({
   id: row.id,
   projectId: row.project_id,
+  parentId: row.parent_id,
   title: row.title,
   kind: row.kind,
   position: row.position,
+  status: row.deleted_at ? "archived" : "active",
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+const draftFromRow = (row: DraftRow): DesktopDraft => ({
+  documentId: row.document_id,
+  baseVersion: row.base_version,
+  content: row.content,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });

@@ -30,6 +30,7 @@ from app.schemas.media import (
     PublicSiteSettingsResponse,
 )
 from app.services.media import (
+    MAX_AVATAR_FILE_BYTES,
     clear_avatar,
     read_validated_image,
     resolve_storage_path,
@@ -79,7 +80,13 @@ async def upload_avatar(
     session: SessionDep,
     file: Annotated[UploadFile, File()],
 ) -> AvatarResponse:
-    image = await read_validated_image(file, max_width=2048, max_height=2048, max_pixels=4_194_304)
+    image = await read_validated_image(
+        file,
+        max_file_bytes=MAX_AVATAR_FILE_BYTES,
+        max_width=2048,
+        max_height=2048,
+        max_pixels=4_194_304,
+    )
     url = await set_uploaded_avatar(
         session,
         context=context,

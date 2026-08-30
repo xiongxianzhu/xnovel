@@ -138,6 +138,7 @@ async def test_ai_task_uses_minimal_manifest_and_saves_candidate_then_applies_at
             ),
         )
         assert task_data.context_manifest["selected_text"] is True
+        assert task_data.context_manifest["document_version"] == 1
         assert task_data.context_manifest["references"] == {
             "character_count": 1,
             "world_entry_count": 1,
@@ -229,6 +230,10 @@ async def test_candidate_apply_rejects_stale_document_version(
             provider="test-provider",
             model="test-model",
             instruction="测试",
+            context_manifest={
+                "document_id": str(project.initial_document.id),
+                "document_version": 1,
+            },
             status="succeeded",
             started_at=project.created_at,
             finished_at=project.updated_at,
@@ -237,6 +242,10 @@ async def test_candidate_apply_rejects_stale_document_version(
         await session.flush()
         result = AIResult(project_id=project.id, task_id=task.id, content="候选")
         session.add(result)
+        content = await session.get(DocumentContent, project.initial_document.id)
+        assert content is not None
+        content.version = 2
+        session.add(content)
         await session.commit()
         with pytest.raises(Exception) as captured:
             await apply_ai_result(
@@ -245,7 +254,7 @@ async def test_candidate_apply_rejects_stale_document_version(
                 result_id=result.id,
                 payload=AIResultApplyRequest(
                     document_id=project.initial_document.id,
-                    version=99,
+                    version=2,
                     content="候选",
                 ),
             )

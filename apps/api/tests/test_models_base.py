@@ -138,6 +138,7 @@ def test_all_persistent_tables_and_columns_have_chinese_comments() -> None:
         versions_path / "20260822_0005_admin_bootstrap_password.py",
         versions_path / "20260828_0006_phase3_planning.py",
         versions_path / "20260828_0007_phase4_ai_and_skills.py",
+        versions_path / "20260830_0008_project_metadata_crud.py",
     ]
     table_comments: dict[str, str] = {}
     column_comments: dict[str, dict[str, str]] = {}
@@ -145,6 +146,8 @@ def test_all_persistent_tables_and_columns_have_chinese_comments() -> None:
         migration = run_path(str(migration_path))
         table_comments.update(migration["TABLE_COMMENTS"])
         column_comments.update(migration["COLUMN_COMMENTS"])
+    author_migration = run_path(str(versions_path / "20260830_0010_project_author.py"))
+    column_comments["projects"].update(author_migration["COLUMN_COMMENTS"]["projects"])
     column_comments["site_settings"]["logo_original_name"] = "Web 全局 Logo 清理后的原始文件名"
     column_comments["users"]["must_change_password"] = "是否必须完成首次密码修改"
     persistent_tables = {

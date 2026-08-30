@@ -26,6 +26,7 @@ function profileToUser(profile: UserProfileData): AuthenticatedUserData {
     email: profile.email,
     id: profile.id,
     nickname: profile.nickname,
+    avatar_url: profile.avatar_url,
     phone_e164: profile.phone_e164,
     role: profile.role,
     status: profile.status,
@@ -103,6 +104,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setUser(null);
         setStatus("anonymous");
       }
+    },
+    refreshProfile: async () => {
+      const profile = await getProfileRequest();
+      setUser(profileToUser(profile));
+      return profile;
     },
   };
 

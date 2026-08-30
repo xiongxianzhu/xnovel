@@ -72,7 +72,7 @@ def validate_nickname(value: str) -> str:
 
 
 def validate_password(value: str) -> str:
-    if not 8 <= len(value) <= 128:
+    if not 8 <= len(value) <= 32:
         raise IdentityValidationError("password", "length")
     if "\x00" in value:
         raise IdentityValidationError("password", "format")
@@ -102,7 +102,7 @@ def validate_strong_password(value: str, *, username: str, email: str | None = N
     lowered = value.casefold()
     email_local = email.split("@", 1)[0].casefold() if email else ""
     if (
-        categories < 3
+        categories < 2
         or value == "123456"
         or lowered == "password"
         or username.casefold() in lowered

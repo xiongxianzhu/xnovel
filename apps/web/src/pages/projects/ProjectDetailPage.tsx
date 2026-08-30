@@ -9,14 +9,17 @@ import { useAuth } from "../../features/auth/useAuth";
 import { ProjectAiPanel } from "../../features/ai/ProjectAiPanel";
 import { useProjectDocuments } from "../../features/documents/useProjectDocuments";
 import { WritingEditor } from "../../features/editor/WritingEditor";
+import { useEditorNavigation } from "../../features/editor/useEditorNavigation";
 import { ProjectExportButton } from "../../features/planning/ProjectExportButton";
 import { ProjectPlanningPanel } from "../../features/planning/ProjectPlanningPanel";
 import { getProjectRequest } from "../../features/projects/projectsApi";
 import { isApiError } from "../../shared/api/errors";
+import { resolveMediaUrl } from "../../shared/api/mediaUrl";
 
 export function ProjectDetailPage() {
   const { t } = useTranslation(["common", "projects", "ai"]);
   const { user } = useAuth();
+  const { blocked: editorBlocked } = useEditorNavigation();
   const { projectId = "" } = useParams();
   const [searchParams] = useSearchParams();
   const [planningOpen, setPlanningOpen] = useState(false);
@@ -80,11 +83,38 @@ export function ProjectDetailPage() {
         {t("projects:backToProjects")}
       </Link>
       <header className="page-heading project-workspace-heading">
-        <div>
-          <h1 id="project-detail-title">{project.data.title}</h1>
-          <p className="page-description">
-            {t(`projects:status.${project.data.status}`)}
-          </p>
+        <div className="project-detail-identity">
+          <div className="project-detail-cover">
+            {project.data.cover_url ? (
+              <img alt="" src={resolveMediaUrl(project.data.cover_url)} />
+            ) : null}
+          </div>
+          <div>
+            <h1 id="project-detail-title">{project.data.title}</h1>
+            <p className="page-description">
+              {project.data.description || t("projects:noDescription")}
+            </p>
+            <div className="project-row-meta">
+              <span>
+                {t("projects:author")}:{" "}
+                {project.data.author || t("projects:authorNotSet")}
+              </span>
+              <span>
+                {t("projects:bookNumber", { value: project.data.book_number })}
+              </span>
+              <span>
+                {t("projects:chapterCount", {
+                  count: project.data.chapter_count,
+                })}
+              </span>
+              <span>
+                {t("projects:wordCount", { count: project.data.word_count })}
+              </span>
+              <span>
+                {t(`projects:updateStatus.${project.data.update_status}`)}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="project-workspace-actions">
           <ProjectExportButton projectId={projectId} />
@@ -170,6 +200,7 @@ export function ProjectDetailPage() {
         />
         <ProjectAiPanel
           document={selectedDocument}
+          editorBlocked={editorBlocked}
           onClose={() => setAiOpen(false)}
           open={aiOpen}
           projectId={projectId}

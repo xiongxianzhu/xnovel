@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.api.deps import SessionDep
 from app.core.config import get_settings
@@ -14,6 +14,7 @@ from app.schemas.ai import (
     ProviderCatalogData,
     ProviderCatalogResponse,
     ProviderConfigCreateRequest,
+    ProviderConfigDeleteResponse,
     ProviderConfigListResponse,
     ProviderConfigResponse,
     ProviderConfigUpdateRequest,
@@ -32,12 +33,16 @@ from app.services.ai_tasks import run_provider_connection_test
 from app.services.provider_catalog import BUILTIN_PROVIDERS
 from app.services.providers import (
     create_provider_config,
+    delete_provider_config,
     list_provider_configs,
     read_provider_config_data,
     update_provider_config,
 )
 
 router = APIRouter(prefix="/ai/providers")
+_PAGE_QUERY = Query(default=1, ge=1)
+_PAGE_SIZE_QUERY = Query(default=50, ge=1, le=100)
+_SEARCH_QUERY = Query(default=None, max_length=200)
 _AUTH: dict[int | str, dict[str, Any]] = {
     401: {"model": AuthenticationErrorResponse, "headers": BEARER_AUTH_RESPONSE_HEADERS},
     503: {"model": ServiceUnavailableErrorResponse},
@@ -57,8 +62,18 @@ async def get_catalog(_: PasswordChangeCompletedContextDep) -> ProviderCatalogRe
 async def get_configs(
     context: PasswordChangeCompletedContextDep,
     session: SessionDep,
+    page: int = _PAGE_QUERY,
+    page_size: int = _PAGE_SIZE_QUERY,
+    q: str | None = _SEARCH_QUERY,
 ) -> ProviderConfigListResponse:
-    data = await list_provider_configs(session, owner_id=context.user.id, settings=get_settings())
+    data = await list_provider_configs(
+        session,
+        owner_id=context.user.id,
+        settings=get_settings(),
+        page=page,
+        page_size=page_size,
+        query=q,
+    )
     return ProviderConfigListResponse(code=0, msg="SUCCESS", data=data)
 
 
@@ -84,6 +99,25 @@ async def post_config(
         settings=get_settings(),
     )
     return ProviderConfigResponse(code=0, msg="SUCCESS", data=data)
+
+
+@router.delete(
+    "/{config_id}",
+    operation_id="deleteAIProviderConfig",
+    responses=_AUTH | {404: {"model": NotFoundErrorResponse}},
+)
+async def delete_config(
+    config_id: UUID,
+    context: PasswordChangeCompletedContextDep,
+    session: SessionDep,
+) -> ProviderConfigDeleteResponse:
+    data = await delete_provider_config(
+        session,
+        owner_id=context.user.id,
+        config_id=config_id,
+        settings=get_settings(),
+    )
+    return ProviderConfigDeleteResponse(code=0, msg="SUCCESS", data=data)
 
 
 @router.get(

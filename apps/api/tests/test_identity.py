@@ -12,6 +12,7 @@ from app.services.identity import (
     validate_account_email,
     validate_password,
     validate_phone_e164,
+    validate_strong_password,
     validate_username,
     verify_password,
 )
@@ -48,7 +49,16 @@ def test_password_preserves_unicode_and_spaces() -> None:
     assert verify_password(password, digest)
 
 
-@pytest.mark.parametrize("value", ["short", "valid-password\x00", "x" * 129])
+@pytest.mark.parametrize("value", ["short", "valid-password\x00", "x" * 33])
 def test_password_rejects_invalid_values(value: str) -> None:
     with pytest.raises(IdentityValidationError):
         validate_password(value)
+
+
+def test_strong_password_requires_two_of_four_character_types() -> None:
+    assert (
+        validate_strong_password("Abcdefgh", username="writer")
+        == "Abcdefgh"
+    )
+    with pytest.raises(IdentityValidationError):
+        validate_strong_password("abcdefgh", username="writer")

@@ -586,6 +586,14 @@ async def apply_ai_result(
         result, task = await _owned_result(session, owner_id, result_id, lock=True)
         if result.status != "candidate" or task.project_id is None:
             raise _conflict("ai_result_already_decided")
+        generated_version = task.context_manifest.get("document_version")
+        if (
+            task.document_id is None
+            or task.document_id != payload.document_id
+            or not isinstance(generated_version, int)
+            or generated_version != payload.version
+        ):
+            raise _conflict("content_version_conflict")
         await _owned_project(session, owner_id=owner_id, project_id=task.project_id, lock=True)
         document = await _editable_document(
             session,

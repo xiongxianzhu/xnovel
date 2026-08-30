@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 from uuid import UUID, uuid7
 
+from sqlalchemy import delete, func, or_, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -12,10 +14,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.config import Settings
 from app.core.error_codes import ErrorCode, ErrorMessage
 from app.core.exceptions import APIException
-from app.models.ai import AICredential, AIProviderConfig, AIProviderModel
+from app.models.ai import AICredential, AIProviderConfig, AIProviderModel, AITask
 from app.schemas.ai import (
     ProviderConfigCreateRequest,
     ProviderConfigData,
+    ProviderConfigDeleteData,
     ProviderConfigListData,
     ProviderConfigUpdateRequest,
     ProviderModelData,
@@ -121,14 +124,31 @@ async def list_provider_configs(
     *,
     owner_id: UUID,
     settings: Settings,
+    page: int,
+    page_size: int,
+    query: str | None,
 ) -> ProviderConfigListData:
+    filters = [col(AIProviderConfig.owner_id) == owner_id]
+    normalized_query = query.strip() if query else ""
+    if normalized_query:
+        pattern = f"%{normalized_query}%"
+        filters.append(
+            or_(
+                col(AIProviderConfig.display_name).ilike(pattern),
+                col(AIProviderConfig.provider_id).ilike(pattern),
+                col(AIProviderConfig.base_url).ilike(pattern),
+            )
+        )
     try:
+        total = int((await session.exec(select(func.count()).select_from(AIProviderConfig).where(*filters))).one())
         configs = list(
             (
                 await session.exec(
                     select(AIProviderConfig)
-                    .where(col(AIProviderConfig.owner_id) == owner_id)
+                    .where(*filters)
                     .order_by(col(AIProviderConfig.updated_at).desc(), col(AIProviderConfig.id).desc())
+                    .offset((page - 1) * page_size)
+                    .limit(page_size)
                 )
             ).all()
         )
@@ -137,7 +157,47 @@ async def list_provider_configs(
         raise
     except SQLAlchemyError as exc:
         raise _unavailable() from exc
-    return ProviderConfigListData(items=items)
+    return ProviderConfigListData(
+        page=page,
+        page_size=page_size,
+        total=total,
+        pages=math.ceil(total / page_size) if total else 0,
+        items=items,
+    )
+
+
+async def delete_provider_config(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    config_id: UUID,
+    settings: Settings,
+) -> ProviderConfigDeleteData:
+    try:
+        config = await get_provider_config(
+            session,
+            owner_id=owner_id,
+            config_id=config_id,
+            settings=settings,
+            lock=True,
+        )
+        credential_id = config.credential_id
+        await session.exec(
+            update(AITask)
+            .where(col(AITask.owner_id) == owner_id, col(AITask.provider_config_id) == config_id)
+            .values(provider_config_id=None)
+        )
+        await session.exec(delete(AIProviderConfig).where(col(AIProviderConfig.id) == config_id))
+        if credential_id:
+            await session.exec(delete(AICredential).where(col(AICredential.id) == credential_id))
+        await session.commit()
+    except APIException:
+        await session.rollback()
+        raise
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise _unavailable() from exc
+    return ProviderConfigDeleteData(id=config_id, deleted=True)
 
 
 async def get_provider_config(

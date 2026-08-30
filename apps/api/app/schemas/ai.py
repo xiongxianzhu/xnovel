@@ -111,7 +111,16 @@ class ProviderConfigData(BaseModel):
 
 
 class ProviderConfigListData(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    pages: int
     items: list[ProviderConfigData]
+
+
+class ProviderConfigDeleteData(BaseModel):
+    id: UUID
+    deleted: Literal[True]
 
 
 class ProviderConnectionTestRequest(BaseModel):
@@ -261,6 +270,10 @@ class ProviderCatalogResponse(APIResponse[ProviderCatalogData]):
 
 
 class ProviderConfigResponse(APIResponse[ProviderConfigData]):
+    pass
+
+
+class ProviderConfigDeleteResponse(APIResponse[ProviderConfigDeleteData]):
     pass
 
 

@@ -90,8 +90,10 @@ async def update_profile(
     try:
         if "username" in fields and payload.username is not None:
             context.user.username = validate_username(payload.username)
-        if "email" in fields and payload.email is not None:
-            context.user.email = validate_account_email(payload.email)
+        if "email" in fields:
+            context.user.email = (
+                validate_account_email(payload.email) if payload.email else None
+            )
             context.user.email_verified_at = None
         if "phone_e164" in fields:
             context.user.phone_e164 = validate_phone_e164(payload.phone_e164)

@@ -22,11 +22,15 @@ export function EditorNavigationProvider({
   const [pending, setPending] = useState<PendingDecision | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
 
   const registerGuard = useCallback((guard: EditorLeaveGuard) => {
     guardRef.current = guard;
     return () => {
-      if (guardRef.current === guard) guardRef.current = null;
+      if (guardRef.current === guard) {
+        guardRef.current = null;
+        setBlocked(false);
+      }
     };
   }, []);
 
@@ -42,8 +46,8 @@ export function EditorNavigationProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ registerGuard, requestDocumentChange }),
-    [registerGuard, requestDocumentChange],
+    () => ({ blocked, registerGuard, requestDocumentChange, setBlocked }),
+    [blocked, registerGuard, requestDocumentChange],
   );
 
   function finish(allowed: boolean) {

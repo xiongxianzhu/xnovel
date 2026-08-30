@@ -61,7 +61,7 @@ function renderSidebar() {
     <MemoryRouter initialEntries={["/projects/project-1"]}>
       <QueryClientProvider client={queryClient}>
         <EditorNavigationProvider>
-          <ProjectDocumentSidebar projectId="project-1" />
+          <ProjectDocumentSidebar projectId="project-1" userId="user-1" />
         </EditorNavigationProvider>
       </QueryClientProvider>
     </MemoryRouter>,

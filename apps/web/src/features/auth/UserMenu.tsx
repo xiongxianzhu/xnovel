@@ -1,9 +1,10 @@
-import { Settings, LogOut } from "lucide-react";
+import { KeyRound, LogOut, Settings, UserRound } from "lucide-react";
 import { Avatar, Button, Dropdown, type MenuProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { usePreferences } from "../preferences/usePreferences";
+import { resolveMediaUrl } from "../../shared/api/mediaUrl";
 import { useAuth } from "./useAuth";
 
 export function UserMenu() {
@@ -28,6 +29,18 @@ export function UserMenu() {
     },
     { type: "divider" },
     {
+      icon: <UserRound aria-hidden size={18} strokeWidth={1.8} />,
+      key: "profile",
+      label: t("settings:profileMenu"),
+      onClick: () => void navigate("/settings/profile"),
+    },
+    {
+      icon: <KeyRound aria-hidden size={18} strokeWidth={1.8} />,
+      key: "password",
+      label: t("settings:passwordMenu"),
+      onClick: () => void navigate("/settings/password"),
+    },
+    {
       icon: <Settings aria-hidden size={18} strokeWidth={1.8} />,
       key: "preferences",
       label: t("settings:open"),
@@ -42,6 +55,7 @@ export function UserMenu() {
   ];
 
   const initial = user?.nickname.trim().charAt(0).toUpperCase() || "X";
+  const avatarUrl = resolveMediaUrl(user?.avatar_url);
 
   return (
     <Dropdown menu={{ items }} placement="bottomRight" trigger={["click"]}>
@@ -50,7 +64,16 @@ export function UserMenu() {
         className="account-trigger"
         type="text"
       >
-        <Avatar size={32}>{initial}</Avatar>
+        <Avatar
+          size={32}
+          src={
+            avatarUrl ? (
+              <img alt="" referrerPolicy="no-referrer" src={avatarUrl} />
+            ) : undefined
+          }
+        >
+          {initial}
+        </Avatar>
         <span className="account-name">{user?.nickname}</span>
       </Button>
     </Dropdown>

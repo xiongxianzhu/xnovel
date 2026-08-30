@@ -12,6 +12,8 @@ from app.schemas.common import APIResponse
 
 ProjectStructureMode = Literal["single_document", "tree"]
 ProjectStatus = Literal["active", "archived"]
+ProjectUpdateStatus = Literal["not_started", "serializing", "completed"]
+ProjectView = Literal["active", "archived", "deleted"]
 DocumentKind = Literal["folder", "manuscript", "outline", "note"]
 DocumentStatus = Literal["active", "archived"]
 DocumentTreeStatus = Literal["active", "archived", "all"]
@@ -19,7 +21,16 @@ CreatableDocumentKind = Literal["folder", "manuscript", "outline"]
 
 
 class ProjectCreateRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
+    title: str = Field(min_length=1, max_length=100)
+    author: str = Field(default="", max_length=100)
+    description: str = Field(default="", max_length=2000)
+    structure_mode: ProjectStructureMode = "tree"
+    update_status: ProjectUpdateStatus = "not_started"
+
+    @field_validator("author", mode="before")
+    @classmethod
+    def normalize_author(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
     @field_validator("title")
     @classmethod
@@ -28,6 +39,35 @@ class ProjectCreateRequest(BaseModel):
         if not normalized:
             raise ValueError("title must not be empty")
         return normalized
+
+
+class ProjectUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=100)
+    author: str | None = Field(default=None, max_length=100)
+    description: str | None = Field(default=None, max_length=2000)
+    update_status: ProjectUpdateStatus | None = None
+    status: ProjectStatus | None = None
+
+    @field_validator("author", mode="before")
+    @classmethod
+    def normalize_author(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("title")
+    @classmethod
+    def normalize_optional_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("title must not be empty")
+        return normalized
+
+    @model_validator(mode="after")
+    def require_change(self) -> ProjectUpdateRequest:
+        if not self.model_fields_set:
+            raise ValueError("at least one field must be provided")
+        return self
 
 
 class DocumentSummary(BaseModel):
@@ -120,9 +160,16 @@ class DocumentContentUpdateRequest(BaseModel):
 
 class ProjectSummary(BaseModel):
     id: UUID
+    book_number: UUID
     title: str
+    author: str
+    description: str
+    cover_url: str | None
+    chapter_count: int
+    word_count: int
     structure_mode: ProjectStructureMode
     status: ProjectStatus
+    update_status: ProjectUpdateStatus
     created_at: datetime
     updated_at: datetime
 
@@ -139,6 +186,15 @@ class ProjectDetailData(ProjectSummary):
     initial_document: DocumentSummary
 
 
+class ProjectDeleteData(BaseModel):
+    id: UUID
+    deleted: Literal[True]
+
+
+class ProjectCoverData(BaseModel):
+    url: str | None
+
+
 class ProjectListResponse(APIResponse[ProjectListData]):
     pass
 
@@ -148,6 +204,18 @@ class ProjectCreateResponse(APIResponse[ProjectDetailData]):
 
 
 class ProjectDetailResponse(APIResponse[ProjectDetailData]):
+    pass
+
+
+class ProjectMutationResponse(APIResponse[ProjectDetailData]):
+    pass
+
+
+class ProjectDeleteResponse(APIResponse[ProjectDeleteData]):
+    pass
+
+
+class ProjectCoverResponse(APIResponse[ProjectCoverData]):
     pass
 
 

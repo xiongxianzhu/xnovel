@@ -15,11 +15,6 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 );
-const PlaceholderPage = lazy(() =>
-  import("../../pages/console/PlaceholderPage").then((module) => ({
-    default: module.PlaceholderPage,
-  })),
-);
 const ForbiddenPage = lazy(() =>
   import("../../pages/console/PlaceholderPage").then((module) => ({
     default: module.ForbiddenPage,
@@ -28,6 +23,16 @@ const ForbiddenPage = lazy(() =>
 const ProjectListPage = lazy(() =>
   import("../../pages/projects/ProjectListPage").then((module) => ({
     default: module.ProjectListPage,
+  })),
+);
+const ProjectFormPage = lazy(() =>
+  import("../../pages/projects/ProjectFormPage").then((module) => ({
+    default: module.ProjectFormPage,
+  })),
+);
+const ProjectInfoPage = lazy(() =>
+  import("../../pages/projects/ProjectInfoPage").then((module) => ({
+    default: module.ProjectInfoPage,
   })),
 );
 const LoginPage = lazy(() =>
@@ -45,6 +50,11 @@ const PasswordChangePage = lazy(() =>
     default: module.PasswordChangePage,
   })),
 );
+const ProfilePage = lazy(() =>
+  import("../../pages/settings/ProfilePage").then((module) => ({
+    default: module.ProfilePage,
+  })),
+);
 const ProjectDetailPage = lazy(() =>
   import("../../pages/projects/ProjectDetailPage").then((module) => ({
     default: module.ProjectDetailPage,
@@ -55,6 +65,16 @@ const ProviderPage = lazy(() =>
     default: module.ProviderPage,
   })),
 );
+const ProviderDetailPage = lazy(() =>
+  import("../../pages/ai/ProviderDetailPage").then((module) => ({
+    default: module.ProviderDetailPage,
+  })),
+);
+const ProviderFormPage = lazy(() =>
+  import("../../pages/ai/ProviderFormPage").then((module) => ({
+    default: module.ProviderFormPage,
+  })),
+);
 const SkillsPage = lazy(() =>
   import("../../pages/skills/SkillsPage").then((module) => ({
     default: module.SkillsPage,
@@ -63,6 +83,21 @@ const SkillsPage = lazy(() =>
 const AdminSkillsPage = lazy(() =>
   import("../../pages/admin/AdminSkillsPage").then((module) => ({
     default: module.AdminSkillsPage,
+  })),
+);
+const AdminUsersPage = lazy(() =>
+  import("../../pages/admin/AdminUsersPage").then((module) => ({
+    default: module.AdminUsersPage,
+  })),
+);
+const AdminLoginAuditPage = lazy(() =>
+  import("../../pages/admin/AdminAuditPage").then((module) => ({
+    default: module.AdminLoginAuditPage,
+  })),
+);
+const AdminOperationAuditPage = lazy(() =>
+  import("../../pages/admin/AdminAuditPage").then((module) => ({
+    default: module.AdminOperationAuditPage,
   })),
 );
 
@@ -76,6 +111,15 @@ export function AppRouter() {
             <Route index element={<Navigate replace to="/dashboard" />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/projects" element={<ProjectListPage />} />
+            <Route path="/projects/new" element={<ProjectFormPage />} />
+            <Route
+              path="/projects/:projectId/details"
+              element={<ProjectInfoPage />}
+            />
+            <Route
+              path="/projects/:projectId/edit"
+              element={<ProjectFormPage />}
+            />
             <Route
               path="/projects/:projectId"
               element={<ProjectDetailPage />}
@@ -85,8 +129,18 @@ export function AppRouter() {
               element={<Navigate replace to="/settings/preferences" />}
             />
             <Route path="/settings/preferences" element={<PreferencesPage />} />
+            <Route path="/settings/profile" element={<ProfilePage />} />
             <Route path="/settings/password" element={<PasswordChangePage />} />
             <Route path="/ai-models" element={<ProviderPage />} />
+            <Route path="/ai-models/new" element={<ProviderFormPage />} />
+            <Route
+              path="/ai-models/:configId"
+              element={<ProviderDetailPage />}
+            />
+            <Route
+              path="/ai-models/:configId/edit"
+              element={<ProviderFormPage />}
+            />
             <Route path="/skills" element={<SkillsPage />} />
             <Route
               path="/admin/skills"
@@ -100,10 +154,7 @@ export function AppRouter() {
               path="/admin/users"
               element={
                 <AdminOnly>
-                  <PlaceholderPage
-                    descriptionKey="usersDescription"
-                    titleKey="users"
-                  />
+                  <AdminUsersPage />
                 </AdminOnly>
               }
             />
@@ -111,10 +162,7 @@ export function AppRouter() {
               path="/admin/audit/login"
               element={
                 <AdminOnly>
-                  <PlaceholderPage
-                    descriptionKey="loginAuditDescription"
-                    titleKey="loginAudit"
-                  />
+                  <AdminLoginAuditPage />
                 </AdminOnly>
               }
             />
@@ -122,10 +170,7 @@ export function AppRouter() {
               path="/admin/audit/operations"
               element={
                 <AdminOnly>
-                  <PlaceholderPage
-                    descriptionKey="operationAuditDescription"
-                    titleKey="operationAudit"
-                  />
+                  <AdminOperationAuditPage />
                 </AdminOnly>
               }
             />
@@ -171,12 +216,6 @@ function ProtectedApplication() {
     location.pathname !== "/settings/password"
   ) {
     return <Navigate replace to="/settings/password" />;
-  }
-  if (
-    !user?.must_change_password &&
-    location.pathname === "/settings/password"
-  ) {
-    return <Navigate replace to="/" />;
   }
   return <Outlet />;
 }

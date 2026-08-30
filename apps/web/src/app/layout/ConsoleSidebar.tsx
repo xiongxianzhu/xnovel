@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronLeft, ChevronRight, List, X } from "lucide-react";
-import { Button } from "antd";
-import { useState } from "react";
+import { Button, Popover, Tooltip } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -14,15 +14,69 @@ import {
 export function ConsoleSidebar() {
   const { user } = useAuth();
   const { t } = useTranslation("console");
-  const [collapsed, setCollapsed] = useState(false);
+  const collapseKey = user ? `xnovel:console-sidebar:v1:${user.id}` : null;
+  const [collapsed, setCollapsed] = useState(() =>
+    collapseKey
+      ? window.localStorage.getItem(collapseKey) === "collapsed"
+      : false,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [auditExpanded, setAuditExpanded] = useState(false);
   const isAdmin = user?.role === "admin";
   const location = useLocation();
   const navigate = useNavigate();
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   const auditActive = location.pathname.startsWith("/admin/audit/");
   const administrationItems = isAdmin ? administrationNavigation : [];
+
+  useEffect(() => {
+    if (!collapseKey) return;
+    window.localStorage.setItem(
+      collapseKey,
+      collapsed ? "collapsed" : "expanded",
+    );
+  }, [collapseKey, collapsed]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() =>
+      sidebarRef.current
+        ?.querySelector<HTMLElement>("a, button:not([disabled])")
+        ?.focus(),
+    );
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        requestAnimationFrame(() => mobileTriggerRef.current?.focus());
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        sidebarRef.current?.querySelectorAll<HTMLElement>(
+          'a, button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+      if (!focusable.length) return;
+      const first = focusable[0]!;
+      const last = focusable.at(-1)!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileOpen]);
 
   function go(path: string) {
     void navigate(path);
@@ -36,6 +90,7 @@ export function ConsoleSidebar() {
         className="mobile-navigation-trigger"
         icon={<List aria-hidden size={22} />}
         onClick={() => setMobileOpen(true)}
+        ref={mobileTriggerRef}
         type="text"
       />
       <aside
@@ -47,11 +102,8 @@ export function ConsoleSidebar() {
         ]
           .filter(Boolean)
           .join(" ")}
+        ref={sidebarRef}
       >
-        <div className="console-sidebar-header">
-          {!collapsed ? <span>{t("navigation")}</span> : null}
-        </div>
-
         <Button
           aria-expanded={mobileOpen || !collapsed}
           aria-label={
@@ -86,16 +138,10 @@ export function ConsoleSidebar() {
             collapsed={collapsed}
             items={workspaceNavigation}
             onNavigate={go}
-            title={t("workspace")}
           />
 
           {administrationItems.length > 0 ? (
             <section className="console-navigation-group">
-              {!collapsed ? (
-                <div className="console-navigation-group-title">
-                  {t("administration")}
-                </div>
-              ) : null}
               {administrationItems
                 .filter((item) => !item.path.startsWith("/admin/audit/"))
                 .map((item) => (
@@ -118,7 +164,10 @@ export function ConsoleSidebar() {
         <button
           aria-label={t("closeNavigation")}
           className="console-sidebar-scrim"
-          onClick={() => setMobileOpen(false)}
+          onClick={() => {
+            setMobileOpen(false);
+            requestAnimationFrame(() => mobileTriggerRef.current?.focus());
+          }}
           type="button"
         />
       ) : null}
@@ -130,20 +179,20 @@ function NavigationGroup({
   collapsed,
   items,
   onNavigate,
-  title,
 }: {
   collapsed: boolean;
   items: NavigationItem[];
   onNavigate: (path: string) => void;
-  title: string;
 }) {
   return (
     <section className="console-navigation-group">
-      {!collapsed ? (
-        <div className="console-navigation-group-title">{title}</div>
-      ) : null}
       {items.map((item) => (
-        <NavItem item={item} key={item.key} onNavigate={onNavigate} />
+        <NavItem
+          collapsed={collapsed}
+          item={item}
+          key={item.key}
+          onNavigate={onNavigate}
+        />
       ))}
     </section>
   );
@@ -187,12 +236,16 @@ function NavItem({
   }
 
   return (
-    <div className="console-nav-flyout-anchor">
+    <Tooltip
+      align={{ offset: [0, 0] }}
+      arrow={false}
+      classNames={{ root: "console-nav-tooltip" }}
+      mouseEnterDelay={0}
+      placement="right"
+      title={t(item.labelKey)}
+    >
       {link}
-      <div className="console-nav-flyout" role="tooltip">
-        {t(item.labelKey)}
-      </div>
-    </div>
+    </Tooltip>
   );
 }
 
@@ -210,11 +263,12 @@ function AuditNavigation({
   onToggle: () => void;
 }) {
   const { t } = useTranslation("console");
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const AuditIcon = items[0]?.icon;
   const open = expanded || active;
   const trigger = (
     <button
-      aria-expanded={open}
+      aria-expanded={collapsed ? popoverOpen : open}
       aria-label={t("audit")}
       className={[
         "console-nav-item",
@@ -222,7 +276,7 @@ function AuditNavigation({
       ]
         .filter(Boolean)
         .join(" ")}
-      onClick={onToggle}
+      onClick={collapsed ? undefined : onToggle}
       type="button"
     >
       {AuditIcon ? <AuditIcon aria-hidden size={19} strokeWidth={1.8} /> : null}
@@ -255,14 +309,27 @@ function AuditNavigation({
   }
 
   return (
-    <div className="console-nav-flyout-anchor">
+    <Popover
+      align={{ offset: [0, 0] }}
+      arrow={false}
+      classNames={{ root: "console-nav-audit-popover" }}
+      content={
+        <div
+          className="console-nav-audit-flyout"
+          onClick={() => setPopoverOpen(false)}
+        >
+          <strong>{t("audit")}</strong>
+          {items.map((item) => (
+            <NavItem item={item} key={item.key} />
+          ))}
+        </div>
+      }
+      onOpenChange={setPopoverOpen}
+      open={popoverOpen}
+      placement="rightTop"
+      trigger={["hover", "focus", "click"]}
+    >
       {trigger}
-      <div className="console-nav-flyout console-nav-audit-flyout">
-        <strong>{t("audit")}</strong>
-        {items.map((item) => (
-          <NavItem item={item} key={item.key} />
-        ))}
-      </div>
-    </div>
+    </Popover>
   );
 }

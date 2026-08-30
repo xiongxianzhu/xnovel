@@ -21,13 +21,15 @@ from app.core.exceptions import APIException
 from app.core.security import AuthContext
 from app.models.site import AdminAuditEvent, SiteSetting
 
-MAX_FILE_BYTES = 5 * 1024 * 1024
+MAX_AVATAR_FILE_BYTES = 10 * 1024 * 1024
+MAX_COVER_FILE_BYTES = 10 * 1024 * 1024
+MAX_LOGO_FILE_BYTES = 5 * 1024 * 1024
 _FORMAT_INFO = {
     "PNG": ("image/png", "png"),
     "JPEG": ("image/jpeg", "jpg"),
     "WEBP": ("image/webp", "webp"),
 }
-_STORAGE_KEY = re.compile(r"^(avatars|logos)/[0-9a-f]{32}\.(png|jpg|webp)$")
+_STORAGE_KEY = re.compile(r"^(avatars|covers|logos)/[0-9a-f]{32}\.(png|jpg|webp)$")
 
 
 @dataclass(frozen=True)
@@ -40,12 +42,13 @@ class ValidatedImage:
 async def read_validated_image(
     upload: UploadFile,
     *,
+    max_file_bytes: int,
     max_width: int,
     max_height: int,
     max_pixels: int,
 ) -> ValidatedImage:
-    content = await upload.read(MAX_FILE_BYTES + 1)
-    if len(content) > MAX_FILE_BYTES:
+    content = await upload.read(max_file_bytes + 1)
+    if len(content) > max_file_bytes:
         raise APIException(status_code=413, code=ErrorCode.MEDIA_TOO_LARGE, msg=ErrorMessage.MEDIA_TOO_LARGE)
     if not content:
         raise _invalid_media()

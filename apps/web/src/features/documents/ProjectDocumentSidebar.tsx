@@ -84,12 +84,23 @@ function conflictReason(error: unknown): string | undefined {
   return typeof reason === "string" ? reason : undefined;
 }
 
-export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
+export function ProjectDocumentSidebar({
+  projectId,
+  userId,
+}: {
+  projectId: string;
+  userId: string;
+}) {
   const { t } = useTranslation(["common", "projects"]);
   const queryClient = useQueryClient();
   const { requestDocumentChange } = useEditorNavigation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [collapsed, setCollapsed] = useState(false);
+  const collapseKey = `xnovel:document-sidebar:v1:${userId}:${projectId}`;
+  const [collapsed, setCollapsed] = useState(() =>
+    collapseKey
+      ? window.localStorage.getItem(collapseKey) === "collapsed"
+      : false,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [view, setView] = useState<"active" | "archived">("active");
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(
@@ -104,6 +115,7 @@ export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const activeQuery = useProjectDocuments(projectId, "active");
   const archivedQuery = useProjectDocuments(
     projectId,
@@ -138,6 +150,13 @@ export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
   const selectedId = searchParams.get("document");
 
   useEffect(() => {
+    window.localStorage.setItem(
+      collapseKey,
+      collapsed ? "collapsed" : "expanded",
+    );
+  }, [collapseKey, collapsed]);
+
+  useEffect(() => {
     if (!activeDocuments.length) return;
     const selectedExists = activeDocuments.some(
       (document) => document.id === selectedId,
@@ -151,14 +170,41 @@ export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() =>
+      sidebarRef.current
+        ?.querySelector<HTMLElement>("a, button:not([disabled])")
+        ?.focus(),
+    );
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMobileOpen(false);
         requestAnimationFrame(() => mobileTriggerRef.current?.focus());
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        sidebarRef.current?.querySelectorAll<HTMLElement>(
+          'a, button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+      if (!focusable.length) return;
+      const first = focusable[0]!;
+      const last = focusable.at(-1)!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [mobileOpen]);
 
   function mutationError(errorValue: unknown) {
@@ -265,6 +311,7 @@ export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
     next.set("document", documentId);
     setSearchParams(next);
     setMobileOpen(false);
+    requestAnimationFrame(() => mobileTriggerRef.current?.focus());
   }
 
   function move(documentId: string, parentId: string | null, index: number) {
@@ -416,6 +463,32 @@ export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
           <div
             aria-label={t("projects:documentTree")}
             className="document-tree"
+            onKeyDown={(event) => {
+              if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key))
+                return;
+              const items = Array.from(
+                event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  ".document-tree-select",
+                ),
+              );
+              const current = event.target as HTMLElement;
+              const button = current.closest<HTMLButtonElement>(
+                ".document-tree-select",
+              );
+              const index = button ? items.indexOf(button) : -1;
+              const next =
+                event.key === "Home"
+                  ? items[0]
+                  : event.key === "End"
+                    ? items.at(-1)
+                    : event.key === "ArrowUp"
+                      ? items[Math.max(0, index - 1)]
+                      : items[Math.min(items.length - 1, index + 1)];
+              if (next) {
+                event.preventDefault();
+                next.focus();
+              }
+            }}
             role="tree"
           >
             {tree.roots.map((node) => (
@@ -505,6 +578,7 @@ export function ProjectDocumentSidebar({ projectId }: { projectId: string }) {
         ]
           .filter(Boolean)
           .join(" ")}
+        ref={sidebarRef}
       >
         <div className="console-sidebar-header document-sidebar-header">
           {!collapsed ? (
@@ -800,6 +874,7 @@ function DocumentTreeItem({
         <button
           className="document-tree-select"
           onClick={() => onSelect(document.id)}
+          tabIndex={archived || selectedId === document.id ? 0 : -1}
           title={document.title}
           type="button"
         >

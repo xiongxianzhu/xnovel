@@ -27,6 +27,8 @@ Web 只依赖 xnovel API，不绑定厂商 SDK。Desktop renderer 只依赖 prel
 
 两端的 Provider 适配层统一模型名称、消息格式、流式事件、超时、取消和错误语义，但密钥来源和数据存储彼此独立。
 
+正文参与任务时，上下文清单必须保存生成时 `document_id` 和 `document_version`，但不得保存完整正文。候选应用只能回到同一文档，并要求请求版本、生成版本与当前正式正文版本完全一致；编辑器存在未保存草稿时不允许生成或应用整篇替换候选。Desktop 在本地主进程执行同样检查，renderer 传入的版本不是授权依据。
+
 Web 首版使用“内置 Provider 目录 + 自定义 Provider + 四种协议适配器”。内置目录包括 DeepSeek、OpenAI、Anthropic、Google Gemini、OpenRouter、Moonshot AI/Kimi、Z.AI、MiniMax、Mistral、xAI、Groq、Together AI、Fireworks AI、Cerebras、NVIDIA 和 Hugging Face。协议固定为 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages 和 Google Generative AI；不允许用户定义任意请求模板或 Header。
 
 一个 Web 用户在自己的范围内只能拥有一个相同 `provider_id`。Provider 连接可以包含多个手工登记的模型和一个默认模型；自定义 Provider ID 创建后不可修改。模型列表不作为永久内置事实，测试连接只验证当前地址、凭据、协议和模型能否完成最小调用。

@@ -80,6 +80,7 @@ async def build_ai_context(
         content = await session.get(DocumentContent, document.id)
         if content is None:
             raise _context_error("document_content_missing")
+        manifest["document_version"] = content.version
         body = payload.selected_text if payload.selected_text is not None else content.content
         context_parts.append(f'<document title="{document.title}">\n{body}\n</document>')
         if document.kind == "manuscript":

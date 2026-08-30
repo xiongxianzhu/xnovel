@@ -18,7 +18,7 @@ from app.schemas.common import (
     ServiceUnavailableErrorResponse,
 )
 from app.schemas.media import LogoData, LogoResponse
-from app.services.media import clear_site_logo, read_validated_image, set_site_logo
+from app.services.media import MAX_LOGO_FILE_BYTES, clear_site_logo, read_validated_image, set_site_logo
 
 router = APIRouter(prefix="/site-settings")
 
@@ -39,7 +39,13 @@ async def upload_logo(
     session: SessionDep,
     file: Annotated[UploadFile, File()],
 ) -> LogoResponse:
-    image = await read_validated_image(file, max_width=4096, max_height=4096, max_pixels=16_777_216)
+    image = await read_validated_image(
+        file,
+        max_file_bytes=MAX_LOGO_FILE_BYTES,
+        max_width=4096,
+        max_height=4096,
+        max_pixels=16_777_216,
+    )
     url = await set_site_logo(
         session,
         context=context,

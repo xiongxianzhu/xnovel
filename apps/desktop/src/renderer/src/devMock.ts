@@ -16,9 +16,11 @@ export function installDevMock(): void {
   const documentItem = {
     id: "01900000-0000-7000-8000-000000000002",
     projectId: project.id,
+    parentId: null,
     title: "第一章 · 雨夜",
     kind: "manuscript" as const,
     position: 0,
+    status: "active" as const,
     createdAt: now,
     updatedAt: now,
   };
@@ -39,6 +41,20 @@ export function installDevMock(): void {
         return { project, document: documentItem };
       },
       documents: async () => [documentItem],
+      archivedDocuments: async () => [],
+      createDocument: async (input) => ({
+        ...documentItem,
+        id: crypto.randomUUID(),
+        parentId: input.parentId,
+        title: input.title,
+        kind: input.kind,
+      }),
+      renameDocument: async (_id, title) => ({ ...documentItem, title }),
+      moveDocument: async () => [documentItem],
+      setDocumentArchived: async (_id, archived) => ({
+        ...documentItem,
+        status: archived ? "archived" : "active",
+      }),
       content: async () => content,
       save: async (_id, text) =>
         (content = {
@@ -47,6 +63,17 @@ export function installDevMock(): void {
           version: content.version + 1,
           updatedAt: new Date().toISOString(),
         }),
+    },
+    drafts: {
+      get: async () => null,
+      save: async (documentId, text, baseVersion) => ({
+        documentId,
+        baseVersion,
+        content: text,
+        createdAt: now,
+        updatedAt: now,
+      }),
+      remove: async () => undefined,
     },
     preferences: {
       get: async () => ({

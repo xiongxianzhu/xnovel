@@ -21,9 +21,11 @@ const auth: AuthContextValue = {
   changePassword: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
+  refreshProfile: vi.fn(),
   status: "authenticated",
   user: {
     email: "writer@example.com",
+    avatar_url: null,
     id: "user-1",
     must_change_password: false,
     nickname: "作者",

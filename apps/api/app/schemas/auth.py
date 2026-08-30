@@ -55,6 +55,7 @@ class AuthenticatedUserData(BaseModel):
     must_change_password: bool
     phone_e164: str | None
     nickname: str
+    avatar_url: str | None
     role: Literal["user", "admin"]
     status: Literal["active"]
 

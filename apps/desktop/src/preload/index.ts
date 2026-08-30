@@ -10,9 +10,24 @@ const api: XnovelDesktopApi = {
     list: () => invoke("projects:list"),
     create: (title) => invoke("projects:create", title),
     documents: (projectId) => invoke("projects:documents", projectId),
+    archivedDocuments: (projectId) =>
+      invoke("projects:documents-archived", projectId),
+    createDocument: (input) => invoke("projects:documents-create", input),
+    renameDocument: (documentId, title) =>
+      invoke("projects:documents-rename", documentId, title),
+    moveDocument: (documentId, parentId, position) =>
+      invoke("projects:documents-move", documentId, parentId, position),
+    setDocumentArchived: (documentId, archived) =>
+      invoke("projects:documents-archive", documentId, archived),
     content: (documentId) => invoke("projects:content", documentId),
     save: (documentId, content, version) =>
       invoke("projects:save", documentId, content, version),
+  },
+  drafts: {
+    get: (documentId) => invoke("drafts:get", documentId),
+    save: (documentId, content, baseVersion) =>
+      invoke("drafts:save", documentId, content, baseVersion),
+    remove: (documentId) => invoke("drafts:remove", documentId),
   },
   preferences: {
     get: () => invoke("preferences:get"),
