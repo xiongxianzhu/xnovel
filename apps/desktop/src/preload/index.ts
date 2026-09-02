@@ -1,14 +1,17 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
 
 import type { XnovelDesktopApi } from "../shared/contracts";
 
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
   ipcRenderer.invoke(channel, ...args) as Promise<T>;
 
+const MAXIMIZED_CHANNEL = "window:maximized-changed";
+
 const api: XnovelDesktopApi = {
   projects: {
     list: () => invoke("projects:list"),
     create: (title) => invoke("projects:create", title),
+    remove: (projectId) => invoke("projects:delete", projectId),
     documents: (projectId) => invoke("projects:documents", projectId),
     archivedDocuments: (projectId) =>
       invoke("projects:documents-archived", projectId),
@@ -19,6 +22,8 @@ const api: XnovelDesktopApi = {
       invoke("projects:documents-move", documentId, parentId, position),
     setDocumentArchived: (documentId, archived) =>
       invoke("projects:documents-archive", documentId, archived),
+    deleteDocument: (documentId) =>
+      invoke("projects:documents-delete", documentId),
     content: (documentId) => invoke("projects:content", documentId),
     save: (documentId, content, version) =>
       invoke("projects:save", documentId, content, version),
@@ -56,6 +61,18 @@ const api: XnovelDesktopApi = {
     check: () => invoke("update:check"),
     download: () => invoke("update:download"),
     install: () => invoke("update:install"),
+  },
+  window: {
+    info: () => invoke("window:info"),
+    minimize: () => invoke("window:minimize"),
+    toggleMaximize: () => invoke("window:toggle-maximize"),
+    close: () => invoke("window:close"),
+    onMaximizedChange: (listener) => {
+      const handler = (_event: IpcRendererEvent, maximized: boolean): void =>
+        listener(maximized);
+      ipcRenderer.on(MAXIMIZED_CHANNEL, handler);
+      return () => ipcRenderer.removeListener(MAXIMIZED_CHANNEL, handler);
+    },
   },
 };
 

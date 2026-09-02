@@ -25,6 +25,12 @@ afterEach(async () => {
   );
 });
 
+function rowCount(store: DesktopDatabase, sql: string, id?: string): number {
+  const statement = store.db.prepare(sql);
+  const row = (id ? statement.get(id) : statement.get()) as { total: number };
+  return row.total;
+}
+
 describe("DesktopDatabase", () => {
   it("persists the offline create-write-reopen flow with optimistic locking", async () => {
     const root = await workspace();
@@ -224,6 +230,146 @@ describe("DesktopDatabase", () => {
     store.setDocumentArchived(chapter.id, false);
     store.removeEditorDraft(chapter.id);
     expect(store.getEditorDraft(chapter.id)).toBeNull();
+    store.close();
+  });
+
+  it("deletes a folder subtree permanently and protects the last manuscript", async () => {
+    const root = await workspace();
+    const store = await DesktopDatabase.open(join(root, "xnovel.db"));
+    const created = store.createProject("删除测试");
+    const folder = store.createDocument({
+      projectId: created.project.id,
+      parentId: null,
+      title: "第一卷",
+      kind: "folder",
+    });
+    const outline = store.createDocument({
+      projectId: created.project.id,
+      parentId: null,
+      title: "设定",
+      kind: "outline",
+    });
+    const chapter = store.createDocument({
+      projectId: created.project.id,
+      parentId: folder.id,
+      title: "第一章",
+      kind: "manuscript",
+    });
+    const appendix = store.createDocument({
+      projectId: created.project.id,
+      parentId: folder.id,
+      title: "附录",
+      kind: "folder",
+    });
+    const archivedNote = store.createDocument({
+      projectId: created.project.id,
+      parentId: appendix.id,
+      title: "旧稿",
+      kind: "outline",
+    });
+    store.setDocumentArchived(archivedNote.id, true);
+    store.saveContent(chapter.id, "正文", 1);
+    store.saveEditorDraft(chapter.id, "草稿", 2);
+
+    store.deleteDocument(folder.id);
+
+    expect(store.listDocuments(created.project.id)).toHaveLength(2);
+    expect(store.listDocuments(created.project.id, "archived")).toHaveLength(0);
+    expect(
+      store.listDocuments(created.project.id).map((item) => item.position),
+    ).toEqual([0, 1]);
+    expect(
+      rowCount(
+        store,
+        "SELECT COUNT(*) AS total FROM documents WHERE project_id=?",
+        created.project.id,
+      ),
+    ).toBe(2);
+    for (const table of [
+      "document_contents",
+      "document_revisions",
+      "editor_drafts",
+    ]) {
+      expect(
+        rowCount(
+          store,
+          `SELECT COUNT(*) AS total FROM ${table} WHERE document_id=?`,
+          chapter.id,
+        ),
+      ).toBe(0);
+    }
+    expect(() => store.deleteDocument(chapter.id)).toThrow(
+      "DOCUMENT_NOT_FOUND",
+    );
+    expect(() => store.deleteDocument(created.document.id)).toThrow(
+      "DOCUMENT_LAST_MANUSCRIPT",
+    );
+    expect(() => store.setDocumentArchived(created.document.id, true)).toThrow(
+      "DOCUMENT_LAST_MANUSCRIPT",
+    );
+
+    store.deleteDocument(outline.id);
+    expect(store.listDocuments(created.project.id)).toHaveLength(1);
+    store.close();
+  });
+
+  it("deletes a project with every document and AI task it owns", async () => {
+    const root = await workspace();
+    const store = await DesktopDatabase.open(join(root, "xnovel.db"));
+    const created = store.createProject("待删除作品");
+    const folder = store.createDocument({
+      projectId: created.project.id,
+      parentId: null,
+      title: "第一卷",
+      kind: "folder",
+    });
+    store.createDocument({
+      projectId: created.project.id,
+      parentId: folder.id,
+      title: "第一章",
+      kind: "manuscript",
+    });
+    store.saveContent(created.document.id, "正文", 1);
+    const provider = store.saveProvider(
+      {
+        displayName: "模型",
+        protocol: "openai_chat",
+        baseUrl: "https://api.example.com/v1",
+        model: "model-1",
+      },
+      "credential-1",
+    );
+    const taskId = store.createAiTask({
+      projectId: created.project.id,
+      documentId: created.document.id,
+      providerId: provider.id,
+      instruction: "改写",
+      contextManifest: {
+        document_id: created.document.id,
+        document_version: 1,
+      },
+    });
+    store.finishAiTask(taskId, "候选正文");
+
+    store.deleteProject(created.project.id);
+
+    expect(store.listProjects()).toHaveLength(0);
+    expect(store.listDocuments(created.project.id)).toHaveLength(0);
+    expect(
+      rowCount(
+        store,
+        "SELECT COUNT(*) AS total FROM documents WHERE project_id=?",
+        created.project.id,
+      ),
+    ).toBe(0);
+    expect(rowCount(store, "SELECT COUNT(*) AS total FROM ai_tasks")).toBe(0);
+    expect(rowCount(store, "SELECT COUNT(*) AS total FROM ai_results")).toBe(0);
+    expect(() => store.deleteProject(created.project.id)).toThrow(
+      "PROJECT_NOT_FOUND",
+    );
+    expect(() => store.deleteDocument(created.document.id)).toThrow(
+      "DOCUMENT_NOT_FOUND",
+    );
     store.close();
   });
 });

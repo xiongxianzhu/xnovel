@@ -6,6 +6,7 @@ import { DesktopAiService } from "./ai";
 import { CredentialStore } from "./credentials";
 import { DesktopDatabase } from "./database";
 import { LocalSkillService } from "./skills";
+import { usesCustomWindowControls } from "./window";
 
 export type DesktopServices = {
   store: DesktopDatabase;
@@ -75,9 +76,31 @@ export function registerIpc(
     });
   };
 
+  const pushMaximized = () => {
+    if (window.isDestroyed()) return;
+    window.webContents.send("window:maximized-changed", window.isMaximized());
+  };
+  window.on("maximize", pushMaximized);
+  window.on("unmaximize", pushMaximized);
+
+  handle("window:info", () => ({
+    frameless: usesCustomWindowControls(process.platform),
+    maximized: window.isMaximized(),
+  }));
+  handle("window:minimize", () => window.minimize());
+  handle("window:toggle-maximize", () => {
+    if (window.isMaximized()) window.unmaximize();
+    else window.maximize();
+    return { maximized: window.isMaximized() };
+  });
+  handle("window:close", () => window.close());
+
   handle("projects:list", () => services.store.listProjects());
   handle("projects:create", (title) =>
     services.store.createProject(stringValue(title, 200)),
+  );
+  handle("projects:delete", (projectId) =>
+    services.store.deleteProject(stringValue(projectId, 64)),
   );
   handle("projects:documents", (projectId) =>
     services.store.listDocuments(stringValue(projectId, 64)),
@@ -113,6 +136,9 @@ export function registerIpc(
       stringValue(documentId, 64),
       Boolean(archived),
     ),
+  );
+  handle("projects:documents-delete", (documentId) =>
+    services.store.deleteDocument(stringValue(documentId, 64)),
   );
   handle("projects:content", (documentId) =>
     services.store.getContent(stringValue(documentId, 64)),

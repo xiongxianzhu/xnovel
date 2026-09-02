@@ -40,6 +40,7 @@ export function installDevMock(): void {
         project = { ...project, title };
         return { project, document: documentItem };
       },
+      remove: async () => undefined,
       documents: async () => [documentItem],
       archivedDocuments: async () => [],
       createDocument: async (input) => ({
@@ -55,6 +56,7 @@ export function installDevMock(): void {
         ...documentItem,
         status: archived ? "archived" : "active",
       }),
+      deleteDocument: async () => [],
       content: async () => content,
       save: async (_id, text) =>
         (content = {
@@ -144,6 +146,13 @@ export function installDevMock(): void {
       check: async () => ({ status: "development" }),
       download: async () => ({ status: "development" }),
       install: async () => undefined,
+    },
+    window: {
+      info: async () => ({ frameless: false, maximized: false }),
+      minimize: async () => undefined,
+      toggleMaximize: async () => ({ maximized: false }),
+      close: async () => undefined,
+      onMaximizedChange: () => () => undefined,
     },
   };
   Object.defineProperty(window, "xnovelDesktop", {

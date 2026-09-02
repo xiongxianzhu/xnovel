@@ -76,6 +76,7 @@ export type XnovelDesktopApi = {
     create(
       title: string,
     ): Promise<{ project: DesktopProject; document: DesktopDocument }>;
+    remove(projectId: string): Promise<void>;
     documents(projectId: string): Promise<DesktopDocument[]>;
     archivedDocuments(projectId: string): Promise<DesktopDocument[]>;
     createDocument(input: {
@@ -94,6 +95,7 @@ export type XnovelDesktopApi = {
       documentId: string,
       archived: boolean,
     ): Promise<DesktopDocument>;
+    deleteDocument(documentId: string): Promise<DesktopDocument[]>;
     content(documentId: string): Promise<DesktopContent>;
     save(
       documentId: string,
@@ -148,5 +150,12 @@ export type XnovelDesktopApi = {
     check(): Promise<{ status: string; version?: string }>;
     download(): Promise<{ status: string }>;
     install(): Promise<void>;
+  };
+  window: {
+    info(): Promise<{ frameless: boolean; maximized: boolean }>;
+    minimize(): Promise<void>;
+    toggleMaximize(): Promise<{ maximized: boolean }>;
+    close(): Promise<void>;
+    onMaximizedChange(listener: (maximized: boolean) => void): () => void;
   };
 };

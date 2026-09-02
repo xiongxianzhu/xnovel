@@ -8,10 +8,12 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronRight,
+  Copy,
   FileText,
   Folder,
   HardDrive,
   Menu,
+  Minus,
   Pencil,
   Plus,
   RefreshCw,
@@ -20,6 +22,8 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Square,
+  Trash2,
   X,
 } from "lucide-react";
 import { themeValues, type ColorScheme } from "@xnovel/theme";
@@ -51,6 +55,31 @@ type PendingAction = {
   allowStash: boolean;
   run: () => void | Promise<void>;
 };
+type TitleRequest = {
+  heading: string;
+  label: string;
+  initialValue: string;
+  submitLabel: string;
+  onSubmit: (title: string) => Promise<void>;
+};
+type ConfirmRequest = {
+  heading: string;
+  description: string;
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+};
+
+function deleteErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("DOCUMENT_LAST_MANUSCRIPT"))
+    return "作品需要保留至少一个当前正文，请先新建正文再删除。";
+  if (
+    message.includes("DOCUMENT_NOT_FOUND") ||
+    message.includes("PROJECT_NOT_FOUND")
+  )
+    return "内容已变化，请重新加载。";
+  return "删除失败，请稍后重试。";
+}
 
 export function App() {
   const [projects, setProjects] = useState<DesktopProject[]>([]);
@@ -67,6 +96,8 @@ export function App() {
   const [view, setView] = useState<View>("writing");
   const [menuOpen, setMenuOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [frameless, setFrameless] = useState(false);
+  const [maximized, setMaximized] = useState(false);
   const [preferences, setPreferences] = useState<DesktopPreferences>({
     themePalette: "manuscript-brown",
     themeMode: "system",
@@ -76,6 +107,8 @@ export function App() {
   const [error, setError] = useState<string>();
   const [draftCandidate, setDraftCandidate] = useState<DesktopDraft>();
   const [pendingAction, setPendingAction] = useState<PendingAction>();
+  const [titleRequest, setTitleRequest] = useState<TitleRequest>();
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest>();
   const draftRef = useRef("");
   const contentRef = useRef<DesktopContent | undefined>(undefined);
   const saveInFlightRef = useRef<Promise<boolean> | null>(null);
@@ -167,6 +200,16 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    const unsubscribe =
+      window.xnovelDesktop.window.onMaximizedChange(setMaximized);
+    void window.xnovelDesktop.window.info().then((info) => {
+      setFrameless(info.frameless);
+      setMaximized(info.maximized);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.themePalette = preferences.themePalette;
     const media = matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
@@ -199,8 +242,9 @@ export function App() {
 
   useEffect(() => {
     if (!menuOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const bodyStyle = document.body.style;
+    const previousOverflow = bodyStyle.getPropertyValue("overflow");
+    bodyStyle.setProperty("overflow", "hidden");
     requestAnimationFrame(() =>
       sidebarRef.current
         ?.querySelector<HTMLElement>("button:not([disabled])")
@@ -213,7 +257,7 @@ export function App() {
     };
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      bodyStyle.setProperty("overflow", previousOverflow);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [menuOpen]);
@@ -379,9 +423,21 @@ export function App() {
     return () => removeEventListener("keydown", listener);
   }, [saveDraft]);
 
-  async function createProject() {
-    const title = prompt("作品名称");
-    if (!title?.trim()) return;
+  function requestTitle(request: TitleRequest) {
+    requestChange(() => setTitleRequest(request));
+  }
+
+  function requestCreateProject() {
+    requestTitle({
+      heading: "新建作品",
+      label: "作品名称",
+      initialValue: "",
+      submitLabel: "创建作品",
+      onSubmit: createProject,
+    });
+  }
+
+  async function createProject(title: string) {
     const created = await window.xnovelDesktop.projects.create(title);
     await refreshProjects();
     await openProject(created.project);
@@ -392,32 +448,56 @@ export function App() {
     setDocuments(await window.xnovelDesktop.projects.documents(projectId));
   }
 
-  async function createLocalDocument(kind: DesktopDocument["kind"]) {
+  function requestCreateDocument(kind: DesktopDocument["kind"]) {
     if (!project) return;
-    const title = prompt(
-      kind === "folder"
-        ? "文件夹名称"
-        : kind === "outline"
-          ? "大纲名称"
-          : "章节名称",
-    );
-    if (!title?.trim()) return;
+    requestTitle({
+      heading:
+        kind === "folder"
+          ? "新建文件夹"
+          : kind === "outline"
+            ? "新建大纲"
+            : "新建正文",
+      label:
+        kind === "folder"
+          ? "文件夹名称"
+          : kind === "outline"
+            ? "大纲名称"
+            : "章节名称",
+      initialValue: "",
+      submitLabel: "创建",
+      onSubmit: (title) => createLocalDocument(kind, title),
+    });
+  }
+
+  async function createLocalDocument(
+    kind: DesktopDocument["kind"],
+    title: string,
+  ) {
+    if (!project) return;
     const created = await window.xnovelDesktop.projects.createDocument({
       projectId: project.id,
       parentId: null,
-      title: title.trim(),
+      title,
       kind,
     });
     await refreshDocuments(project.id);
     if (created.kind !== "folder") await openDocument(created);
   }
 
-  async function renameLocalDocument(item: DesktopDocument) {
-    const title = prompt("文档名称", item.title);
-    if (!title?.trim()) return;
+  function requestRenameDocument(item: DesktopDocument) {
+    requestTitle({
+      heading: "重命名文档",
+      label: "文档名称",
+      initialValue: item.title,
+      submitLabel: "保存名称",
+      onSubmit: (title) => renameLocalDocument(item, title),
+    });
+  }
+
+  async function renameLocalDocument(item: DesktopDocument, title: string) {
     const updated = await window.xnovelDesktop.projects.renameDocument(
       item.id,
-      title.trim(),
+      title,
     );
     setDocuments((items) =>
       items.map((entry) => (entry.id === updated.id ? updated : entry)),
@@ -455,6 +535,96 @@ export function App() {
       items.filter((entry) => entry.id !== item.id),
     );
     setDocuments((items) => [...items, restored]);
+  }
+
+  function countDescendants(item: DesktopDocument): number {
+    const all = [...documents, ...archivedDocuments];
+    let total = 0;
+    const queue = [item.id];
+    while (queue.length) {
+      const parentId = queue.shift()!;
+      for (const entry of all) {
+        if (entry.parentId !== parentId) continue;
+        total += 1;
+        queue.push(entry.id);
+      }
+    }
+    return total;
+  }
+
+  async function refreshDocumentLists(projectId: string) {
+    const [active, archived] = await Promise.all([
+      window.xnovelDesktop.projects.documents(projectId),
+      window.xnovelDesktop.projects.archivedDocuments(projectId),
+    ]);
+    setDocuments(active);
+    setArchivedDocuments(archived);
+    return active;
+  }
+
+  function clearEditor() {
+    setDocumentItem(undefined);
+    setContent(undefined);
+    contentRef.current = undefined;
+    setDraft("");
+    draftRef.current = "";
+    setDraftCandidate(undefined);
+    setSaveState("clean");
+  }
+
+  async function deleteLocalDocument(item: DesktopDocument) {
+    try {
+      await window.xnovelDesktop.projects.deleteDocument(item.id);
+      const next = await refreshDocumentLists(item.projectId);
+      if (documentItem && !next.some((entry) => entry.id === documentItem.id)) {
+        const fallback = next.find((entry) => entry.kind !== "folder");
+        if (fallback) await openDocument(fallback);
+        else clearEditor();
+      }
+    } catch (error) {
+      setError(deleteErrorMessage(error));
+    }
+  }
+
+  async function deleteLocalProject(item: DesktopProject) {
+    try {
+      await window.xnovelDesktop.projects.remove(item.id);
+      await refreshProjects();
+      if (project?.id === item.id) closeProject();
+    } catch (error) {
+      setError(deleteErrorMessage(error));
+    }
+  }
+
+  function requestDeleteDocument(item: DesktopDocument) {
+    requestChange(() =>
+      setConfirmRequest({
+        heading: item.kind === "folder" ? "删除文件夹" : "删除文档",
+        description:
+          item.kind === "folder"
+            ? `将同时删除「${item.title}」内的 ${countDescendants(item)} 个文档，删除后不可恢复。`
+            : `「${item.title}」的正文与历史版本将被彻底删除，不可恢复。`,
+        confirmLabel: "彻底删除",
+        onConfirm: async () => {
+          setConfirmRequest(undefined);
+          await deleteLocalDocument(item);
+        },
+      }),
+    );
+  }
+
+  function requestDeleteProject(item: DesktopProject) {
+    requestChange(() =>
+      setConfirmRequest({
+        heading: "删除作品",
+        description: `「${item.title}」及其全部文档、正文、历史版本与本地草稿将被彻底删除，不可恢复。`,
+        confirmLabel: "彻底删除",
+        onConfirm: async () => {
+          setConfirmRequest(undefined);
+          await deleteLocalProject(item);
+        },
+      }),
+    );
   }
 
   async function moveLocalDocument(item: DesktopDocument, offset: -1 | 1) {
@@ -509,7 +679,10 @@ export function App() {
 
   return (
     <div className="desktop-app">
-      <header className="desktop-topbar">
+      <header
+        className="desktop-topbar"
+        data-frameless={frameless ? "true" : undefined}
+      >
         <button
           className="icon-button mobile-only"
           aria-label="打开作品列表"
@@ -542,6 +715,38 @@ export function App() {
             设置
           </button>
         </div>
+        {frameless ? (
+          <div className="window-controls">
+            <button
+              aria-label="最小化"
+              className="window-control"
+              onClick={() => void window.xnovelDesktop.window.minimize()}
+            >
+              <Minus aria-hidden size={16} />
+            </button>
+            <button
+              aria-label={maximized ? "向下还原" : "最大化"}
+              className="window-control"
+              onClick={async () => {
+                const next = await window.xnovelDesktop.window.toggleMaximize();
+                setMaximized(next.maximized);
+              }}
+            >
+              {maximized ? (
+                <Copy aria-hidden size={15} />
+              ) : (
+                <Square aria-hidden size={15} />
+              )}
+            </button>
+            <button
+              aria-label="关闭"
+              className="window-control close"
+              onClick={() => void window.xnovelDesktop.window.close()}
+            >
+              <X aria-hidden size={17} />
+            </button>
+          </div>
+        ) : null}
       </header>
       <div className="desktop-body">
         <aside
@@ -571,26 +776,14 @@ export function App() {
                 返回作品列表
               </button>
               <div className="document-create-actions">
-                <button
-                  onClick={() =>
-                    requestChange(() => createLocalDocument("manuscript"))
-                  }
-                >
+                <button onClick={() => requestCreateDocument("manuscript")}>
                   <Plus aria-hidden size={16} />
                   正文
                 </button>
-                <button
-                  onClick={() =>
-                    requestChange(() => createLocalDocument("folder"))
-                  }
-                >
+                <button onClick={() => requestCreateDocument("folder")}>
                   文件夹
                 </button>
-                <button
-                  onClick={() =>
-                    requestChange(() => createLocalDocument("outline"))
-                  }
-                >
+                <button onClick={() => requestCreateDocument("outline")}>
                   大纲
                 </button>
               </div>
@@ -609,9 +802,19 @@ export function App() {
                     archivedDocuments.map((item) => (
                       <div key={item.id}>
                         <span>{item.title}</span>
-                        <button onClick={() => void restoreLocalDocument(item)}>
-                          恢复
-                        </button>
+                        <div className="archived-document-actions">
+                          <button
+                            onClick={() => void restoreLocalDocument(item)}
+                          >
+                            恢复
+                          </button>
+                          <button
+                            aria-label={`彻底删除${item.title}`}
+                            onClick={() => requestDeleteDocument(item)}
+                          >
+                            彻底删除
+                          </button>
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -625,6 +828,7 @@ export function App() {
                   onArchive={(item) =>
                     requestChange(() => archiveLocalDocument(item))
                   }
+                  onDelete={requestDeleteDocument}
                   onDrop={(source, target) =>
                     void dropLocalDocument(source, target)
                   }
@@ -632,29 +836,34 @@ export function App() {
                     void moveLocalDocument(item, offset)
                   }
                   onOpen={(item) => requestChange(() => openDocument(item))}
-                  onRename={(item) => void renameLocalDocument(item)}
+                  onRename={requestRenameDocument}
                 />
               )}
             </>
           ) : (
             <>
-              <button
-                className="primary full"
-                onClick={() => requestChange(createProject)}
-              >
+              <button className="primary full" onClick={requestCreateProject}>
                 <Plus aria-hidden size={17} />
                 新建作品
               </button>
               <nav aria-label="本地作品">
                 {projects.map((item) => (
-                  <button
-                    className="project-link"
-                    key={item.id}
-                    onClick={() => requestChange(() => openProject(item))}
-                  >
-                    <BookOpenText aria-hidden size={17} />
-                    <span>{item.title}</span>
-                  </button>
+                  <div className="project-link-row" key={item.id}>
+                    <button
+                      className="project-link"
+                      onClick={() => requestChange(() => openProject(item))}
+                    >
+                      <BookOpenText aria-hidden size={17} />
+                      <span>{item.title}</span>
+                    </button>
+                    <button
+                      aria-label={`删除作品${item.title}`}
+                      className="icon-button"
+                      onClick={() => requestDeleteProject(item)}
+                    >
+                      <Trash2 aria-hidden size={16} />
+                    </button>
+                  </div>
                 ))}
               </nav>
             </>
@@ -698,7 +907,7 @@ export function App() {
               }}
               onSave={() => void saveDraft()}
               onAi={() => requestChange(() => setAiOpen(true), false)}
-              onCreate={() => requestChange(createProject)}
+              onCreate={requestCreateProject}
               draftCandidate={draftCandidate}
               onDiscardDraft={async () => {
                 if (!documentItem) return;
@@ -800,7 +1009,150 @@ export function App() {
             </section>
           </div>
         ) : null}
+        {titleRequest ? (
+          <TitleDialog
+            request={titleRequest}
+            onCancel={() => setTitleRequest(undefined)}
+          />
+        ) : null}
+        {confirmRequest ? (
+          <ConfirmDialog
+            request={confirmRequest}
+            onCancel={() => setConfirmRequest(undefined)}
+          />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+function useDialogKeyboard(
+  ref: { current: HTMLElement | null },
+  onClose: () => void,
+): void {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        ref.current?.querySelectorAll<HTMLElement>(
+          "input, button:not([disabled])",
+        ) ?? [],
+      );
+      if (!focusable.length) return;
+      const first = focusable[0]!;
+      const last = focusable.at(-1)!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose, ref]);
+}
+
+function ConfirmDialog({
+  request,
+  onCancel,
+}: {
+  request: ConfirmRequest;
+  onCancel: () => void;
+}) {
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogKeyboard(dialogRef, onCancel);
+
+  useEffect(() => {
+    requestAnimationFrame(() =>
+      dialogRef.current?.querySelector<HTMLButtonElement>("button")?.focus(),
+    );
+  }, []);
+
+  return (
+    <div className="dialog-scrim" role="presentation">
+      <section
+        aria-labelledby="confirm-dialog-heading"
+        aria-modal="true"
+        className="unsaved-dialog confirm-dialog"
+        ref={dialogRef}
+        role="dialog"
+      >
+        <h2 id="confirm-dialog-heading">{request.heading}</h2>
+        <p>{request.description}</p>
+        <div>
+          <button onClick={onCancel}>取消</button>
+          <button className="danger" onClick={() => void request.onConfirm()}>
+            {request.confirmLabel}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function TitleDialog({
+  request,
+  onCancel,
+}: {
+  request: TitleRequest;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(request.initialValue);
+  const dialogRef = useRef<HTMLElement>(null);
+  const title = value.trim();
+  useDialogKeyboard(dialogRef, onCancel);
+
+  function submit() {
+    if (!title) return;
+    onCancel();
+    void request.onSubmit(title);
+  }
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const input = dialogRef.current?.querySelector<HTMLInputElement>("input");
+      input?.focus();
+      input?.select();
+    });
+  }, []);
+
+  return (
+    <div className="dialog-scrim" role="presentation">
+      <section
+        aria-labelledby="title-dialog-heading"
+        aria-modal="true"
+        className="unsaved-dialog title-dialog"
+        ref={dialogRef}
+        role="dialog"
+      >
+        <h2 id="title-dialog-heading">{request.heading}</h2>
+        <label htmlFor="title-dialog-input">
+          {request.label}
+          <input
+            autoComplete="off"
+            id="title-dialog-input"
+            maxLength={120}
+            onChange={(event) => setValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") submit();
+            }}
+            value={value}
+          />
+        </label>
+        <div>
+          <button onClick={onCancel}>取消</button>
+          <button className="primary" disabled={!title} onClick={submit}>
+            {request.submitLabel}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
@@ -809,6 +1161,7 @@ function DesktopDocumentTree({
   documents,
   selectedId,
   onArchive,
+  onDelete,
   onDrop,
   onMove,
   onOpen,
@@ -817,6 +1170,7 @@ function DesktopDocumentTree({
   documents: DesktopDocument[];
   selectedId?: string;
   onArchive(item: DesktopDocument): void;
+  onDelete(item: DesktopDocument): void;
   onDrop(source: DesktopDocument, target: DesktopDocument): void;
   onMove(item: DesktopDocument, offset: -1 | 1): void;
   onOpen(item: DesktopDocument): void;
@@ -919,6 +1273,12 @@ function DesktopDocumentTree({
                 onClick={() => onArchive(item)}
               >
                 <Archive aria-hidden />
+              </button>
+              <button
+                aria-label={`删除${item.title}`}
+                onClick={() => onDelete(item)}
+              >
+                <Trash2 aria-hidden />
               </button>
             </div>
           </div>

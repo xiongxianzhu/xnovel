@@ -525,13 +525,16 @@ export class DesktopDatabase {
   setDocumentArchived(documentId: string, archived: boolean): DesktopDocument {
     const id = uuid(documentId);
     const document = this.documentRow(id);
-    if (archived && document.kind === "folder") {
-      const child = this.db
-        .prepare(
-          "SELECT id FROM documents WHERE parent_id=? AND deleted_at IS NULL LIMIT 1",
-        )
-        .get(id);
-      if (child) throw new Error("DOCUMENT_FOLDER_NOT_EMPTY");
+    if (archived) {
+      this.assertNotLastManuscript(document);
+      if (document.kind === "folder") {
+        const child = this.db
+          .prepare(
+            "SELECT id FROM documents WHERE parent_id=? AND deleted_at IS NULL LIMIT 1",
+          )
+          .get(id);
+        if (child) throw new Error("DOCUMENT_FOLDER_NOT_EMPTY");
+      }
     }
     const timestamp = now();
     const parentId =
@@ -546,6 +549,95 @@ export class DesktopDatabase {
       )
       .run(parentId, archived ? timestamp : null, timestamp, id);
     return documentFromRow(this.documentRow(id));
+  }
+
+  deleteDocument(documentId: string): DesktopDocument[] {
+    const id = uuid(documentId);
+    const document = this.documentRow(id);
+    this.assertNotLastManuscript(document);
+    const timestamp = now();
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.deleteDocumentsDeepFirst([id]);
+      this.reindexActiveSiblings(
+        document.project_id,
+        document.parent_id,
+        timestamp,
+      );
+      this.db
+        .prepare("UPDATE projects SET updated_at=? WHERE id=?")
+        .run(timestamp, document.project_id);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    return this.listDocuments(document.project_id);
+  }
+
+  deleteProject(projectId: string): void {
+    const id = uuid(projectId);
+    const project = this.db
+      .prepare("SELECT id FROM projects WHERE id=?")
+      .get(id) as ProjectRow | undefined;
+    if (!project) throw new Error("PROJECT_NOT_FOUND");
+    const rootIds = (
+      this.db
+        .prepare(
+          "SELECT id FROM documents WHERE project_id=? AND parent_id IS NULL",
+        )
+        .all(id) as DocumentRow[]
+    ).map((row) => row.id);
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.deleteDocumentsDeepFirst(rootIds);
+      this.db.prepare("DELETE FROM projects WHERE id=?").run(id);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  private assertNotLastManuscript(document: DocumentRow): void {
+    if (document.kind !== "manuscript" || document.deleted_at) return;
+    const { total } = this.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM documents WHERE project_id=? AND kind='manuscript' AND deleted_at IS NULL",
+      )
+      .get(document.project_id) as { total: number };
+    if (total <= 1) throw new Error("DOCUMENT_LAST_MANUSCRIPT");
+  }
+
+  private deleteDocumentsDeepFirst(rootIds: string[]): void {
+    if (!rootIds.length) return;
+    const ids = (
+      this.db
+        .prepare(
+          `WITH RECURSIVE subtree(id,depth) AS (
+             SELECT id,0 FROM documents WHERE id IN (${rootIds.map(() => "?").join(",")})
+             UNION ALL
+             SELECT documents.id,subtree.depth+1 FROM documents JOIN subtree ON documents.parent_id=subtree.id
+           )
+           SELECT id FROM subtree ORDER BY depth DESC`,
+        )
+        .all(...rootIds) as DocumentRow[]
+    ).map((row) => row.id);
+    const remove = this.db.prepare("DELETE FROM documents WHERE id=?");
+    ids.forEach((documentId) => remove.run(documentId));
+  }
+
+  private reindexActiveSiblings(
+    projectId: string,
+    parentId: string | null,
+    timestamp: string,
+  ): void {
+    const update = this.db.prepare(
+      "UPDATE documents SET position=?,updated_at=? WHERE id=?",
+    );
+    this.listDocuments(projectId)
+      .filter((item) => item.parentId === parentId)
+      .forEach((item, index) => update.run(index, timestamp, item.id));
   }
 
   getEditorDraft(documentId: string): DesktopDraft | null {

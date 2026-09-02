@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import electronUpdater from "electron-updater";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -9,10 +9,13 @@ import {
   type DesktopServices,
 } from "./ipc";
 import { navigationAllowed, SECURE_WEB_PREFERENCES } from "./security";
+import { usesCustomWindowControls, windowChrome } from "./window";
 
 let services: DesktopServices | undefined;
 
 async function createWindow(): Promise<void> {
+  if (usesCustomWindowControls(process.platform) && app.isPackaged)
+    Menu.setApplicationMenu(null);
   const window = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -20,8 +23,9 @@ async function createWindow(): Promise<void> {
     minHeight: 600,
     show: false,
     backgroundColor: "#171310",
+    ...windowChrome(process.platform),
     webPreferences: {
-      preload: join(__dirname, "../preload/index.mjs"),
+      preload: join(__dirname, "../preload/index.cjs"),
       ...SECURE_WEB_PREFERENCES,
     },
   });

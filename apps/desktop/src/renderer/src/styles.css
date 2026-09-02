@@ -250,6 +250,38 @@ button:disabled {
   background: var(--muted);
   border-color: var(--border);
 }
+.desktop-topbar[data-frameless="true"] {
+  -webkit-app-region: drag;
+  padding-inline-end: 0;
+}
+.desktop-topbar[data-frameless="true"] button {
+  -webkit-app-region: no-drag;
+}
+.window-controls {
+  display: flex;
+  height: 100%;
+  margin-inline-start: 12px;
+}
+.window-control {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--text);
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  width: 46px;
+}
+.window-control:hover {
+  background: var(--muted);
+  border-color: transparent;
+  color: var(--ink);
+}
+.window-control.close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
 .desktop-body {
   display: grid;
   grid-template-columns: 256px minmax(0, 1fr);
@@ -325,6 +357,12 @@ button:disabled {
   white-space: nowrap;
 }
 
+.archived-document-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
 .desktop-document-row {
   position: relative;
   display: grid;
@@ -386,6 +424,19 @@ button:disabled {
 
 .document-row-actions button {
   width: 32px;
+}
+.project-link-row {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.project-link-row > .project-link {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.project-link-row > .icon-button {
+  flex: 0 0 auto;
 }
 .project-link {
   background: transparent;
@@ -559,6 +610,33 @@ button:disabled {
 .dialog-error {
   color: var(--danger);
 }
+
+.unsaved-dialog button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.unsaved-dialog button.danger:hover {
+  background: var(--danger);
+  color: var(--surface);
+}
+
+.title-dialog label {
+  display: grid;
+  font-weight: 600;
+  gap: 6px;
+  margin: 12px 0 20px;
+}
+
+.title-dialog input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  min-height: 44px;
+  padding: 8px;
+}
 .editor-surface {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -648,7 +726,10 @@ button:disabled {
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 12px 28px rgb(0 0 0/0.18);
+  display: flex;
+  flex-direction: column;
   inset: 88px 48px 48px calc(256px + 48px);
+  overflow: hidden;
   padding: 20px;
   position: fixed;
   z-index: 50;
@@ -657,6 +738,7 @@ button:disabled {
   align-items: center;
   border-bottom: 1px solid var(--border);
   display: flex;
+  flex: 0 0 auto;
   justify-content: space-between;
 }
 .detail-dialog h2 {
@@ -664,8 +746,11 @@ button:disabled {
   margin: 2px 0 12px;
 }
 .detail-dialog pre {
-  max-height: calc(100vh - 210px);
+  flex: 1 1 auto;
+  margin: 12px 0 0;
+  min-height: 0;
   overflow: auto;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 .settings-section {
@@ -869,6 +954,9 @@ button:disabled {
   .topbar-actions button svg {
     height: 18px;
     width: 18px;
+  }
+  .window-control {
+    width: 44px;
   }
   .desktop-body {
     display: block;

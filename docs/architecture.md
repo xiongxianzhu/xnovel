@@ -90,7 +90,7 @@ Web 作品列表按书名/独立作者署名查询，可与更新状态组合过
 
 Desktop 只读扫描 `~/.agents/skills/` 的一级子目录。启动和手动重新扫描负责发现变化；每次 AI 任务前仍重新校验文件数、累计大小、`SKILL.md` 大小和内容指纹，并使用本次校验捕获的不可变字节，避免检查后替换。preload 只暴露列表、详情、重新扫描、启用和禁用，不暴露写文件能力。
 
-当前实现由 `src/main` 持有 `node:sqlite`、迁移、备份、凭据、Skill 与 Provider 服务，`src/preload` 只映射白名单领域方法，`src/renderer` 通过 `XnovelDesktopApi` 存储适配器使用 React 工作台。文档树创建、重命名、移动、归档、恢复和编辑草稿都通过窄 IPC 进入主进程；未保存草稿独立于正式正文版本保存。窗口启用 `contextIsolation`、sandbox 和禁用 Node integration，拒绝权限请求、任意新窗口和非应用导航。
+当前实现由 `src/main` 持有 `node:sqlite`、迁移、备份、凭据、Skill 与 Provider 服务，`src/preload` 只映射白名单领域方法，`src/renderer` 通过 `XnovelDesktopApi` 存储适配器使用 React 工作台。文档树创建、重命名、移动、归档、恢复、彻底删除和编辑草稿都通过窄 IPC 进入主进程；未保存草稿独立于正式正文版本保存；删除文档或作品在同一事务中按子树深度倒序清理，避免触发 `documents.parent_id` 的 `ON DELETE RESTRICT`。窗口启用 `contextIsolation`、sandbox 和禁用 Node integration，拒绝权限请求、任意新窗口和非应用导航。Windows 使用无边框窗口与自绘的最小化、最大化和关闭控制，打包后不加载应用菜单，避免默认菜单加速键绕过未保存正文保护；窗口控制 IPC 与领域 IPC 一样只接受主框架调用。macOS 与 Linux 保持系统原生窗口边框。
 
 Web 与 Desktop 的 Skill 指纹统一使用 [`database.md`](database.md) 第 3.5 节的清单式 SHA-256；路径规范化、排序、Unicode 碰撞和元数据排除规则不能由平台适配器自行改写。
 

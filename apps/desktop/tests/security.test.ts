@@ -6,6 +6,7 @@ import {
   navigationAllowed,
   SECURE_WEB_PREFERENCES,
 } from "../src/main/security";
+import { usesCustomWindowControls, windowChrome } from "../src/main/window";
 
 describe("Desktop security boundary", () => {
   it("keeps Node and arbitrary navigation out of the renderer", () => {
@@ -65,5 +66,28 @@ describe("Desktop security boundary", () => {
       "utf8",
     );
     expect(source).toContain('exclude: ["@xnovel/theme"]');
+  });
+
+  it("drops the native window frame only on Windows", () => {
+    expect(usesCustomWindowControls("win32")).toBe(true);
+    expect(windowChrome("win32")).toEqual({ frame: false });
+    expect(usesCustomWindowControls("darwin")).toBe(false);
+    expect(windowChrome("darwin")).toEqual({ frame: true });
+    expect(windowChrome("linux")).toEqual({ frame: true });
+  });
+
+  it("builds the sandboxed preload as CommonJS and loads it from that path", async () => {
+    const config = await readFile(
+      join(process.cwd(), "electron.vite.config.ts"),
+      "utf8",
+    );
+    const main = await readFile(
+      join(process.cwd(), "src", "main", "index.ts"),
+      "utf8",
+    );
+    expect(config).toContain('format: "cjs"');
+    expect(config).toContain('entryFileNames: "[name].cjs"');
+    expect(main).toContain('"../preload/index.cjs"');
+    expect(main).not.toContain("index.mjs");
   });
 });
