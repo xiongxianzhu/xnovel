@@ -9,6 +9,7 @@ import {
 } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   createProviderConfigRequest,
   getProviderConfigRequest,
@@ -28,6 +29,7 @@ type Values = {
   provider_id: string;
 };
 export function ProviderFormPage() {
+  const { t } = useTranslation("ai");
   const { configId } = useParams();
   const editing = Boolean(configId);
   const navigate = useNavigate();
@@ -120,7 +122,7 @@ export function ProviderFormPage() {
         onFinish={(values) => save.mutate(values)}
       >
         <Form.Item
-          label="Provider ID"
+          label={t("customProviderId")}
           name="provider_id"
           rules={[{ required: true }]}
         >

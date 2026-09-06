@@ -1,3 +1,6 @@
+import { GitCompareArrows } from "lucide-react";
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
 import { compareText } from "@xnovel/text-diff";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Modal, Pagination } from "antd";
@@ -134,29 +137,42 @@ export function RevisionPage() {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {revisions.data.items.map((item) => (
-              <li key={item.id}>
-                <div>
-                  <strong>
-                    {item.checkpoint_name || t("autoSnapshot")} · v
-                    {item.version}
-                  </strong>
-                  <p>
-                    <time>{new Date(item.created_at).toLocaleString()}</time>
-                  </p>
-                </div>
-                <Button
-                  onClick={() =>
-                    setParams({ page: String(page), revision: item.id })
-                  }
-                >
-                  {t("compare")}
-                </Button>
-              </li>
-            ))}
-          </ul>
-          {!revisions.data.total ? <p>{t("empty")}</p> : null}
+          <RecordTable
+            items={revisions.data.items}
+            columns={[
+              {
+                title: t("checkpointName"),
+                dataIndex: "checkpoint_name",
+                width: 240,
+                ellipsis: true,
+                render: (value: string | null) => value || t("autoSnapshot"),
+              },
+              { title: t("version"), dataIndex: "version", width: 100 },
+              { title: t("wordCount"), dataIndex: "word_count", width: 120 },
+              {
+                title: t("createdAt"),
+                dataIndex: "created_at",
+                width: 190,
+                render: (value: string) => new Date(value).toLocaleString(),
+              },
+              {
+                title: t("admin:actions"),
+                key: "actions",
+                width: 88,
+                fixed: "right",
+                align: "center",
+                render: (_, row) => (
+                  <RowAction
+                    label={t("compare")}
+                    icon={GitCompareArrows}
+                    onClick={() =>
+                      setParams({ page: String(page), revision: row.id })
+                    }
+                  />
+                ),
+              },
+            ]}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}

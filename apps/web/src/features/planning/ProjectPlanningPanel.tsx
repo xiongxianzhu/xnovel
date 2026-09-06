@@ -1,5 +1,6 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
 import { Link, useNavigate } from "react-router-dom";
-import { Alert, Button, Modal, Skeleton } from "antd";
+import { Alert, Button, Modal, Skeleton, Tooltip } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
@@ -8,7 +9,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  UserRound,
   X,
 } from "lucide-react";
 import {
@@ -209,63 +209,84 @@ function CharacterManager({ projectId }: { projectId: string }) {
       ) : items.length === 0 ? (
         <p className="planning-empty">{t("projects:noCharacters")}</p>
       ) : (
-        <div className="planning-list">
-          {items.map((character, index) => (
-            <div className="planning-row" key={character.id}>
-              <div className="planning-row-main">
-                <UserRound aria-hidden size={17} />
-                <div>
-                  <Link
-                    to={`/projects/${projectId}/characters/${character.id}`}
+        <RecordTable
+          items={items}
+          columns={[
+            {
+              title: t("studio:title"),
+              dataIndex: "name",
+              width: 170,
+              ellipsis: true,
+              render: (value: string, character) => (
+                <Link to={`/projects/${projectId}/characters/${character.id}`}>
+                  {value}
+                </Link>
+              ),
+            },
+            {
+              title: t("studio:body"),
+              dataIndex: "summary",
+              width: 250,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:aliases"),
+              key: "aliases",
+              width: 170,
+              ellipsis: true,
+              render: (_, character) => character.aliases.join("、"),
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 208,
+              fixed: "right",
+              align: "center",
+              render: (_, character, index) => (
+                <div className="record-actions">
+                  <IconAction
+                    disabled={index === 0}
+                    label={t("projects:moveUp")}
+                    onClick={() =>
+                      reorder.mutate(
+                        prepareCharacterMove(items, character.id, index - 1),
+                      )
+                    }
                   >
-                    {character.name}
-                  </Link>
-                  <span>{character.summary || t("projects:noSummary")}</span>
+                    <ArrowUp aria-hidden size={16} />
+                  </IconAction>
+                  <IconAction
+                    disabled={index === items.length - 1}
+                    label={t("projects:moveDown")}
+                    onClick={() =>
+                      reorder.mutate(
+                        prepareCharacterMove(items, character.id, index + 1),
+                      )
+                    }
+                  >
+                    <ArrowDown aria-hidden size={16} />
+                  </IconAction>
+                  <IconAction
+                    label={t("projects:editCharacter")}
+                    onClick={() =>
+                      navigate(
+                        `/projects/${projectId}/characters/${character.id}/edit`,
+                      )
+                    }
+                  >
+                    <Pencil aria-hidden size={16} />
+                  </IconAction>
+                  <IconAction
+                    label={t("projects:deleteCharacter")}
+                    onClick={() => setDeleting(character)}
+                  >
+                    <Trash2 aria-hidden size={16} />
+                  </IconAction>
                 </div>
-              </div>
-              <div className="planning-row-actions">
-                <IconAction
-                  disabled={index === 0}
-                  label={t("projects:moveUp")}
-                  onClick={() =>
-                    reorder.mutate(
-                      prepareCharacterMove(items, character.id, index - 1),
-                    )
-                  }
-                >
-                  <ArrowUp aria-hidden size={16} />
-                </IconAction>
-                <IconAction
-                  disabled={index === items.length - 1}
-                  label={t("projects:moveDown")}
-                  onClick={() =>
-                    reorder.mutate(
-                      prepareCharacterMove(items, character.id, index + 1),
-                    )
-                  }
-                >
-                  <ArrowDown aria-hidden size={16} />
-                </IconAction>
-                <IconAction
-                  label={t("projects:editCharacter")}
-                  onClick={() =>
-                    navigate(
-                      `/projects/${projectId}/characters/${character.id}/edit`,
-                    )
-                  }
-                >
-                  <Pencil aria-hidden size={16} />
-                </IconAction>
-                <IconAction
-                  label={t("projects:deleteCharacter")}
-                  onClick={() => setDeleting(character)}
-                >
-                  <Trash2 aria-hidden size={16} />
-                </IconAction>
-              </div>
-            </div>
-          ))}
-        </div>
+              ),
+            },
+          ]}
+        />
       )}
 
       <DeleteDialog
@@ -342,97 +363,133 @@ function WorldManager({ projectId }: { projectId: string }) {
       ) : flattened.length === 0 ? (
         <p className="planning-empty">{t("projects:noWorldEntries")}</p>
       ) : (
-        <div className="planning-list">
-          {flattened.map((entry) => {
-            const siblings = items
-              .filter((item) => item.parent_id === entry.parent_id)
-              .sort(
-                (a, b) => a.position - b.position || a.id.localeCompare(b.id),
-              );
-            const index = siblings.findIndex((item) => item.id === entry.id);
-            return (
-              <div
-                className={`planning-row planning-depth-${Math.min(entry.depth, 5)}`}
-                key={entry.id}
-              >
-                <div className="planning-row-main planning-tree-row-main">
-                  <div>
-                    <Link to={`/projects/${projectId}/world/${entry.id}`}>
-                      {entry.title}
-                    </Link>
-                    <span>{t(`projects:worldCategory.${entry.category}`)}</span>
+        <RecordTable
+          items={flattened}
+          columns={[
+            {
+              title: t("studio:title"),
+              dataIndex: "title",
+              width: 190,
+              ellipsis: true,
+              render: (value: string, entry) => (
+                <Link to={`/projects/${projectId}/world/${entry.id}`}>
+                  {value}
+                </Link>
+              ),
+            },
+            {
+              title: t("studio:category"),
+              dataIndex: "category",
+              width: 130,
+              render: (value: string) => t(`projects:worldCategory.${value}`),
+            },
+            {
+              title: t("studio:body"),
+              dataIndex: "content",
+              width: 250,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:parent"),
+              key: "parent",
+              width: 170,
+              ellipsis: true,
+              render: (_, entry) =>
+                items.find((item) => item.id === entry.parent_id)?.title ??
+                t("studio:root"),
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 304,
+              fixed: "right",
+              align: "center",
+              render: (_, entry) => {
+                const siblings = items
+                  .filter((item) => item.parent_id === entry.parent_id)
+                  .sort(
+                    (a, b) =>
+                      a.position - b.position || a.id.localeCompare(b.id),
+                  );
+                const index = siblings.findIndex(
+                  (item) => item.id === entry.id,
+                );
+                return (
+                  <div className="record-actions">
+                    <IconAction
+                      disabled={index === 0}
+                      label={t("projects:moveUp")}
+                      onClick={() =>
+                        reorder.mutate(
+                          prepareWorldMove(
+                            items,
+                            entry.id,
+                            entry.parent_id,
+                            index - 1,
+                          ),
+                        )
+                      }
+                    >
+                      <ArrowUp aria-hidden size={16} />
+                    </IconAction>
+                    <IconAction
+                      disabled={index === siblings.length - 1}
+                      label={t("projects:moveDown")}
+                      onClick={() =>
+                        reorder.mutate(
+                          prepareWorldMove(
+                            items,
+                            entry.id,
+                            entry.parent_id,
+                            index + 1,
+                          ),
+                        )
+                      }
+                    >
+                      <ArrowDown aria-hidden size={16} />
+                    </IconAction>
+                    <IconAction
+                      label={t("projects:newChildWorldEntry")}
+                      onClick={() =>
+                        navigate(
+                          `/projects/${projectId}/world/new?parent=${entry.id}`,
+                        )
+                      }
+                    >
+                      <Plus aria-hidden size={16} />
+                    </IconAction>
+                    <IconAction
+                      label={t("projects:moveTo")}
+                      onClick={() =>
+                        navigate(
+                          `/projects/${projectId}/world/${entry.id}/move`,
+                        )
+                      }
+                    >
+                      <Link2 aria-hidden size={16} />
+                    </IconAction>
+                    <IconAction
+                      label={t("projects:editWorldEntry")}
+                      onClick={() =>
+                        navigate(
+                          `/projects/${projectId}/world/${entry.id}/edit`,
+                        )
+                      }
+                    >
+                      <Pencil aria-hidden size={16} />
+                    </IconAction>
+                    <IconAction
+                      label={t("projects:deleteWorldEntry")}
+                      onClick={() => setDeleting(entry)}
+                    >
+                      <Trash2 aria-hidden size={16} />
+                    </IconAction>
                   </div>
-                </div>
-                <div className="planning-row-actions">
-                  <IconAction
-                    disabled={index === 0}
-                    label={t("projects:moveUp")}
-                    onClick={() =>
-                      reorder.mutate(
-                        prepareWorldMove(
-                          items,
-                          entry.id,
-                          entry.parent_id,
-                          index - 1,
-                        ),
-                      )
-                    }
-                  >
-                    <ArrowUp aria-hidden size={16} />
-                  </IconAction>
-                  <IconAction
-                    disabled={index === siblings.length - 1}
-                    label={t("projects:moveDown")}
-                    onClick={() =>
-                      reorder.mutate(
-                        prepareWorldMove(
-                          items,
-                          entry.id,
-                          entry.parent_id,
-                          index + 1,
-                        ),
-                      )
-                    }
-                  >
-                    <ArrowDown aria-hidden size={16} />
-                  </IconAction>
-                  <IconAction
-                    label={t("projects:newChildWorldEntry")}
-                    onClick={() =>
-                      navigate(
-                        `/projects/${projectId}/world/new?parent=${entry.id}`,
-                      )
-                    }
-                  >
-                    <Plus aria-hidden size={16} />
-                  </IconAction>
-                  <IconAction
-                    label={t("projects:moveTo")}
-                    onClick={() =>
-                      navigate(`/projects/${projectId}/world/${entry.id}/move`)
-                    }
-                  >
-                    <Link2 aria-hidden size={16} />
-                  </IconAction>
-                  <IconAction
-                    label={t("projects:editWorldEntry")}
-                    onClick={() =>
-                      navigate(`/projects/${projectId}/world/${entry.id}/edit`)
-                    }
-                  >
-                    <Pencil aria-hidden size={16} />
-                  </IconAction>
-                  <IconAction
-                    label={t("projects:deleteWorldEntry")}
-                    onClick={() => setDeleting(entry)}
-                  >
-                    <Trash2 aria-hidden size={16} />
-                  </IconAction>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              },
+            },
+          ]}
+        />
       )}
 
       <DeleteDialog
@@ -574,14 +631,17 @@ function IconAction({
   onClick: () => void;
 }) {
   return (
-    <button
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
+    <Tooltip title={label} trigger={["hover", "focus"]}>
+      <button
+        className="record-action"
+        aria-label={label}
+        disabled={disabled}
+        onClick={onClick}
+        type="button"
+      >
+        {children}
+      </button>
+    </Tooltip>
   );
 }
 

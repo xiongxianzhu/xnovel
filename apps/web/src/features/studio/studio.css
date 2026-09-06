@@ -109,12 +109,7 @@
 .studio-field textarea.studio-body {
   min-height: 240px;
 }
-.studio-field input:focus-visible,
-.studio-field select:focus-visible,
-.studio-field textarea:focus-visible,
-.studio-page a:focus-visible,
-.studio-filter input:focus-visible,
-.studio-filter select:focus-visible {
+.studio-page a:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }

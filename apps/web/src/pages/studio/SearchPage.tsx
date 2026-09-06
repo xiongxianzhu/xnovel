@@ -1,7 +1,10 @@
+import { ExternalLink } from "lucide-react";
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
 import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
 import { useQuery } from "@tanstack/react-query";
 import { Pagination } from "antd";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { searchProjectManuscript } from "../../shared/api/generated/sdk.gen";
 import { apiClient } from "../../shared/api/client";
@@ -76,27 +79,52 @@ export function SearchPage() {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {query.data.items.map((hit) => (
-              <li key={`${hit.kind}:${hit.id}`}>
-                <div>
-                  <h2>
-                    <Link
-                      to={
-                        hit.kind === "document"
-                          ? `/projects/${projectId}?document=${hit.id}&find=${encodeURIComponent(q)}`
-                          : `/projects/${projectId}/${hit.kind === "character" ? "characters" : "world"}/${hit.id}`
-                      }
-                    >
-                      {hit.title}
-                    </Link>
-                  </h2>
-                  <p className="studio-excerpt">{hit.excerpt}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {!query.data.items.length ? <p>{t("empty")}</p> : null}
+          <RecordTable
+            items={query.data.items.map((hit) => ({
+              ...hit,
+              rowKey: `${hit.kind}:${hit.id}`,
+            }))}
+            rowKey="rowKey"
+            columns={[
+              {
+                title: t("title"),
+                dataIndex: "title",
+                width: 240,
+                ellipsis: true,
+              },
+              {
+                title: t("kind"),
+                dataIndex: "kind",
+                width: 120,
+                render: (value: string) =>
+                  t(value === "character" ? "characters" : value),
+              },
+              {
+                title: t("body"),
+                dataIndex: "excerpt",
+                width: 480,
+                ellipsis: true,
+              },
+              {
+                title: t("admin:actions"),
+                key: "actions",
+                width: 88,
+                fixed: "right",
+                align: "center",
+                render: (_, hit) => (
+                  <RowAction
+                    label={t("openSource")}
+                    icon={ExternalLink}
+                    to={
+                      hit.kind === "document"
+                        ? `/projects/${projectId}?document=${hit.id}&find=${encodeURIComponent(q)}`
+                        : `/projects/${projectId}/${hit.kind === "character" ? "characters" : "world"}/${hit.id}`
+                    }
+                  />
+                ),
+              },
+            ]}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}

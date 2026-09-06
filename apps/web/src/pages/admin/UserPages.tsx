@@ -1,3 +1,6 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { FilterMenu as AdminFilterMenu } from "../../shared/ui/FilterMenu";
+import { SelectField } from "../../shared/ui/SelectField";
 import {
   clearFormDraft,
   parseFormDraft,
@@ -9,8 +12,18 @@ import {
   listLoginAuditsRequest,
 } from "../../features/admin/adminApi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Modal, Pagination } from "antd";
+import {
+  Alert,
+  Button,
+  Input,
+  Tooltip,
+  Modal,
+  Pagination,
+  type TableColumnsType,
+} from "antd";
 import { useRef, useState } from "react";
+import { Eye, Pencil, Search } from "lucide-react";
+import "./admin-list-controls.css";
 import {
   Link,
   useLocation,
@@ -26,7 +39,10 @@ import {
   getAdminUser,
   updateAdminUser,
 } from "../../shared/api/generated/sdk.gen";
-import type { AdminUserData } from "../../shared/api/generated/types.gen";
+import type {
+  AdminUserData,
+  LoginAuditData,
+} from "../../shared/api/generated/types.gen";
 import { apiClient } from "../../shared/api/client";
 import { useAuth } from "../../features/auth/useAuth";
 import { useFormProtection } from "../../features/studio/useFormProtection";
@@ -38,7 +54,7 @@ import {
 } from "../../features/studio/StudioFrame";
 
 export function AdminUsersListPage() {
-  const { t } = useTranslation("studio");
+  const { t, i18n } = useTranslation("studio");
   const [params, setParams] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const q = params.get("q") ?? "";
@@ -72,6 +88,91 @@ export function AdminUsersListPage() {
     next.set("page", "1");
     setParams(next, { replace: true });
   };
+  const columns: TableColumnsType<AdminUserData> = [
+    {
+      title: t("username"),
+      dataIndex: "username",
+      width: 160,
+      ellipsis: true,
+      render: (value: string, user) => (
+        <Link to={`/admin/users/${user.id}`}>{value}</Link>
+      ),
+    },
+    { title: t("nickname"), dataIndex: "nickname", width: 140, ellipsis: true },
+    {
+      title: t("role"),
+      dataIndex: "role",
+      width: 100,
+      render: (value: string) => t(value),
+    },
+    {
+      title: t("status"),
+      dataIndex: "status",
+      width: 100,
+      render: (value: string) => t(value),
+    },
+    {
+      title: t("email"),
+      dataIndex: "email_masked",
+      width: 200,
+      ellipsis: true,
+      render: (value: string | null) => value ?? "—",
+    },
+    {
+      title: t("settings:phone"),
+      dataIndex: "phone_masked",
+      width: 160,
+      ellipsis: true,
+      render: (value: string | null) => value ?? "—",
+    },
+    {
+      title: t("createdAt"),
+      dataIndex: "created_at",
+      width: 190,
+      render: (value: string) => new Date(value).toLocaleString(i18n.language),
+    },
+    {
+      title: t("admin:lastLogin"),
+      dataIndex: "last_login_at",
+      width: 190,
+      render: (value: string | null) =>
+        value
+          ? new Date(value).toLocaleString(i18n.language)
+          : t("admin:neverLoggedIn"),
+    },
+    {
+      title: t("admin:actions"),
+      key: "actions",
+      width: 128,
+      fixed: "right",
+      align: "center",
+      render: (_, user) => (
+        <div className="record-actions">
+          <Tooltip title={t("admin:viewDetails")} trigger={["hover", "focus"]}>
+            <Link
+              className="record-action"
+              aria-label={t("admin:viewDetails")}
+              to={`/admin/users/${user.id}`}
+            >
+              <Eye aria-hidden size={16} />
+            </Link>
+          </Tooltip>
+          <Tooltip
+            title={t("admin:editNamed", { name: user.nickname })}
+            trigger={["hover", "focus"]}
+          >
+            <Link
+              className="record-action"
+              aria-label={t("admin:editNamed", { name: user.nickname })}
+              to={`/admin/users/${user.id}/edit`}
+            >
+              <Pencil aria-hidden size={16} />
+            </Link>
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
   return (
     <StudioFrame
       title={t("users")}
@@ -81,36 +182,35 @@ export function AdminUsersListPage() {
         </Link>
       }
     >
-      <div className="studio-filter">
-        <label>
-          {t("keyword")}
-          <input
-            value={q}
-            onChange={(event) => change("q", event.target.value)}
-          />
-        </label>
-        <label>
-          {t("role")}
-          <select
-            value={role ?? ""}
-            onChange={(event) => change("role", event.target.value)}
-          >
-            <option value="">{t("all")}</option>
-            <option value="user">{t("user")}</option>
-            <option value="admin">{t("admin")}</option>
-          </select>
-        </label>
-        <label>
-          {t("status")}
-          <select
-            value={status ?? ""}
-            onChange={(event) => change("status", event.target.value)}
-          >
-            <option value="">{t("all")}</option>
-            <option value="active">{t("active")}</option>
-            <option value="disabled">{t("disabled")}</option>
-          </select>
-        </label>
+      <div className="admin-list-filters">
+        <Input
+          className="admin-list-search"
+          aria-label={t("keyword")}
+          placeholder={t("admin:searchUsers")}
+          prefix={<Search aria-hidden size={16} />}
+          value={q}
+          onChange={(event) => change("q", event.target.value)}
+        />
+        <AdminFilterMenu
+          label={t("role")}
+          value={role ?? ""}
+          onChange={(value) => change("role", value)}
+          options={[
+            { value: "", label: t("admin:allRoles") },
+            { value: "user", label: t("user") },
+            { value: "admin", label: t("admin") },
+          ]}
+        />
+        <AdminFilterMenu
+          label={t("status")}
+          value={status ?? ""}
+          onChange={(value) => change("status", value)}
+          options={[
+            { value: "", label: t("admin:allStatuses") },
+            { value: "active", label: t("active") },
+            { value: "disabled", label: t("disabled") },
+          ]}
+        />
       </div>
       {query.isPending ? (
         <StudioLoading />
@@ -127,34 +227,11 @@ export function AdminUsersListPage() {
         />
       ) : (
         <>
-          <ul className="studio-list">
-            {query.data.items.map((user) => (
-              <li key={user.id}>
-                <div>
-                  <h2>
-                    <Link to={`/admin/users/${user.id}`}>
-                      <strong>{user.nickname}</strong> ·{" "}
-                      <span>@{user.username}</span>
-                    </Link>
-                  </h2>
-                  <p>
-                    {t(user.role)} · {t(user.status)}
-                  </p>
-                  <p>
-                    <span>{user.email_masked ?? "—"}</span> ·{" "}
-                    <span>{user.phone_masked ?? "—"}</span>
-                  </p>
-                </div>
-                <Link
-                  className="studio-link-button"
-                  to={`/admin/users/${user.id}/edit`}
-                >
-                  {t("edit")}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {!query.data.items.length ? <p>{t("empty")}</p> : null}
+          <RecordTable<AdminUserData>
+            columns={columns}
+            items={query.data.items}
+            emptyText={t("admin:noUsers")}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}
@@ -410,36 +487,36 @@ function AdminUserForm({ record }: { record?: AdminUserData }) {
         ) : null}
         <label className="studio-field">
           {t("role")}
-          <select
+          <SelectField
             disabled={self}
             value={values.role}
-            onChange={(event) =>
+            onValueChange={(value) =>
               setValues((previous) => ({
                 ...previous,
-                role: event.target.value as "user" | "admin",
+                role: value as "user" | "admin",
               }))
             }
           >
             <option value="user">{t("user")}</option>
             <option value="admin">{t("admin")}</option>
-          </select>
+          </SelectField>
         </label>
         {record ? (
           <label className="studio-field">
             {t("status")}
-            <select
+            <SelectField
               disabled={self}
               value={values.status}
-              onChange={(event) =>
+              onValueChange={(value) =>
                 setValues((previous) => ({
                   ...previous,
-                  status: event.target.value as "active" | "disabled",
+                  status: value as "active" | "disabled",
                 }))
               }
             >
               <option value="active">{t("active")}</option>
               <option value="disabled">{t("disabled")}</option>
-            </select>
+            </SelectField>
           </label>
         ) : null}
         {mutation.isError ? <StudioError /> : null}
@@ -454,7 +531,7 @@ function AdminUserForm({ record }: { record?: AdminUserData }) {
 }
 
 export function LoginAuditListPage() {
-  const { t } = useTranslation(["studio", "admin"]);
+  const { t, i18n } = useTranslation(["studio", "admin"]);
   const [params, setParams] = useSearchParams();
   const q = params.get("q") ?? "";
   const debouncedQ = useDebouncedValue(q);
@@ -468,19 +545,80 @@ export function LoginAuditListPage() {
         query: debouncedQ,
       }),
   });
+  const columns: TableColumnsType<LoginAuditData> = [
+    {
+      title: t("username"),
+      dataIndex: "username",
+      width: 150,
+      ellipsis: true,
+      render: (value: string, item) => (
+        <Link to={`/admin/audit/login/${item.id}`}>{value}</Link>
+      ),
+    },
+    { title: t("nickname"), dataIndex: "nickname", width: 140, ellipsis: true },
+    {
+      title: t("admin:createdIp"),
+      dataIndex: "created_ip",
+      width: 160,
+      ellipsis: true,
+    },
+    {
+      title: t("admin:lastIp"),
+      dataIndex: "last_ip",
+      width: 160,
+      ellipsis: true,
+    },
+    {
+      title: t("admin:loginTime"),
+      dataIndex: "created_at",
+      width: 190,
+      render: (value: string) => new Date(value).toLocaleString(i18n.language),
+    },
+    {
+      title: t("lastUsedAt"),
+      dataIndex: "last_used_at",
+      width: 190,
+      render: (value: string) => new Date(value).toLocaleString(i18n.language),
+    },
+    {
+      title: t("admin:sessionStatus"),
+      key: "status",
+      width: 140,
+      render: (_, item) =>
+        t(item.revoked_at ? "admin:revoked" : "admin:validSession"),
+    },
+    {
+      title: t("admin:actions"),
+      key: "actions",
+      width: 100,
+      fixed: "right",
+      align: "center",
+      render: (_, item) => (
+        <Tooltip title={t("admin:details")} trigger={["hover", "focus"]}>
+          <Link
+            className="record-action"
+            aria-label={t("admin:details")}
+            to={`/admin/audit/login/${item.id}`}
+          >
+            <Eye aria-hidden size={16} />
+          </Link>
+        </Tooltip>
+      ),
+    },
+  ];
   return (
     <StudioFrame title={t("admin:loginAuditTitle")}>
-      <Alert type="info" title={t("readOnly")} />
-      <div className="studio-filter">
-        <label>
-          {t("keyword")}
-          <input
-            value={q}
-            onChange={(event) =>
-              setParams({ q: event.target.value, page: "1" }, { replace: true })
-            }
-          />
-        </label>
+      <div className="admin-list-filters">
+        <Input
+          className="admin-list-search"
+          aria-label={t("keyword")}
+          placeholder={t("admin:searchLoginAudit")}
+          prefix={<Search aria-hidden size={16} />}
+          value={q}
+          onChange={(event) =>
+            setParams({ q: event.target.value, page: "1" }, { replace: true })
+          }
+        />
       </div>
       {query.isPending ? (
         <StudioLoading />
@@ -488,24 +626,11 @@ export function LoginAuditListPage() {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {query.data.items.map((item) => (
-              <li key={item.id}>
-                <div>
-                  <h2>
-                    <Link to={`/admin/audit/login/${item.id}`}>
-                      {item.username} · {item.nickname}
-                    </Link>
-                  </h2>
-                  <p>
-                    {item.last_ip} ·{" "}
-                    {new Date(item.last_used_at).toLocaleString()}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {!query.data.items.length ? <p>{t("admin:noAuditRecords")}</p> : null}
+          <RecordTable<LoginAuditData>
+            columns={columns}
+            items={query.data.items}
+            emptyText={t("admin:noAuditRecords")}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}

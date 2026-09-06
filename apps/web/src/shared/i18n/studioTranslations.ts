@@ -433,6 +433,23 @@ const entries = {
     "人物狀態可能並列，請結合故事順序與來源判斷；未知時間不自動推斷。",
     "States may coexist. Use story order and sources to judge them; unknown times are not inferred.",
   ],
+  description: ["说明", "說明", "Description"],
+  owner: ["所有者", "擁有者", "Owner"],
+  fileCount: ["文件数", "檔案數", "Files"],
+  sizeKiB: ["大小 (KiB)", "大小 (KiB)", "Size (KiB)"],
+  modelCount: ["模型数", "模型數", "Models"],
+  sourceState: ["来源状态", "來源狀態", "Source status"],
+  bookNumber: ["书号", "書號", "Book number"],
+  chapterCount: ["章节数", "章節數", "Chapters"],
+  wordCount: ["字数", "字數", "Word count"],
+  updatedAt: ["更新时间", "更新時間", "Updated"],
+  version: ["版本", "版本", "Version"],
+  yes: ["是", "是", "Yes"],
+  no: ["否", "否", "No"],
+  totalCount: ["总数", "總數", "Total"],
+  errorCode: ["失败原因", "失敗原因", "Failure reason"],
+  document: ["文档", "文件", "Document"],
+  skillReady: ["可用", "可用", "Ready"],
 } as const;
 
 export const studioTranslations = Object.fromEntries(

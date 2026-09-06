@@ -1,3 +1,12 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { Eye, ExternalLink } from "lucide-react";
+import type {
+  SummaryData,
+  FactData,
+  ThreadData,
+} from "../../shared/api/generated/types.gen";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Button, Drawer } from "antd";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -68,43 +77,99 @@ export function RecallContents({
               {!query.data[kind].length ? (
                 <p>{t("empty")}</p>
               ) : (
-                <ul className="studio-list">
-                  {query.data[kind].map((record) => (
-                    <li key={record.id}>
-                      <div>
-                        <h3>
-                          <Link
-                            to={`/projects/${projectId}/studio/${kind}/${record.id}`}
-                          >
-                            {record.title}
-                          </Link>
-                        </h3>
+                <RecordTable<SummaryData | FactData | ThreadData>
+                  items={query.data[kind]}
+                  columns={[
+                    {
+                      title: t("title"),
+                      dataIndex: "title",
+                      width: 200,
+                      ellipsis: true,
+                    },
+                    {
+                      title: t("body"),
+                      dataIndex: "body",
+                      width: 320,
+                      ellipsis: true,
+                    },
+                    {
+                      title: t("source"),
+                      dataIndex: "source_title",
+                      width: 170,
+                      ellipsis: true,
+                      render: (value: string | null) => value ?? t("manual"),
+                    },
+                    {
+                      title: t("sourceState"),
+                      key: "sourceState",
+                      width: 170,
+                      render: (_, row) => (
                         <SourceLabel
-                          stale={record.source_stale}
-                          missing={record.source_missing}
-                          manual={!record.source_document_id}
+                          stale={row.source_stale}
+                          missing={row.source_missing}
+                          manual={!row.source_document_id}
                         />
-                        <p className="studio-excerpt">{record.body}</p>
-                        {"story_order" in record ? (
-                          <p>
-                            {t("story_order")}:{" "}
-                            {record.story_order ?? t("unknown")}
-                          </p>
-                        ) : null}
-                        {"overdue" in record && record.overdue ? (
-                          <p>{t("overdue")}</p>
-                        ) : null}
-                        {record.source_document_id ? (
-                          <Link
-                            to={`/projects/${projectId}?document=${record.source_document_id}`}
-                          >
-                            {t("openSource")}
-                          </Link>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      ),
+                    },
+                    ...(kind === "facts"
+                      ? [
+                          {
+                            title: t("story_order"),
+                            key: "story_order",
+                            width: 160,
+                            render: (
+                              _: unknown,
+                              row: SummaryData | FactData | ThreadData,
+                            ) =>
+                              "story_order" in row
+                                ? (row.story_order ?? t("unknown"))
+                                : "—",
+                          },
+                        ]
+                      : []),
+                    ...(kind === "threads"
+                      ? [
+                          {
+                            title: t("status"),
+                            key: "status",
+                            width: 150,
+                            render: (
+                              _: unknown,
+                              row: SummaryData | FactData | ThreadData,
+                            ) =>
+                              "overdue" in row && row.overdue
+                                ? t("overdue")
+                                : "status" in row
+                                  ? t(row.status ?? "unknown")
+                                  : "—",
+                          },
+                        ]
+                      : []),
+                    {
+                      title: t("admin:actions"),
+                      key: "actions",
+                      width: 112,
+                      fixed: "right",
+                      align: "center",
+                      render: (_, row) => (
+                        <div className="record-actions">
+                          <RowAction
+                            label={t("details")}
+                            icon={Eye}
+                            to={`/projects/${projectId}/studio/${kind}/${row.id}`}
+                          />
+                          {row.source_document_id ? (
+                            <RowAction
+                              label={t("openSource")}
+                              icon={ExternalLink}
+                              to={`/projects/${projectId}?document=${row.source_document_id}`}
+                            />
+                          ) : null}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               )}
               <Link
                 className="studio-link-button"
@@ -153,9 +218,9 @@ export function RecallPage() {
     >
       <label className="studio-field">
         {t("chooseChapter")}
-        <select
+        <SelectField
           value={selected}
-          onChange={(event) => setParams({ document: event.target.value })}
+          onValueChange={(value) => setParams({ document: value })}
         >
           {documents.data?.items
             .filter((item) => item.kind === "manuscript")
@@ -164,7 +229,7 @@ export function RecallPage() {
                 {item.title}
               </option>
             ))}
-        </select>
+        </SelectField>
       </label>
       <RecallContents projectId={projectId} documentId={selected} />
     </StudioFrame>

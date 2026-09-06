@@ -1,3 +1,7 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { ArrowUp, ArrowDown } from "lucide-react";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useAuth } from "../../features/auth/useAuth";
 import { useFormProtection } from "../../features/studio/useFormProtection";
 import {
@@ -198,9 +202,9 @@ export function ImportPage() {
           </label>
           <label className="studio-field">
             {t("encoding")}
-            <select
+            <SelectField
               value={encoding}
-              onChange={(event) => setEncoding(event.target.value)}
+              onValueChange={(value) => setEncoding(value)}
             >
               {[
                 "auto",
@@ -215,17 +219,17 @@ export function ImportPage() {
                   {value === "auto" ? t("auto") : value}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
           <label className="studio-field">
             {t("split")}
-            <select
+            <SelectField
               value={split}
-              onChange={(event) => setSplit(event.target.value)}
+              onValueChange={(value) => setSplit(value)}
             >
               <option value="auto">{t("auto")}</option>
               <option value="none">{t("noSplit")}</option>
-            </select>
+            </SelectField>
           </label>
           <div>
             <Button
@@ -259,10 +263,10 @@ export function ImportPage() {
             </p>
             <label className="studio-field">
               {t("targetProject")}
-              <select
+              <SelectField
                 value={target}
-                onChange={(event) => {
-                  setTarget(event.target.value);
+                onValueChange={(value) => {
+                  setTarget(value);
                   setRequestId(crypto.randomUUID());
                 }}
               >
@@ -270,7 +274,7 @@ export function ImportPage() {
                 {projectId ? (
                   <option value={projectId}>{t("studio")}</option>
                 ) : null}
-              </select>
+              </SelectField>
             </label>
             <label className="studio-field">
               {t("title")}
@@ -286,16 +290,16 @@ export function ImportPage() {
             </label>
             <label className="studio-field">
               {t("duplicatePolicy")}
-              <select
+              <SelectField
                 value={duplicates}
-                onChange={(event) => {
-                  setDuplicates(event.target.value as "keep" | "skip");
+                onValueChange={(value) => {
+                  setDuplicates(value as "keep" | "skip");
                   setRequestId(crypto.randomUUID());
                 }}
               >
                 <option value="keep">{t("keep")}</option>
                 <option value="skip">{t("skip")}</option>
-              </select>
+              </SelectField>
             </label>
             {duplicateTitles.length ? (
               <Alert
@@ -306,16 +310,16 @@ export function ImportPage() {
             ) : null}
             <label className="studio-field">
               {t("chooseChapter")}
-              <select
+              <SelectField
                 value={active}
-                onChange={(event) => setActive(Number(event.target.value))}
+                onValueChange={(value) => setActive(Number(value))}
               >
                 {chapters.map((chapter, index) => (
                   <option key={index} value={index}>
                     {index + 1}. {chapter.title}
                   </option>
                 ))}
-              </select>
+              </SelectField>
             </label>
             <label className="studio-field">
               {t("title")}
@@ -468,16 +472,16 @@ export function ExportPage() {
         <fieldset className="studio-form-fields" disabled={preview.isPending}>
           <label className="studio-field">
             {t("format")}
-            <select
+            <SelectField
               value={format}
-              onChange={(event) => {
-                setFormat(event.target.value as "markdown" | "plain_text");
+              onValueChange={(value) => {
+                setFormat(value as "markdown" | "plain_text");
                 preview.reset();
               }}
             >
               <option value="markdown">{t("markdown")}</option>
               <option value="plain_text">{t("plain_text")}</option>
-            </select>
+            </SelectField>
           </label>
           <label>
             <input
@@ -492,16 +496,16 @@ export function ExportPage() {
           </label>
           <label className="studio-field">
             {t("separator")}
-            <select
+            <SelectField
               value={separator}
-              onChange={(event) => {
-                setSeparator(event.target.value);
+              onValueChange={(value) => {
+                setSeparator(value);
                 preview.reset();
               }}
             >
               <option value={"\n\n"}>{t("blankLine")}</option>
               <option value={"\n\n---\n\n"}>{t("dividerLine")}</option>
-            </select>
+            </SelectField>
           </label>
           <div className="studio-source-list" aria-label={t("chooseChapter")}>
             {available.map((doc) => (
@@ -524,43 +528,66 @@ export function ExportPage() {
           </div>
           <details>
             <summary>{t("exportOrder")}</summary>
-            <ol className="studio-list">
-              {ids.map((id, index) => (
-                <li key={id}>
-                  <span>{available.find((item) => item.id === id)?.title}</span>
-                  <div className="studio-actions">
-                    <Button
-                      disabled={index === 0}
-                      onClick={() => {
-                        const next = [...ids];
-                        [next[index - 1], next[index]] = [
-                          next[index]!,
-                          next[index - 1]!,
-                        ];
-                        setSelected(next);
-                        preview.reset();
-                      }}
-                    >
-                      {t("moveUp")}
-                    </Button>
-                    <Button
-                      disabled={index === ids.length - 1}
-                      onClick={() => {
-                        const next = [...ids];
-                        [next[index + 1], next[index]] = [
-                          next[index]!,
-                          next[index + 1]!,
-                        ];
-                        setSelected(next);
-                        preview.reset();
-                      }}
-                    >
-                      {t("moveDown")}
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <RecordTable
+              items={ids.map((id, index) => ({
+                id,
+                index,
+                title: available.find((item) => item.id === id)?.title ?? "—",
+              }))}
+              columns={[
+                {
+                  title: t("position"),
+                  dataIndex: "index",
+                  width: 100,
+                  render: (value: number) => value + 1,
+                },
+                {
+                  title: t("title"),
+                  dataIndex: "title",
+                  width: 300,
+                  ellipsis: true,
+                },
+                {
+                  title: t("admin:actions"),
+                  key: "actions",
+                  width: 112,
+                  fixed: "right",
+                  align: "center",
+                  render: (_, row) => (
+                    <div className="record-actions">
+                      <RowAction
+                        label={t("moveUp")}
+                        icon={ArrowUp}
+                        disabled={row.index === 0}
+                        onClick={() => {
+                          const next = [...ids];
+                          [next[row.index - 1], next[row.index]] = [
+                            next[row.index]!,
+                            next[row.index - 1]!,
+                          ];
+                          setSelected(next);
+                          preview.reset();
+                        }}
+                      />
+                      <RowAction
+                        label={t("moveDown")}
+                        icon={ArrowDown}
+                        disabled={row.index === ids.length - 1}
+                        onClick={() => {
+                          const next = [...ids];
+                          [next[row.index + 1], next[row.index]] = [
+                            next[row.index]!,
+                            next[row.index + 1]!,
+                          ];
+                          setSelected(next);
+                          preview.reset();
+                        }}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </details>
           <div>
             <Button
@@ -578,14 +605,27 @@ export function ExportPage() {
         <>
           <h2>{t("warnings")}</h2>
           {preview.data.warnings.length ? (
-            <ul>
-              {preview.data.warnings.map((warning, index) => (
-                <li key={index}>
-                  {t(warning.kind === "empty" ? "emptyChapter" : warning.kind)}{" "}
-                  · {warning.title}
-                </li>
-              ))}
-            </ul>
+            <RecordTable
+              items={preview.data.warnings.map((warning, index) => ({
+                ...warning,
+                id: String(index),
+              }))}
+              columns={[
+                {
+                  title: t("kind"),
+                  dataIndex: "kind",
+                  width: 180,
+                  render: (value: string) =>
+                    t(value === "empty" ? "emptyChapter" : value),
+                },
+                {
+                  title: t("title"),
+                  dataIndex: "title",
+                  width: 360,
+                  ellipsis: true,
+                },
+              ]}
+            />
           ) : (
             <p>{t("noWarnings")}</p>
           )}

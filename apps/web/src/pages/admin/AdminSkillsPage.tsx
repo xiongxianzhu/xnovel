@@ -1,3 +1,5 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
 import { useSearchParams } from "react-router-dom";
 import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
 import { Alert, Button, Input, Modal, Pagination, Skeleton } from "antd";
@@ -85,55 +87,70 @@ export function AdminSkillsPage() {
           <h2>{t("noAdminSkills")}</h2>
         </section>
       ) : (
-        <div className="tool-list">
-          {query.data.items.map((skill) => (
-            <article className="tool-row" key={skill.id}>
-              <div className="tool-row-icon">
-                {skill.status === "quarantined" ? (
-                  <ShieldAlert aria-hidden size={19} />
+        <RecordTable
+          items={query.data.items}
+          columns={[
+            {
+              title: t("studio:title"),
+              dataIndex: "name",
+              width: 220,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:owner"),
+              dataIndex: "owner_id",
+              width: 220,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:status"),
+              dataIndex: "status",
+              width: 140,
+              render: (value: string) =>
+                t(value === "quarantined" ? "quarantined" : "normal"),
+            },
+            {
+              title: "SHA-256",
+              dataIndex: "content_sha256",
+              width: 250,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:fileCount"),
+              dataIndex: "file_count",
+              width: 100,
+            },
+            {
+              title: t("studio:sizeKiB"),
+              dataIndex: "uncompressed_size",
+              width: 120,
+              render: (value: number) => Math.ceil(value / 1024),
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 100,
+              fixed: "right",
+              align: "center",
+              render: (_, item) =>
+                item.status === "quarantined" ? (
+                  <RowAction
+                    label={t("release")}
+                    icon={ShieldCheck}
+                    loading={release.isPending}
+                    onClick={() => release.mutate(item.id)}
+                  />
                 ) : (
-                  <ShieldCheck aria-hidden size={19} />
-                )}
-              </div>
-              <div className="tool-row-content">
-                <div className="tool-row-title">
-                  <h2>{skill.name}</h2>
-                  <span
-                    className={`status-label ${skill.status === "quarantined" ? "status-danger" : ""}`}
-                  >
-                    {skill.status === "quarantined"
-                      ? t("quarantined")
-                      : t("normal")}
-                  </span>
-                </div>
-                <p>{t("owner", { id: skill.owner_id })}</p>
-                <small>
-                  {skill.content_sha256.slice(0, 12)}… ·{" "}
-                  {t("filesAndSize", {
-                    count: skill.file_count,
-                    size: Math.ceil(skill.uncompressed_size / 1024),
-                  })}
-                </small>
-              </div>
-              <div className="tool-row-actions">
-                {skill.status === "quarantined" ? (
-                  <Button onClick={() => release.mutate(skill.id)}>
-                    {t("release")}
-                  </Button>
-                ) : (
-                  <Button
+                  <RowAction
+                    label={t("quarantine")}
+                    icon={ShieldAlert}
                     danger
-                    onClick={() =>
-                      setTarget({ id: skill.id, name: skill.name })
-                    }
-                  >
-                    {t("quarantine")}
-                  </Button>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
+                    onClick={() => setTarget({ id: item.id, name: item.name })}
+                  />
+                ),
+            },
+          ]}
+        />
       )}
       <div className="studio-pagination">
         <Pagination

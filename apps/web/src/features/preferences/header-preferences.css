@@ -28,6 +28,24 @@
   align-items: center;
 }
 
+.header-preference-anchor .ant-btn {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--color-text-muted);
+}
+
+.header-preference-anchor .ant-btn.header-language-button {
+  width: auto;
+  gap: var(--space-2);
+  padding-inline: var(--space-2);
+}
+
+.header-language-short {
+  font-size: 14px;
+  line-height: 1;
+}
+
 .header-preference-menu .ant-dropdown-menu {
   min-width: 200px;
   max-width: calc(100vw - 32px);
@@ -66,15 +84,6 @@
   .top-navigation-actions,
   .header-preferences {
     gap: 0;
-  }
-
-  .header-preference-text {
-    display: none;
-  }
-
-  .header-preference-anchor .ant-btn {
-    width: 44px;
-    padding: 0;
   }
 
   .top-navigation .writing-breadcrumb {

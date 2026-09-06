@@ -9,6 +9,7 @@ import {
   themePalettes,
 } from "../../shared/preferences/contracts";
 import "./header-preferences.css";
+import { ThemePreview } from "./ThemePreview";
 
 const paletteKeys = {
   graphite: "graphite",
@@ -21,6 +22,11 @@ const localeLabels = {
   "zh-CN": "简体中文",
   "zh-TW": "繁體中文",
   "en-US": "English",
+} as const;
+const localeShortLabels = {
+  "zh-CN": "中",
+  "zh-TW": "繁",
+  "en-US": "EN",
 } as const;
 const modeIcons = { light: Sun, dark: Moon, system: Monitor };
 
@@ -40,14 +46,13 @@ export function HeaderPreferences() {
       label: t("themePalette"),
       children: themePalettes.map((palette) => ({
         key: palette,
+        className: "theme-menu-card",
         label: (
-          <span className="preference-menu-label">
-            <span
-              aria-hidden
-              className="palette-swatch"
-              data-palette-preview={palette}
-            />
-            {t(paletteKeys[palette])}
+          <span className="theme-menu-label">
+            <ThemePreview palette={palette} compact />
+            <span className="theme-menu-name" title={t(paletteKeys[palette])}>
+              {t(paletteKeys[palette])}
+            </span>
             {appearance.themePalette === palette ? (
               <Check aria-hidden size={16} />
             ) : null}
@@ -82,12 +87,13 @@ export function HeaderPreferences() {
         align={{ offset: [0, 1] }}
         placement="bottomRight"
         trigger={["click"]}
+        transitionName=""
         menu={{
           items: appearanceItems,
           selectable: true,
           selectedKeys: [appearance.themePalette, appearance.themeMode],
         }}
-        classNames={{ root: "header-preference-menu" }}
+        classNames={{ root: "header-preference-menu theme-card-menu" }}
       >
         <div className="header-preference-anchor">
           <Button
@@ -95,15 +101,13 @@ export function HeaderPreferences() {
             aria-label={t("appearanceMenu")}
             aria-expanded={openMenu === "appearance"}
             aria-haspopup="menu"
-            icon={<Palette aria-hidden size={19} />}
-          >
-            <span className="header-preference-text">
-              {t("appearanceMenu")}
-            </span>
-          </Button>
+            title={t("appearanceMenu")}
+            icon={<Palette aria-hidden size={18} />}
+          />
         </div>
       </Dropdown>
       <Dropdown
+        transitionName=""
         open={openMenu === "language"}
         onOpenChange={(open) => setOpenMenu(open ? "language" : null)}
         align={{ offset: [0, 1] }}
@@ -127,10 +131,12 @@ export function HeaderPreferences() {
             aria-label={t("language")}
             aria-expanded={openMenu === "language"}
             aria-haspopup="menu"
-            icon={<Languages aria-hidden size={19} />}
+            className="header-language-button"
+            title={localeLabels[appearance.locale]}
+            icon={<Languages aria-hidden size={18} />}
           >
-            <span className="header-preference-text">
-              {localeLabels[appearance.locale]}
+            <span className="header-language-short">
+              {localeShortLabels[appearance.locale]}
             </span>
           </Button>
         </div>

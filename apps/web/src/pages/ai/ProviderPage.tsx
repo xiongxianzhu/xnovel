@@ -1,3 +1,5 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
 import {
   Alert,
   Button,
@@ -8,7 +10,7 @@ import {
   Switch,
 } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, Pencil, Plus, RefreshCw, Server, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -85,81 +87,115 @@ export function ProviderPage() {
           </Link>
         </div>
       </header>
-      <Input.Search
-        allowClear
-        className="tool-search"
-        onChange={(event) =>
-          setParams((current) => {
-            if (event.target.value) current.set("q", event.target.value);
-            else current.delete("q");
-            current.set("page", "1");
-            return current;
-          })
-        }
-        placeholder={t("providerSearchPlaceholder")}
-        value={query}
-      />
+      <div className="record-filters">
+        <Input.Search
+          allowClear
+          className="record-filter-search"
+          onChange={(event) =>
+            setParams((current) => {
+              if (event.target.value) current.set("q", event.target.value);
+              else current.delete("q");
+              current.set("page", "1");
+              return current;
+            })
+          }
+          placeholder={t("providerSearchPlaceholder")}
+          value={query}
+        />
+      </div>
       {providers.isPending ? <Skeleton active paragraph={{ rows: 5 }} /> : null}
       {providers.isError ? (
         <Alert showIcon title={t("providerLoadFailed")} type="error" />
       ) : null}
-      <div className="tool-list">
-        {providers.data?.items.map((item) => (
-          <article className="tool-row" key={item.id}>
-            <div className="tool-row-icon">
-              <Server aria-hidden size={19} />
-            </div>
-            <div className="tool-row-content">
-              <div className="tool-row-title">
-                <h2>{item.display_name}</h2>
-                <span className="status-label">
-                  {item.enabled ? t("enabled") : t("disabled")}
-                </span>
-              </div>
-              <p>
-                {item.provider_id} ·{" "}
-                {t("modelsCount", { count: item.models.length })}
-              </p>
-              <code>{item.base_url}</code>
-            </div>
-            <div className="tool-row-actions">
-              <Switch
-                checked={item.enabled}
-                onChange={(enabled) => toggle.mutate({ item, enabled })}
-              />
-              <Link to={`/ai-models/${item.id}`}>
-                <Button icon={<Eye aria-hidden size={16} />}>
-                  {t("details")}
-                </Button>
-              </Link>
-              <Link to={`/ai-models/${item.id}/edit`}>
-                <Button icon={<Pencil aria-hidden size={16} />}>
-                  {t("edit")}
-                </Button>
-              </Link>
-              <Button
-                icon={<RefreshCw aria-hidden size={16} />}
-                onClick={() => test.mutate(item.id)}
-              >
-                {t("test")}
-              </Button>
-              <Button
-                danger
-                icon={<Trash2 aria-hidden size={16} />}
-                onClick={() =>
-                  Modal.confirm({
-                    title: t("deleteProviderTitle"),
-                    content: t("deleteProviderDescription"),
-                    onOk: () => remove.mutateAsync(item.id),
-                  })
-                }
-              >
-                {t("delete")}
-              </Button>
-            </div>
-          </article>
-        ))}
-      </div>
+      {providers.data ? (
+        <RecordTable
+          items={providers.data.items}
+          columns={[
+            {
+              title: t("displayName"),
+              dataIndex: "display_name",
+              width: 190,
+              ellipsis: true,
+            },
+            {
+              title: t("customProviderId"),
+              dataIndex: "provider_id",
+              width: 150,
+              ellipsis: true,
+            },
+            { title: t("protocol"), dataIndex: "protocol", width: 150 },
+            {
+              title: t("baseUrl"),
+              dataIndex: "base_url",
+              width: 300,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:modelCount"),
+              key: "models",
+              width: 100,
+              render: (_, item) => item.models.length,
+            },
+            {
+              title: t("studio:status"),
+              key: "enabled",
+              width: 110,
+              render: (_, item) => (
+                <Switch
+                  aria-label={`${t("enabled")} · ${item.display_name}`}
+                  checked={item.enabled}
+                  loading={
+                    toggle.isPending && toggle.variables?.item.id === item.id
+                  }
+                  disabled={toggle.isPending}
+                  onChange={(enabled) => toggle.mutate({ item, enabled })}
+                />
+              ),
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 208,
+              fixed: "right",
+              align: "center",
+              render: (_, item) => (
+                <div className="record-actions">
+                  <RowAction
+                    label={t("details")}
+                    icon={Eye}
+                    to={`/ai-models/${item.id}`}
+                  />
+                  <RowAction
+                    label={t("studio:edit")}
+                    icon={Pencil}
+                    to={`/ai-models/${item.id}/edit`}
+                  />
+                  <RowAction
+                    label={t("test")}
+                    icon={RefreshCw}
+                    loading={test.isPending && test.variables === item.id}
+                    disabled={test.isPending}
+                    onClick={() => test.mutate(item.id)}
+                  />
+                  <RowAction
+                    label={t("studio:delete")}
+                    icon={Trash2}
+                    danger
+                    disabled={remove.isPending}
+                    onClick={() =>
+                      Modal.confirm({
+                        title: t("deleteProviderTitle"),
+                        content: t("deleteProviderDescription"),
+                        onOk: () => remove.mutateAsync(item.id),
+                      })
+                    }
+                  />
+                </div>
+              ),
+            },
+          ]}
+        />
+      ) : null}
       {providers.data?.total ? (
         <Pagination
           current={providers.data.page}

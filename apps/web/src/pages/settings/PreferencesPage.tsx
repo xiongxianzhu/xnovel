@@ -1,4 +1,6 @@
 import { Alert, Button, Radio, Skeleton } from "antd";
+import { Check } from "lucide-react";
+import { ThemePreview } from "../../features/preferences/ThemePreview";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -48,7 +50,10 @@ export function PreferencesPage() {
   }
 
   return (
-    <main className="settings-page" aria-labelledby="settings-title">
+    <main
+      className="settings-page theme-preferences-page"
+      aria-labelledby="settings-title"
+    >
       <header className="page-heading">
         <h1 id="settings-title">{t("settings:title")}</h1>
         <p className="page-description">{t("settings:description")}</p>
@@ -102,20 +107,26 @@ export function PreferencesPage() {
       >
         <Radio.Group
           aria-label={t("settings:themePalette")}
-          className="palette-options"
+          className="theme-preview-grid"
+          disabled={isLoading || loadError || pendingFields.size > 0}
           onChange={(event) =>
             setThemePalette(event.target.value as ThemePalette)
           }
           value={appearance.themePalette}
         >
           {themePalettes.map((palette) => (
-            <Radio className="palette-option" key={palette} value={palette}>
-              <span
-                aria-hidden
-                className="palette-swatch"
-                data-palette-preview={palette}
-              />
-              <span>{t(`settings:${paletteKeys[palette]}`)}</span>
+            <Radio
+              className="theme-preview-option"
+              key={palette}
+              value={palette}
+            >
+              <ThemePreview palette={palette} />
+              <span className="theme-preview-caption">
+                <span>{t(`settings:${paletteKeys[palette]}`)}</span>
+                {appearance.themePalette === palette ? (
+                  <Check aria-hidden size={16} />
+                ) : null}
+              </span>
             </Radio>
           ))}
         </Radio.Group>

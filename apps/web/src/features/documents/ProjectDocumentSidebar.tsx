@@ -362,6 +362,7 @@ export function ProjectDocumentSidebar({
       {summary}
       <div className="document-sidebar-toolbar">
         <Dropdown
+          transitionName=""
           menu={{
             items: [
               {
@@ -828,6 +829,7 @@ function DocumentTreeItem({
           <span>{document.title}</span>
         </button>
         <Dropdown
+          transitionName=""
           menu={{
             items: menuItems,
             onClick: ({ domEvent, key }) => {

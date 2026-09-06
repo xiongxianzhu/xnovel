@@ -1,3 +1,5 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
 import {
   Alert,
   Button,
@@ -11,6 +13,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
+  BookOpenText,
   Eye,
   ImageUp,
   Pencil,
@@ -179,126 +182,155 @@ export function ProjectListPage() {
           <p>{t("projects:emptyDescription")}</p>
         </section>
       ) : null}
-      <section
-        aria-label={t("projects:titlePlural")}
-        className="project-list project-metadata-list"
-      >
-        {projects.data?.items.map((project) => (
-          <article className="project-metadata-row" key={project.id}>
-            <div className="project-cover-thumb">
-              {project.cover_url ? (
-                <img alt="" src={resolveMediaUrl(project.cover_url)} />
-              ) : (
-                <ImageUp aria-hidden size={24} />
-              )}
-            </div>
-            <div className="project-row-content">
-              <div className="project-row-title">
-                {view === "deleted" ? (
-                  <strong>{project.title}</strong>
-                ) : (
-                  <Link to={`/projects/${project.id}/details`}>
-                    {project.title}
-                  </Link>
-                )}
-                <span>
-                  {t(`projects:updateStatus.${project.update_status}`)}
-                </span>
-              </div>
-              <p>{project.description || t("projects:noDescription")}</p>
-              <div className="project-row-meta">
-                <span>
-                  {t("projects:author")}:{" "}
-                  {project.author || t("projects:authorNotSet")}
-                </span>
-                <span>
-                  {t("projects:bookNumber", { value: project.book_number })}
-                </span>
-                <span>
-                  {t("projects:chapterCount", { count: project.chapter_count })}
-                </span>
-                <span>
-                  {t("projects:wordCount", { count: project.word_count })}
-                </span>
-                <span>
-                  {t("projects:updatedOn", {
-                    value: new Date(project.updated_at).toLocaleDateString(),
-                  })}
-                </span>
-              </div>
-            </div>
-            <div className="project-row-actions">
-              {view !== "deleted" ? (
-                <>
-                  <Link to={`/projects/${project.id}/details`}>
-                    <Button icon={<Eye aria-hidden size={16} />}>
-                      {t("projects:viewDetails")}
-                    </Button>
-                  </Link>
-                  <Link to={`/projects/${project.id}`}>
-                    <Button>{t("projects:openWorkspace")}</Button>
-                  </Link>
-                </>
-              ) : null}
-              {view !== "deleted" ? (
-                <Link to={`/projects/${project.id}/edit`}>
-                  <Button
-                    aria-label={t("projects:editProject", {
-                      title: project.title,
-                    })}
-                    icon={<Pencil aria-hidden size={16} />}
+      {projects.data?.items.length ? (
+        <RecordTable
+          items={projects.data.items}
+          columns={[
+            {
+              title: t("projects:cover"),
+              key: "cover",
+              width: 76,
+              render: (_, item) =>
+                item.cover_url ? (
+                  <img
+                    className="record-cover"
+                    alt=""
+                    src={resolveMediaUrl(item.cover_url)}
                   />
-                </Link>
-              ) : null}
-              {view === "active" ? (
-                <Button
-                  icon={<Archive aria-hidden size={16} />}
-                  onClick={() =>
-                    action.mutate({ id: project.id, type: "archive" })
-                  }
-                >
-                  {t("projects:archiveProject")}
-                </Button>
-              ) : null}
-              {view === "archived" ? (
-                <Button
-                  icon={<RotateCcw aria-hidden size={16} />}
-                  onClick={() =>
-                    action.mutate({ id: project.id, type: "unarchive" })
-                  }
-                >
-                  {t("projects:unarchiveProject")}
-                </Button>
-              ) : null}
-              {view !== "deleted" ? (
-                <Button
-                  danger
-                  icon={<Trash2 aria-hidden size={16} />}
-                  onClick={() =>
-                    Modal.confirm({
-                      title: t("projects:deleteProjectTitle"),
-                      content: t("projects:deleteProjectDescription"),
-                      onOk: () =>
-                        action.mutateAsync({ id: project.id, type: "delete" }),
-                    })
-                  }
-                >
-                  {t("projects:deleteProject")}
-                </Button>
-              ) : (
-                <Button
-                  icon={<RotateCcw aria-hidden size={16} />}
-                  onClick={() =>
-                    action.mutate({ id: project.id, type: "restore" })
-                  }
-                >
-                  {t("projects:restoreProject")}
-                </Button>
-              )}
-            </div>
-          </article>
-        ))}
-      </section>
+                ) : (
+                  <ImageUp aria-hidden size={24} />
+                ),
+            },
+            {
+              title: t("projects:title"),
+              dataIndex: "title",
+              width: 210,
+              ellipsis: true,
+              render: (value: string, item) =>
+                view === "deleted" ? (
+                  value
+                ) : (
+                  <Link to={`/projects/${item.id}/details`}>{value}</Link>
+                ),
+            },
+            {
+              title: t("projects:author"),
+              dataIndex: "author",
+              width: 160,
+              ellipsis: true,
+              render: (value: string) => value || t("projects:authorNotSet"),
+            },
+            {
+              title: t("studio:bookNumber"),
+              dataIndex: "book_number",
+              width: 190,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:description"),
+              dataIndex: "description",
+              width: 300,
+              ellipsis: true,
+            },
+            {
+              title: t("studio:status"),
+              dataIndex: "update_status",
+              width: 120,
+              render: (value: string) => t(`projects:updateStatus.${value}`),
+            },
+            {
+              title: t("studio:chapterCount"),
+              dataIndex: "chapter_count",
+              width: 100,
+            },
+            {
+              title: t("studio:wordCount"),
+              dataIndex: "word_count",
+              width: 100,
+            },
+            {
+              title: t("studio:updatedAt"),
+              dataIndex: "updated_at",
+              width: 180,
+              render: (value: string) => new Date(value).toLocaleString(),
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 256,
+              fixed: "right",
+              align: "center",
+              render: (_, item) => (
+                <div className="record-actions">
+                  {view !== "deleted" ? (
+                    <>
+                      <RowAction
+                        label={t("projects:viewDetails")}
+                        icon={Eye}
+                        to={`/projects/${item.id}/details`}
+                      />
+                      <RowAction
+                        label={t("projects:openWorkspace")}
+                        icon={BookOpenText}
+                        to={`/projects/${item.id}`}
+                      />
+                      <RowAction
+                        label={t("projects:editProject", { title: item.title })}
+                        icon={Pencil}
+                        to={`/projects/${item.id}/edit`}
+                      />
+                    </>
+                  ) : null}
+                  {view === "active" ? (
+                    <RowAction
+                      label={t("projects:archiveProject")}
+                      icon={Archive}
+                      disabled={action.isPending}
+                      onClick={() =>
+                        action.mutate({ id: item.id, type: "archive" })
+                      }
+                    />
+                  ) : view === "archived" ? (
+                    <RowAction
+                      label={t("projects:unarchiveProject")}
+                      icon={RotateCcw}
+                      disabled={action.isPending}
+                      onClick={() =>
+                        action.mutate({ id: item.id, type: "unarchive" })
+                      }
+                    />
+                  ) : null}
+                  {view !== "deleted" ? (
+                    <RowAction
+                      label={t("projects:deleteProject")}
+                      icon={Trash2}
+                      danger
+                      disabled={action.isPending}
+                      onClick={() =>
+                        Modal.confirm({
+                          title: t("projects:deleteProjectTitle"),
+                          content: t("projects:deleteProjectDescription"),
+                          onOk: () =>
+                            action.mutateAsync({ id: item.id, type: "delete" }),
+                        })
+                      }
+                    />
+                  ) : (
+                    <RowAction
+                      label={t("projects:restoreProject")}
+                      icon={RotateCcw}
+                      disabled={action.isPending}
+                      onClick={() =>
+                        action.mutate({ id: item.id, type: "restore" })
+                      }
+                    />
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
+      ) : null}
       {projects.data && projects.data.total > 0 ? (
         <Pagination
           current={projects.data.page}

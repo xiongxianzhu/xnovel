@@ -1,3 +1,7 @@
+import { Eye, Pencil, ExternalLink } from "lucide-react";
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useAuth } from "../../features/auth/useAuth";
 import {
   clearFormDraft,
@@ -122,24 +126,98 @@ export function PlanningListPage() {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {query.data.items.map((record) => (
-              <li key={record.id}>
-                <div>
-                  <h2>
-                    <Link to={`${base}/${record.id}`}>{nameOf(record)}</Link>
-                  </h2>
-                </div>
-                <Link
-                  className="studio-link-button"
-                  to={`${base}/${record.id}/edit`}
-                >
-                  {t("edit")}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {!query.data.items.length ? <p>{t("empty")}</p> : null}
+          <RecordTable<PlanningRecord>
+            items={query.data.items}
+            columns={[
+              {
+                title: t("title"),
+                key: "name",
+                width: 220,
+                ellipsis: true,
+                render: (_, row) => (
+                  <Link to={`${base}/${row.id}`}>{nameOf(row)}</Link>
+                ),
+              },
+              ...(resource === "documents"
+                ? [
+                    {
+                      title: t("kind"),
+                      key: "kind",
+                      width: 130,
+                      render: (_: unknown, row: PlanningRecord) =>
+                        "kind" in row ? t(row.kind) : "—",
+                    },
+                    {
+                      title: t("status"),
+                      key: "status",
+                      width: 130,
+                      render: (_: unknown, row: PlanningRecord) =>
+                        "status" in row ? t(row.status) : "—",
+                    },
+                  ]
+                : [
+                    {
+                      title: t("body"),
+                      key: "body",
+                      width: 360,
+                      ellipsis: true,
+                      render: (_: unknown, row: PlanningRecord) =>
+                        "summary" in row
+                          ? row.summary
+                          : "content" in row
+                            ? row.content
+                            : "—",
+                    },
+                    ...(resource === "characters"
+                      ? [
+                          {
+                            title: t("aliases"),
+                            key: "aliases",
+                            width: 220,
+                            ellipsis: true,
+                            render: (_: unknown, row: PlanningRecord) =>
+                              "aliases" in row ? row.aliases.join("、") : "—",
+                          },
+                        ]
+                      : [
+                          {
+                            title: t("category"),
+                            key: "category",
+                            width: 140,
+                            render: (_: unknown, row: PlanningRecord) =>
+                              "category" in row ? t(row.category) : "—",
+                          },
+                        ]),
+                  ]),
+              {
+                title: t("updatedAt"),
+                dataIndex: "updated_at",
+                width: 190,
+                render: (value: string) => new Date(value).toLocaleString(),
+              },
+              {
+                title: t("admin:actions"),
+                key: "actions",
+                width: 112,
+                fixed: "right",
+                align: "center",
+                render: (_, row) => (
+                  <div className="record-actions">
+                    <RowAction
+                      label={t("details")}
+                      icon={Eye}
+                      to={`${base}/${row.id}`}
+                    />
+                    <RowAction
+                      label={t("edit")}
+                      icon={Pencil}
+                      to={`${base}/${row.id}/edit`}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}
@@ -561,22 +639,22 @@ function PlanningForm({
           <>
             <label className="studio-field">
               {t("kind")}
-              <select
+              <SelectField
                 value={kind}
-                onChange={(event) => setKind(event.target.value as typeof kind)}
+                onValueChange={(value) => setKind(value as typeof kind)}
               >
                 {["manuscript", "outline", "folder"].map((value) => (
                   <option key={value} value={value}>
                     {t(value)}
                   </option>
                 ))}
-              </select>
+              </SelectField>
             </label>
             <label className="studio-field">
               {t("parent")}
-              <select
+              <SelectField
                 value={parent}
-                onChange={(event) => setParent(event.target.value)}
+                onValueChange={(value) => setParent(value)}
               >
                 <option value="">{t("root")}</option>
                 {docs.data?.items
@@ -586,7 +664,7 @@ function PlanningForm({
                       {doc.title}
                     </option>
                   ))}
-              </select>
+              </SelectField>
             </label>
           </>
         ) : null}
@@ -601,11 +679,9 @@ function PlanningForm({
         ) : resource === "world" ? (
           <label className="studio-field">
             {t("category")}
-            <select
+            <SelectField
               value={category}
-              onChange={(event) =>
-                setCategory(event.target.value as typeof category)
-              }
+              onValueChange={(value) => setCategory(value as typeof category)}
             >
               {["location", "faction", "item", "rule", "event", "other"].map(
                 (value) => (
@@ -614,7 +690,7 @@ function PlanningForm({
                   </option>
                 ),
               )}
-            </select>
+            </SelectField>
           </label>
         ) : null}
         {resource !== "documents" ? (
@@ -949,9 +1025,9 @@ export function DocumentMovePage() {
         <fieldset className="studio-form-fields" disabled={mutation.isPending}>
           <label className="studio-field">
             {t("parent")}
-            <select
+            <SelectField
               value={parent}
-              onChange={(event) => setParent(event.target.value)}
+              onValueChange={(value) => setParent(value)}
             >
               <option value="">{t("root")}</option>
               {query.data?.items
@@ -963,7 +1039,7 @@ export function DocumentMovePage() {
                     {item.title}
                   </option>
                 ))}
-            </select>
+            </SelectField>
           </label>
           {mutation.isError || query.isError ? <StudioError /> : null}
           <div>
@@ -1040,9 +1116,9 @@ export function WorldMovePage() {
         <fieldset className="studio-form-fields" disabled={mutation.isPending}>
           <label className="studio-field">
             {t("parent")}
-            <select
+            <SelectField
               value={selected}
-              onChange={(event) => setParent(event.target.value)}
+              onValueChange={(value) => setParent(value)}
             >
               <option value="">{t("root")}</option>
               {query.data?.items
@@ -1054,7 +1130,7 @@ export function WorldMovePage() {
                     {item.title}
                   </option>
                 ))}
-            </select>
+            </SelectField>
           </label>
           {mutation.isError || query.isError ? <StudioError /> : null}
           <div>
@@ -1118,18 +1194,46 @@ function SettingImpact({
         </fieldset>
       </form>
       {query.isError ? <StudioError /> : null}
-      <ul className="studio-list">
-        {query.data?.map((item) => (
-          <li key={item.document_id}>
-            <div>
-              <Link to={`/projects/${projectId}?document=${item.document_id}`}>
-                {item.title}
-              </Link>
-              <p className="studio-excerpt">{item.evidence}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {query.data ? (
+        <RecordTable
+          items={query.data}
+          rowKey="document_id"
+          columns={[
+            {
+              title: t("title"),
+              dataIndex: "title",
+              width: 220,
+              ellipsis: true,
+            },
+            {
+              title: t("evidence"),
+              dataIndex: "evidence",
+              width: 440,
+              ellipsis: true,
+            },
+            {
+              title: t("references"),
+              dataIndex: "explicit_reference",
+              width: 140,
+              render: (value: boolean) => t(value ? "yes" : "no"),
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 88,
+              fixed: "right",
+              align: "center",
+              render: (_, row) => (
+                <RowAction
+                  label={t("openSource")}
+                  icon={ExternalLink}
+                  to={`/projects/${projectId}?document=${row.document_id}`}
+                />
+              ),
+            },
+          ]}
+        />
+      ) : null}
     </section>
   );
 }

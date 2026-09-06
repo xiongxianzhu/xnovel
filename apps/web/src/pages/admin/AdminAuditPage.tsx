@@ -1,6 +1,7 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
 import { LoginAuditListPage } from "./UserPages";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Input, Modal, Skeleton, Table, Tag } from "antd";
+import { Alert, Button, Input, Modal, Skeleton, Tag, Tooltip } from "antd";
 import type { TableColumnsType } from "antd";
 import { Eye } from "lucide-react";
 import { useState } from "react";
@@ -110,12 +111,12 @@ function AdminAuditPage({ mode }: { mode: "login" | "operations" }) {
         />
       ) : (
         <div className="admin-table-shell">
-          <Table<LoginAuditData | OperationAuditData>
+          <RecordTable<LoginAuditData | OperationAuditData>
             columns={
               columns as TableColumnsType<LoginAuditData | OperationAuditData>
             }
-            dataSource={data?.items ?? []}
-            locale={{ emptyText: t("noAuditRecords") }}
+            items={data?.items ?? []}
+            emptyText={t("noAuditRecords")}
             pagination={{
               current: page,
               onChange: setPage,
@@ -126,7 +127,6 @@ function AdminAuditPage({ mode }: { mode: "login" | "operations" }) {
               total: data?.total ?? 0,
             }}
             rowKey="id"
-            scroll={{ x: mode === "login" ? 1040 : 900 }}
           />
         </div>
       )}
@@ -213,12 +213,15 @@ function detailColumn<T extends LoginAuditData | OperationAuditData>(
     fixed: "right" as const,
     key: "details",
     render: (_: unknown, record: T) => (
-      <Button
-        aria-label={t("viewDetails")}
-        icon={<Eye aria-hidden size={16} />}
-        onClick={() => setDetail(record)}
-        type="text"
-      />
+      <Tooltip title={t("viewDetails")} trigger={["hover", "focus"]}>
+        <Button
+          className="record-action"
+          aria-label={t("viewDetails")}
+          icon={<Eye aria-hidden size={16} />}
+          onClick={() => setDetail(record)}
+          type="text"
+        />
+      </Tooltip>
     ),
     title: t("details"),
     width: 88,

@@ -1,13 +1,12 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { Eye } from "lucide-react";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Modal, Pagination } from "antd";
 import { useState } from "react";
-import {
-  Link,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { apiClient } from "../../shared/api/client";
 import {
@@ -141,9 +140,9 @@ function AiHistoryList({ projectId }: { projectId: string }) {
         {!projectId ? (
           <label>
             {t("project")}
-            <select
+            <SelectField
               value={filterProject ?? ""}
-              onChange={(event) => changeFilter("project", event.target.value)}
+              onValueChange={(value) => changeFilter("project", value)}
             >
               <option value="">{t("all")}</option>
               {projects.data?.items.map((item) => (
@@ -151,14 +150,14 @@ function AiHistoryList({ projectId }: { projectId: string }) {
                   {item.title}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
         ) : null}
         <label>
           {t("chooseChapter")}
-          <select
+          <SelectField
             value={filterDocument ?? ""}
-            onChange={(event) => changeFilter("document", event.target.value)}
+            onValueChange={(value) => changeFilter("document", value)}
           >
             <option value="">{t("all")}</option>
             {docs.data?.items
@@ -168,13 +167,13 @@ function AiHistoryList({ projectId }: { projectId: string }) {
                   {item.title}
                 </option>
               ))}
-          </select>
+          </SelectField>
         </label>
         <label>
           {t("kind")}
-          <select
+          <SelectField
             value={filterType ?? ""}
-            onChange={(event) => changeFilter("type", event.target.value)}
+            onValueChange={(value) => changeFilter("type", value)}
           >
             <option value="">{t("all")}</option>
             {[
@@ -191,13 +190,13 @@ function AiHistoryList({ projectId }: { projectId: string }) {
                 {t(value)}
               </option>
             ))}
-          </select>
+          </SelectField>
         </label>
         <label>
           {t("status")}
-          <select
+          <SelectField
             value={filterStatus ?? ""}
-            onChange={(event) => changeFilter("status", event.target.value)}
+            onValueChange={(value) => changeFilter("status", value)}
           >
             <option value="">{t("all")}</option>
             {(results
@@ -208,7 +207,7 @@ function AiHistoryList({ projectId }: { projectId: string }) {
                 {t(value)}
               </option>
             ))}
-          </select>
+          </SelectField>
         </label>
         <label>
           {t("fromDate")}
@@ -253,39 +252,107 @@ function AiHistoryList({ projectId }: { projectId: string }) {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {results
-              ? candidates.data?.items.map((item) => (
-                  <li key={item.id}>
-                    <div>
-                      <h2>
-                        <Link to={`${base}/${item.task_id}`}>
-                          {t(item.task_type)} · {t(item.status)}
-                        </Link>
-                      </h2>
-                      <p className="studio-excerpt">{item.excerpt}</p>
-                      <time>{new Date(item.created_at).toLocaleString()}</time>
-                      {item.pinned ? <p>{t("pin")}</p> : null}
-                    </div>
-                  </li>
-                ))
-              : tasks.data?.items.map((task) => (
-                  <li key={task.id}>
-                    <div>
-                      <h2>
-                        <Link to={`${base}/${task.id}`}>
-                          {t(task.task_type)} · {t(task.status)}
-                        </Link>
-                      </h2>
-                      <p>
-                        {task.provider} / {task.model}
-                      </p>
-                      <time>{new Date(task.created_at).toLocaleString()}</time>
-                    </div>
-                  </li>
-                ))}
-          </ul>
-          {!active.data?.total ? <p>{t("empty")}</p> : null}
+          {results ? (
+            <RecordTable
+              items={candidates.data?.items ?? []}
+              columns={[
+                {
+                  title: t("kind"),
+                  dataIndex: "task_type",
+                  width: 170,
+                  render: (value: string) => t(value),
+                },
+                {
+                  title: t("status"),
+                  dataIndex: "status",
+                  width: 140,
+                  render: (value: string) => t(value),
+                },
+                {
+                  title: t("body"),
+                  dataIndex: "excerpt",
+                  width: 420,
+                  ellipsis: true,
+                },
+                {
+                  title: t("favorites"),
+                  dataIndex: "pinned",
+                  width: 100,
+                  render: (value: boolean) => t(value ? "yes" : "no"),
+                },
+                {
+                  title: t("createdAt"),
+                  dataIndex: "created_at",
+                  width: 190,
+                  render: (value: string) => new Date(value).toLocaleString(),
+                },
+                {
+                  title: t("admin:actions"),
+                  key: "actions",
+                  width: 88,
+                  fixed: "right",
+                  align: "center",
+                  render: (_, row) => (
+                    <RowAction
+                      label={t("details")}
+                      icon={Eye}
+                      to={`${base}/${row.task_id}`}
+                    />
+                  ),
+                },
+              ]}
+            />
+          ) : (
+            <RecordTable
+              items={tasks.data?.items ?? []}
+              columns={[
+                {
+                  title: t("kind"),
+                  dataIndex: "task_type",
+                  width: 170,
+                  render: (value: string) => t(value),
+                },
+                {
+                  title: t("status"),
+                  dataIndex: "status",
+                  width: 140,
+                  render: (value: string) => t(value),
+                },
+                {
+                  title: t("provider"),
+                  dataIndex: "provider",
+                  width: 180,
+                  ellipsis: true,
+                },
+                {
+                  title: t("model"),
+                  dataIndex: "model",
+                  width: 220,
+                  ellipsis: true,
+                },
+                {
+                  title: t("createdAt"),
+                  dataIndex: "created_at",
+                  width: 190,
+                  render: (value: string) => new Date(value).toLocaleString(),
+                },
+                {
+                  title: t("admin:actions"),
+                  key: "actions",
+                  width: 88,
+                  fixed: "right",
+                  align: "center",
+                  render: (_, row) => (
+                    <RowAction
+                      label={t("details")}
+                      icon={Eye}
+                      to={`${base}/${row.id}`}
+                    />
+                  ),
+                },
+              ]}
+            />
+          )}
           <div className="studio-pagination">
             <Pagination
               current={page}

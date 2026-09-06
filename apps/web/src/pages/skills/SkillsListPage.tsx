@@ -1,6 +1,10 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, Pagination, Switch } from "antd";
+import { Modal, Pagination, Switch } from "antd";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -71,16 +75,16 @@ export function SkillsListPage() {
         </label>
         <label>
           {t("status")}
-          <select
+          <SelectField
             value={enabled}
-            onChange={(event) =>
-              setParams({ q, enabled: event.target.value, page: "1" })
+            onValueChange={(value) =>
+              setParams({ q, enabled: value, page: "1" })
             }
           >
             <option value="">{t("all")}</option>
             <option value="true">{t("enabled")}</option>
             <option value="false">{t("disabled")}</option>
-          </select>
+          </SelectField>
         </label>
       </div>
       {query.isPending ? (
@@ -89,36 +93,73 @@ export function SkillsListPage() {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {query.data.items.map((skill) => (
-              <li key={skill.id}>
-                <div>
-                  <h2>
-                    <Link to={`/skills/${skill.id}`}>{skill.name}</Link>
-                  </h2>
-                  <p className="studio-excerpt">{skill.description}</p>
-                </div>
-                <div className="studio-actions">
+          <RecordTable
+            items={query.data.items}
+            columns={[
+              {
+                title: t("title"),
+                dataIndex: "name",
+                width: 240,
+                ellipsis: true,
+                render: (name: string, item) => (
+                  <Link to={`/skills/${item.id}`}>{name}</Link>
+                ),
+              },
+              {
+                title: t("description"),
+                dataIndex: "description",
+                width: 420,
+                ellipsis: true,
+              },
+              {
+                title: t("status"),
+                dataIndex: "status",
+                width: 130,
+                render: (value: string) =>
+                  value === "ready" ? t("skillReady") : t(`skills:${value}`),
+              },
+              {
+                title: t("enabled"),
+                key: "enabled",
+                width: 110,
+                render: (_, item) => (
                   <Switch
-                    aria-label={`${t("enabled")} · ${skill.name}`}
-                    checked={skill.enabled}
-                    disabled={skill.status !== "ready" || toggle.isPending}
-                    onChange={(value) => toggle.mutate({ id: skill.id, value })}
+                    aria-label={`${t("enabled")} · ${item.name}`}
+                    checked={item.enabled}
+                    disabled={item.status !== "ready" || toggle.isPending}
+                    onChange={(value) => toggle.mutate({ id: item.id, value })}
                   />
-                  <Link
-                    className="studio-link-button"
-                    to={`/skills/${skill.id}/edit`}
-                  >
-                    {t("edit")}
-                  </Link>
-                  <Button danger onClick={() => setDeleting(skill.id)}>
-                    {t("delete")}
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {!query.data.items.length ? <p>{t("empty")}</p> : null}
+                ),
+              },
+              {
+                title: t("admin:actions"),
+                key: "actions",
+                width: 160,
+                fixed: "right",
+                align: "center",
+                render: (_, item) => (
+                  <div className="record-actions">
+                    <RowAction
+                      label={t("details")}
+                      icon={Eye}
+                      to={`/skills/${item.id}`}
+                    />
+                    <RowAction
+                      label={t("edit")}
+                      icon={Pencil}
+                      to={`/skills/${item.id}/edit`}
+                    />
+                    <RowAction
+                      label={t("delete")}
+                      icon={Trash2}
+                      danger
+                      onClick={() => setDeleting(item.id)}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}

@@ -1,3 +1,6 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { SelectField } from "../../shared/ui/SelectField";
 import {
   clearFormDraft,
   parseFormDraft,
@@ -16,7 +19,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FileText } from "lucide-react";
+import { FileText, Eye, Pencil, Plus } from "lucide-react";
 import { useAuth } from "../../features/auth/useAuth";
 import {
   studioFields,
@@ -118,6 +121,17 @@ function StudioList({
       ).data.data,
   });
   const page = Math.max(1, Number(params.get("page")) || 1);
+  const relatedCharacters = useQuery({
+    queryKey: ["characters", projectId],
+    enabled: studioFields[kind].some((field) => field.type === "character"),
+    queryFn: async () =>
+      (
+        await listProjectCharacters({
+          client: apiClient,
+          path: { project_id: projectId },
+        })
+      ).data.data,
+  });
   const query = useQuery({
     queryKey: ["studio", projectId, kind, page, debouncedQ, sourceId],
     queryFn: () =>
@@ -155,10 +169,10 @@ function StudioList({
         </label>
         <label>
           {t("source")}
-          <select
+          <SelectField
             value={sourceId}
-            onChange={(event) =>
-              setParams({ q, page: "1", source: event.target.value })
+            onValueChange={(value) =>
+              setParams({ q, page: "1", source: value })
             }
           >
             <option value="">{t("all")}</option>
@@ -169,7 +183,7 @@ function StudioList({
                   {doc.title}
                 </option>
               ))}
-          </select>
+          </SelectField>
         </label>
       </div>
       {kind === "rules" ? <StyleCheck projectId={projectId} /> : null}
@@ -182,53 +196,91 @@ function StudioList({
           {!query.data.items.length ? (
             <p>{t("empty")}</p>
           ) : (
-            <ul className="studio-list">
-              {query.data.items.map((record) => (
-                <li key={record.id}>
-                  <div>
-                    <h2>
-                      <Link to={`${base}/${record.id}`}>{record.title}</Link>
-                    </h2>
+            <RecordTable<StudioRecord>
+              items={query.data.items}
+              columns={[
+                {
+                  title: t("title"),
+                  dataIndex: "title",
+                  width: 220,
+                  ellipsis: true,
+                  render: (value: string, row) => (
+                    <Link to={`${base}/${row.id}`}>{value}</Link>
+                  ),
+                },
+                {
+                  title: t("body"),
+                  dataIndex: "body",
+                  width: 300,
+                  ellipsis: true,
+                },
+                {
+                  title: t("source"),
+                  dataIndex: "source_title",
+                  width: 190,
+                  ellipsis: true,
+                  render: (value: string | null) => value || t("manual"),
+                },
+                {
+                  title: t("sourceVersion"),
+                  dataIndex: "source_version",
+                  width: 110,
+                  render: (value: number | null) => value ?? "—",
+                },
+                {
+                  title: t("sourceState"),
+                  key: "sourceState",
+                  width: 170,
+                  render: (_, row) => (
                     <SourceLabel
-                      stale={record.source_stale}
-                      missing={record.source_missing}
-                      manual={!record.source_document_id}
+                      stale={row.source_stale}
+                      missing={row.source_missing}
+                      manual={!row.source_document_id}
                     />
-                    <p className="studio-excerpt">
-                      {record.body?.slice(0, 160)}
-                    </p>
-                    {kind === "events" ? (
-                      <p>
-                        {recordField(record, "time_label") || t("unknown")} ·{" "}
-                        {recordField(record, "story_order") || t("unknown")}
-                      </p>
-                    ) : null}
-                    {kind === "plans" ? (
-                      <p>
-                        {recordField(record, "arc")} ·{" "}
-                        {recordField(record, "pov")}
-                      </p>
-                    ) : null}
-                    <span>
-                      {t(
-                        recordField(record, "status") ||
-                          recordField(record, "kind") ||
-                          recordField(record, "delivery_status") ||
-                          "manual",
-                      )}
-                    </span>
-                  </div>
-                  <div className="studio-actions">
-                    <Link
-                      className="studio-link-button"
-                      to={`${base}/${record.id}/edit`}
-                    >
-                      {t("edit")}
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  ),
+                },
+                ...studioFields[kind].map((field) => ({
+                  title: t(field.key),
+                  key: field.key,
+                  width: field.type === "textarea" ? 260 : 160,
+                  ellipsis: true,
+                  render: (_: unknown, row: StudioRecord) =>
+                    field.options
+                      ? t(recordField(row, field.key) || "unknown")
+                      : field.type === "document"
+                        ? (sources.data?.items.find(
+                            (doc) => doc.id === recordField(row, field.key),
+                          )?.title ?? "—")
+                        : field.type === "character"
+                          ? (relatedCharacters.data?.items.find(
+                              (character) =>
+                                character.id === recordField(row, field.key),
+                            )?.name ?? "—")
+                          : recordField(row, field.key) || "—",
+                })),
+                {
+                  title: t("admin:actions"),
+                  key: "actions",
+                  width: 112,
+                  fixed: "right",
+                  align: "center",
+                  render: (_, row) => (
+                    <div className="record-actions">
+                      <RowAction
+                        label={t("details")}
+                        icon={Eye}
+                        to={`${base}/${row.id}`}
+                      />
+                      <RowAction
+                        label={t("edit")}
+                        icon={Pencil}
+                        to={`${base}/${row.id}/edit`}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
+            />
           )}
           <div className="studio-pagination">
             <Pagination
@@ -602,11 +654,11 @@ function StudioRecordForm({
         </label>
         <label className="studio-field" htmlFor="studio-source">
           {t("source")}
-          <select
+          <SelectField
             required={kind === "summaries"}
             id="studio-source"
             value={values.source_document_id}
-            onChange={(event) => set("source_document_id", event.target.value)}
+            onValueChange={(value) => set("source_document_id", value)}
           >
             <option value="">{t("noSource")}</option>
             {docs.data?.items
@@ -620,7 +672,7 @@ function StudioRecordForm({
                   {doc.title}
                 </option>
               ))}
-          </select>
+          </SelectField>
         </label>
         {values.source_document_id ? (
           <div className="studio-actions">
@@ -646,23 +698,23 @@ function StudioRecordForm({
           >
             {t(field.key)}
             {field.options ? (
-              <select
+              <SelectField
                 id={`studio-${field.key}`}
                 value={values[field.key]}
-                onChange={(event) => set(field.key, event.target.value)}
+                onValueChange={(value) => set(field.key, value)}
               >
                 {field.options.map((option) => (
                   <option key={option} value={option}>
                     {t(option)}
                   </option>
                 ))}
-              </select>
+              </SelectField>
             ) : field.type === "document" || field.type === "character" ? (
-              <select
+              <SelectField
                 id={`studio-${field.key}`}
                 value={values[field.key]}
                 required={field.required}
-                onChange={(event) => set(field.key, event.target.value)}
+                onValueChange={(value) => set(field.key, value)}
               >
                 <option value="">—</option>
                 {field.type === "document"
@@ -678,7 +730,7 @@ function StudioRecordForm({
                         {character.name}
                       </option>
                     ))}
-              </select>
+              </SelectField>
             ) : field.type === "textarea" ? (
               <textarea
                 id={`studio-${field.key}`}
@@ -744,17 +796,24 @@ function ThreadHistory({
   if (query.isError) return <StudioError retry={() => void query.refetch()} />;
   return (
     <>
-      <ul className="studio-list">
-        {query.data.items.map((item) => (
-          <li key={item.id}>
-            <div>
-              <strong>{t(item.status)}</strong>
-              <p className="studio-excerpt">{item.note}</p>
-              <time>{new Date(item.created_at).toLocaleString()}</time>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <RecordTable
+        items={query.data.items}
+        columns={[
+          {
+            title: t("status"),
+            dataIndex: "status",
+            width: 140,
+            render: (value: string) => t(value),
+          },
+          { title: t("body"), dataIndex: "note", width: 360, ellipsis: true },
+          {
+            title: t("createdAt"),
+            dataIndex: "created_at",
+            width: 190,
+            render: (value: string) => new Date(value).toLocaleString(),
+          },
+        ]}
+      />
       <div className="studio-pagination">
         <Pagination
           current={page}
@@ -833,10 +892,10 @@ function StyleCheck({ projectId }: { projectId: string }) {
       <div className="studio-filter">
         <label>
           {t("chooseChapter")}
-          <select
+          <SelectField
             value={documentId}
-            onChange={(event) => {
-              setDocumentId(event.target.value);
+            onValueChange={(value) => {
+              setDocumentId(value);
               check.reset();
             }}
           >
@@ -848,7 +907,7 @@ function StyleCheck({ projectId }: { projectId: string }) {
                   {doc.title}
                 </option>
               ))}
-          </select>
+          </SelectField>
         </label>
         <Button
           disabled={!documentId || note.isPending}
@@ -860,24 +919,37 @@ function StyleCheck({ projectId }: { projectId: string }) {
       </div>
       {check.isError || note.isError ? <StudioError /> : null}
       {check.data ? (
-        <ul className="studio-list">
-          {check.data.warnings.length ? (
-            check.data.warnings.map((warning, index) => (
-              <li key={index}>
-                <span>{warning.title}</span>
-                <Button
-                  disabled={added.includes(warning.title)}
+        <RecordTable
+          items={check.data.warnings.map((warning, index) => ({
+            ...warning,
+            id: String(index),
+          }))}
+          emptyText={t("noWarnings")}
+          columns={[
+            {
+              title: t("body"),
+              dataIndex: "title",
+              width: 400,
+              ellipsis: true,
+            },
+            {
+              title: t("admin:actions"),
+              key: "actions",
+              width: 88,
+              fixed: "right",
+              align: "center",
+              render: (_, row) => (
+                <RowAction
+                  label={t(added.includes(row.title) ? "saved" : "addNote")}
+                  icon={Plus}
+                  disabled={added.includes(row.title)}
                   loading={note.isPending}
-                  onClick={() => note.mutate(warning.title)}
-                >
-                  {t(added.includes(warning.title) ? "saved" : "addNote")}
-                </Button>
-              </li>
-            ))
-          ) : (
-            <li>{t("noWarnings")}</li>
-          )}
-        </ul>
+                  onClick={() => note.mutate(row.title)}
+                />
+              ),
+            },
+          ]}
+        />
       ) : null}
     </section>
   );

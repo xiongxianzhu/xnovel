@@ -1,3 +1,7 @@
+import { Eye } from "lucide-react";
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Pagination } from "antd";
@@ -184,7 +188,7 @@ function SkillResourceBrowser({
     <section>
       <label className="studio-field">
         {t("resources")}
-        <select value={path} onChange={(event) => setPath(event.target.value)}>
+        <SelectField value={path} onValueChange={(value) => setPath(value)}>
           {(files.data ?? ["SKILL.md"]).map((file) => (
             <option
               key={file}
@@ -194,7 +198,7 @@ function SkillResourceBrowser({
               {file}
             </option>
           ))}
-        </select>
+        </SelectField>
       </label>
       {files.isError || resource.isError ? (
         <StudioError
@@ -382,19 +386,42 @@ export function SkillVersionsPage() {
             <StudioError />
           ) : (
             <>
-              <ul className="studio-list">
-                {list.data.items.map((item) => (
-                  <li key={item.id}>
-                    <div>
-                      <Link to={`/skills/${skillId}/versions/${item.id}`}>
-                        v{item.version_number}
-                      </Link>
-                      <p className="studio-excerpt">{item.content_sha256}</p>
-                      <time>{new Date(item.created_at).toLocaleString()}</time>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <RecordTable
+                items={list.data.items}
+                columns={[
+                  {
+                    title: t("version"),
+                    dataIndex: "version_number",
+                    width: 100,
+                  },
+                  {
+                    title: "SHA-256",
+                    dataIndex: "content_sha256",
+                    width: 360,
+                    ellipsis: true,
+                  },
+                  {
+                    title: t("createdAt"),
+                    dataIndex: "created_at",
+                    width: 200,
+                    render: (value: string) => new Date(value).toLocaleString(),
+                  },
+                  {
+                    title: t("admin:actions"),
+                    key: "actions",
+                    width: 88,
+                    fixed: "right",
+                    align: "center",
+                    render: (_, row) => (
+                      <RowAction
+                        label={t("details")}
+                        icon={Eye}
+                        to={`/skills/${skillId}/versions/${row.id}`}
+                      />
+                    ),
+                  },
+                ]}
+              />
               <div className="studio-pagination">
                 <Pagination
                   current={page}

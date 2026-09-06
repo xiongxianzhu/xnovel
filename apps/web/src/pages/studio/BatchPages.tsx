@@ -1,5 +1,9 @@
+import { RecordTable } from "../../shared/ui/RecordTable";
+import { RowAction } from "../../shared/ui/RowAction";
+import { Eye, History } from "lucide-react";
+import { SelectField } from "../../shared/ui/SelectField";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Pagination } from "antd";
+import { Button, Pagination } from "antd";
 import { useRef, useState } from "react";
 import { useAuth } from "../../features/auth/useAuth";
 import { useFormProtection } from "../../features/studio/useFormProtection";
@@ -70,26 +74,62 @@ export function BatchListPage() {
         <StudioError />
       ) : (
         <>
-          <ul className="studio-list">
-            {query.data.items.map((batch) => (
-              <li key={batch.id}>
-                <div>
-                  <h2>
-                    <Link to={`/projects/${projectId}/batches/${batch.id}`}>
-                      {t(batch.task_type)}
-                    </Link>
-                  </h2>
-                  <p>{t(batch.status)}</p>
-                  <p>
-                    {t("succeeded")}: {batch.counts.succeeded ?? 0} /{" "}
-                    {batch.total}
-                  </p>
-                  <time>{new Date(batch.created_at).toLocaleString()}</time>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {!query.data.items.length ? <p>{t("empty")}</p> : null}
+          <RecordTable
+            items={query.data.items}
+            columns={[
+              {
+                title: t("kind"),
+                dataIndex: "task_type",
+                width: 160,
+                render: (value: string) => t(value),
+              },
+              {
+                title: t("status"),
+                dataIndex: "status",
+                width: 220,
+                render: (value: string) => t(value),
+              },
+              { title: t("totalCount"), dataIndex: "total", width: 110 },
+              ...(
+                [
+                  "succeeded",
+                  "failed",
+                  "cancelled",
+                  "queued",
+                  "running",
+                  "stale",
+                ] as const
+              ).map((status) => ({
+                title: t(status),
+                key: status,
+                width: 110,
+                render: (
+                  _: unknown,
+                  row: NonNullable<typeof query.data>["items"][number],
+                ) => row.counts[status] ?? 0,
+              })),
+              {
+                title: t("createdAt"),
+                dataIndex: "created_at",
+                width: 190,
+                render: (value: string) => new Date(value).toLocaleString(),
+              },
+              {
+                title: t("admin:actions"),
+                key: "actions",
+                width: 88,
+                fixed: "right",
+                align: "center",
+                render: (_, row) => (
+                  <RowAction
+                    label={t("details")}
+                    icon={Eye}
+                    to={`/projects/${projectId}/batches/${row.id}`}
+                  />
+                ),
+              },
+            ]}
+          />
           <div className="studio-pagination">
             <Pagination
               current={page}
@@ -237,11 +277,11 @@ export function BatchCreatePage() {
         >
           <label className="studio-field">
             {t("provider")}
-            <select
+            <SelectField
               required
               value={providerId}
-              onChange={(event) => {
-                setProviderId(event.target.value);
+              onValueChange={(value) => {
+                setProviderId(value);
                 setModelId("");
                 reset();
               }}
@@ -254,14 +294,14 @@ export function BatchCreatePage() {
                     {item.display_name}
                   </option>
                 ))}
-            </select>
+            </SelectField>
           </label>
           <label className="studio-field">
             {t("model")}
-            <select
+            <SelectField
               value={modelId || provider?.default_model_id || ""}
-              onChange={(event) => {
-                setModelId(event.target.value);
+              onValueChange={(value) => {
+                setModelId(value);
                 reset();
               }}
             >
@@ -271,20 +311,20 @@ export function BatchCreatePage() {
                   {model.display_name}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
           <label className="studio-field">
             {t("kind")}
-            <select
+            <SelectField
               value={taskType}
-              onChange={(event) => {
-                setTaskType(event.target.value as "summary" | "consistency");
+              onValueChange={(value) => {
+                setTaskType(value as "summary" | "consistency");
                 reset();
               }}
             >
               <option value="summary">{t("summary")}</option>
               <option value="consistency">{t("consistency")}</option>
-            </select>
+            </SelectField>
           </label>
           <label className="studio-field">
             {t("instruction")}
@@ -486,43 +526,67 @@ export function BatchDetailPage() {
             )}
           </div>
           {control.isError ? <StudioError /> : null}
-          <ul className="studio-list">
-            {query.data.items.map((item) => (
-              <li key={item.id}>
-                <div>
-                  <h3>
-                    {docs.data?.items.find((doc) => doc.id === item.document_id)
-                      ?.title ?? t("missing")}
-                  </h3>
-                  <p>{t(item.status)}</p>
-                  {item.error_code ? (
-                    <Alert type="warning" title={t("requestFailed")} />
-                  ) : null}
-                </div>
-                <div className="studio-actions">
-                  {item.result_id ? (
-                    <Link
-                      className="studio-link-button"
-                      to={
-                        query.data.task_type === "summary"
-                          ? `/projects/${projectId}/studio/summaries/${item.result_id}`
-                          : `/projects/${projectId}/studio/issues?source=${item.document_id}`
-                      }
-                    >
-                      {t("details")}
-                    </Link>
-                  ) : null}
-                  {item.task_id ? (
-                    <Link
-                      to={`/projects/${projectId}/ai-history/${item.task_id}`}
-                    >
-                      {t("aiHistory")}
-                    </Link>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <RecordTable
+            items={query.data.items}
+            columns={[
+              {
+                title: t("title"),
+                key: "title",
+                width: 240,
+                ellipsis: true,
+                render: (_, row) =>
+                  docs.data?.items.find((doc) => doc.id === row.document_id)
+                    ?.title ?? t("missing"),
+              },
+              {
+                title: t("sourceVersion"),
+                dataIndex: "document_version",
+                width: 120,
+              },
+              {
+                title: t("status"),
+                dataIndex: "status",
+                width: 140,
+                render: (value: string) => t(value),
+              },
+              {
+                title: t("errorCode"),
+                dataIndex: "error_code",
+                width: 240,
+                ellipsis: true,
+                render: (value: string | null) => value ?? "—",
+              },
+              {
+                title: t("admin:actions"),
+                key: "actions",
+                width: 112,
+                fixed: "right",
+                align: "center",
+                render: (_, row) => (
+                  <div className="record-actions">
+                    {row.result_id ? (
+                      <RowAction
+                        label={t("details")}
+                        icon={Eye}
+                        to={
+                          query.data.task_type === "summary"
+                            ? `/projects/${projectId}/studio/summaries/${row.result_id}`
+                            : `/projects/${projectId}/studio/issues?source=${row.document_id}`
+                        }
+                      />
+                    ) : null}
+                    {row.task_id ? (
+                      <RowAction
+                        label={t("aiHistory")}
+                        icon={History}
+                        to={`/projects/${projectId}/ai-history/${row.task_id}`}
+                      />
+                    ) : null}
+                  </div>
+                ),
+              },
+            ]}
+          />
         </>
       )}
     </StudioFrame>

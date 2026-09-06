@@ -41,6 +41,7 @@ export function ProjectExportButton({ projectId }: { projectId: string }) {
   return (
     <div className="project-export-control">
       <Dropdown
+        transitionName=""
         menu={{
           items: [
             { key: "review", label: t("studio:export") },

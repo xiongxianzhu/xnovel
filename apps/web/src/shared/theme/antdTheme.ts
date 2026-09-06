@@ -11,7 +11,27 @@ export function createAntdTheme(
   return {
     algorithm:
       colorScheme === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
+    components: {
+      Input: {
+        activeShadow: "none",
+        errorActiveShadow: "none",
+        warningActiveShadow: "none",
+      },
+      InputNumber: {
+        activeShadow: "none",
+        errorActiveShadow: "none",
+        warningActiveShadow: "none",
+      },
+      DatePicker: {
+        activeShadow: "none",
+        errorActiveShadow: "none",
+        warningActiveShadow: "none",
+      },
+      Select: { activeOutlineColor: "transparent", motion: false },
+    },
     token: {
+      lineWidth: 1,
+      controlOutlineWidth: 0,
       borderRadius: 2,
       colorBgBase: values.canvas,
       colorBgContainer: values.surface,

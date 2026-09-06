@@ -68,6 +68,7 @@ export function UserMenu() {
 
   return (
     <Dropdown
+      transitionName=""
       align={{ offset: [0, 1] }}
       menu={{ items }}
       placement="bottomRight"
