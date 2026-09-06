@@ -11,6 +11,7 @@
 - [x] T-005 增加根目录 `.gitignore` 和项目 README。
 - [x] T-006 建立贡献指南、Issue/PR 模板与 API/Web/Desktop 持续集成。
 - [x] T-007 配置根目录 pnpm 工作区，支持 `pnpm -F web dev` 启动前端，保留应用独立锁文件与 Desktop 工作区。
+- [x] T-008 修复 CI 的 Desktop pnpm 版本缺失及 API 全量格式检查失败，保留独立的 lint/format 门槛。
 
 退出条件：全新检出后可以分别启动 API、Web 和 Desktop，文档链接有效，Pull Request 自动执行三端质量检查。
 

@@ -11,7 +11,7 @@
 - 只采用 stable / LTS 版本，不使用 alpha、beta、rc 或 nightly。
 - API 以 apps/api/uv.lock 为可复现安装来源，Web 以 apps/web/pnpm-lock.yaml 为准。
 - 根目录 pnpm 工作区包含 `apps/web` 和 `packages/theme`，支持 `pnpm -F web dev`；设置 `sharedWorkspaceLockfile: false` 保留应用独立锁文件。Desktop 继续使用自己的工作区配置。
-- Desktop 直接依赖以 `apps/desktop/package.json` 和独立 `pnpm-lock.yaml` 为准。
+- Desktop 直接依赖以 `apps/desktop/package.json` 和独立 `pnpm-lock.yaml` 为准；`packageManager` 固定为 `pnpm@12.3.4`，与根目录一致。Web 独立声明保持 `pnpm@11.21.0`。
 - 主版本升级必须单独验证类型检查、测试、构建、安装包和自动更新。
 - 生产数据库跟随 PostgreSQL 当前受支持的最新大版本，并及时升级该大版本的补丁版本。
 
@@ -76,7 +76,7 @@ Web AI 使用 cryptography 的 AES-GCM 保存凭据，使用 HTTPX 异步流调�
 | 类别              | 技术              | 当前基线 | 状态     | 用途                                 |
 | ----------------- | ----------------- | -------- | -------- | ------------------------------------ |
 | JavaScript 运行时 | Node.js           | 24.19.0+ | 仓库要求 | 本地开发与 CI；优先使用 Node 24 LTS  |
-| 包管理            | pnpm              | 11.21.0  | 已声明   | Monorepo 依赖与锁文件                |
+| 包管理            | pnpm              | 11.21.0  | 已声明   | Web 应用依赖与锁文件                 |
 | UI 框架           | React / React DOM | 19.2.8   | 已锁定   | 网页界面                             |
 | UI 组件库         | Ant Design        | 6.6.0    | 已锁定   | 工作台、表单、反馈与管理界面组件     |
 | 路由              | React Router DOM  | 7.18.2   | 已锁定   | 登录页、受保护路由和设置页           |
@@ -284,3 +284,5 @@ Desktop 发布门槛还包括：Windows x64 安装、卸载和升级测试；mac
 - Web 使用现有 React Router 数据路由阻断能力处理跨页与浏览器后退保护；继续使用 TanStack Query、Ant Design 和现有主题令牌。
 - `packages/text-diff` 为 Web/Desktop 已共同使用的有界行差异比较纯函数包。计算量超过 100 万行组合时回退为完整原文比较，不引入第三方差异渲染依赖。
 - API 和 Desktop 分别在已有异步生命周期及主进程中定期清理历史；当前 API 仍为单进程部署，不能以增加 worker 数代替持久化调度设计。
+
+CI 和 Desktop 发布工作流的 pnpm/action-setup 分别读取所选应用的 `package.json`，不会根据 `engines.pnpm` 推导安装版本。API 提交前必须分别执行 `ruff check .` 和 `ruff format --check .`，两者不能互相替代。

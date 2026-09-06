@@ -312,7 +312,8 @@ async def test_only_admin_can_upload_global_logo_and_action_is_audited(
 
 @pytest.mark.anyio
 async def test_site_name_is_admin_only_persisted_and_audited(
-    client: AsyncClient, session_factory: async_sessionmaker[AsyncSession],
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     public = await client.get("/api/v1/site-settings/public")
     assert public.json()["data"]["site_name"] == "xnovel"
@@ -328,7 +329,8 @@ async def test_site_name_is_admin_only_persisted_and_audited(
     token = await _login(client, admin)
     headers = {"Authorization": f"Bearer {token}"}
     uploaded = await client.post(
-        "/api/admin/v1/site-settings/logo", headers=headers,
+        "/api/admin/v1/site-settings/logo",
+        headers=headers,
         files={"file": ("logo.png", _png_bytes(), "image/png")},
     )
     for _ in range(2):
@@ -338,7 +340,9 @@ async def test_site_name_is_admin_only_persisted_and_audited(
         assert changed.status_code == 200, changed.text
     public = await client.get("/api/v1/site-settings/public")
     assert public.json()["data"] == {
-        "site_name": "墨雨写作室", "registration_enabled": False, "logo_url": uploaded.json()["data"]["url"]
+        "site_name": "墨雨写作室",
+        "registration_enabled": False,
+        "logo_url": uploaded.json()["data"]["url"],
     }
     async with session_factory() as session:
         setting = await session.get(SiteSetting, 1)
@@ -357,13 +361,18 @@ async def test_site_name_is_admin_only_persisted_and_audited(
 
 @pytest.mark.anyio
 async def test_site_name_validation_preserves_settings(
-    client: AsyncClient, session_factory: async_sessionmaker[AsyncSession],
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     admin = await _create_user(session_factory, role="admin")
     token = await _login(client, admin)
     headers = {"Authorization": f"Bearer {token}"}
-    for body in ({"site_name": " \t\n "}, {"site_name": "字" * 101}, {"site_name": None},
-                 {"site_name": "新名称", "registration_enabled": True}):
+    for body in (
+        {"site_name": " \t\n "},
+        {"site_name": "字" * 101},
+        {"site_name": None},
+        {"site_name": "新名称", "registration_enabled": True},
+    ):
         response = await client.patch("/api/admin/v1/site-settings", headers=headers, json=body)
         assert response.status_code == 422, response.text
     public = await client.get("/api/v1/site-settings/public")

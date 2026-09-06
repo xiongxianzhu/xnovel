@@ -211,15 +211,7 @@ async def list_projects(
     if update_status is not None:
         filters.append(col(Project.update_status) == update_status)
     try:
-        total = int(
-            (
-                await session.exec(
-                    select(func.count())
-                    .select_from(Project)
-                    .where(*filters)
-                )
-            ).one()
-        )
+        total = int((await session.exec(select(func.count()).select_from(Project).where(*filters))).one())
         projects = (
             await session.exec(
                 select(Project)

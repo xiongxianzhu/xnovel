@@ -56,9 +56,6 @@ def test_password_rejects_invalid_values(value: str) -> None:
 
 
 def test_strong_password_requires_two_of_four_character_types() -> None:
-    assert (
-        validate_strong_password("Abcdefgh", username="writer")
-        == "Abcdefgh"
-    )
+    assert validate_strong_password("Abcdefgh", username="writer") == "Abcdefgh"
     with pytest.raises(IdentityValidationError):
         validate_strong_password("abcdefgh", username="writer")

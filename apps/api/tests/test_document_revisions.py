@@ -5,12 +5,14 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from tests.test_planning import _headers, _project, _user, client  # noqa: F401, F811
+from tests.test_planning import _headers, _project, _user
+from tests.test_planning import client as client
 
 
 @pytest.mark.anyio
 async def test_revision_restore_conflict_and_owner(
-    client: AsyncClient, session_factory: async_sessionmaker[AsyncSession]  # noqa: F811
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     owner = await _user(session_factory, "revision-owner")
     other = await _user(session_factory, "revision-other")

@@ -21,14 +21,16 @@ async def update_site_name(session: AsyncSession, *, context: AuthContext, site_
             setting.site_name = site_name
             setting.updated_by = context.user.id
             session.add(setting)
-            session.add(AdminAuditEvent(
-                actor_type="admin",
-                admin_id=context.user.id,
-                action="site.name_changed",
-                target_type="site_settings",
-                target_id="1",
-                change_summary={"site_name_changed": True},
-            ))
+            session.add(
+                AdminAuditEvent(
+                    actor_type="admin",
+                    admin_id=context.user.id,
+                    action="site.name_changed",
+                    target_type="site_settings",
+                    target_id="1",
+                    change_summary={"site_name_changed": True},
+                )
+            )
             await session.commit()
             await session.refresh(setting)
         return PublicSiteSettingsData(

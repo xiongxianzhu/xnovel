@@ -37,6 +37,7 @@ async def client(
 ) -> AsyncIterator[AsyncClient]:
     monkeypatch.setenv("MEDIA_ROOT", str(tmp_path / "media"))
     get_settings.cache_clear()
+
     async def override_get_db() -> AsyncIterator[AsyncSession]:
         async with session_factory() as session:
             try:
@@ -274,16 +275,12 @@ async def test_author_search_status_filter_and_owner_boundaries(
         data = response.json()["data"]
         assert data["author"] == author.strip()
         ids.append(data["id"])
-        await client.patch(
-            f"/api/v1/projects/{data['id']}", headers=headers, json={"update_status": progress}
-        )
+        await client.patch(f"/api/v1/projects/{data['id']}", headers=headers, json={"update_status": progress})
     other = await _create_user(session_factory, suffix="author-other")
     other_headers = {"Authorization": f"Bearer {await _login(client, other)}"}
     await client.post("/api/v1/projects", headers=other_headers, json={"title": "雨城", "author": "林墨"})
 
-    search_cases = (
-        ("林墨", [ids[0]]), ("雨城", [ids[0]]), ("lin", [ids[1]]), ("仅简介", []), (ids[0], []), ("%", [])
-    )
+    search_cases = (("林墨", [ids[0]]), ("雨城", [ids[0]]), ("lin", [ids[1]]), ("仅简介", []), (ids[0], []), ("%", []))
     for query, expected in search_cases:
         response = await client.get("/api/v1/projects", headers=headers, params={"q": query})
         assert response.status_code == 200

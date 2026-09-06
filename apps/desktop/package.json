@@ -4,6 +4,7 @@
   "description": "离线优先、作者掌控正文的开源小说工作室桌面端",
   "author": "xnovel contributors",
   "private": true,
+  "packageManager": "pnpm@12.3.4",
   "type": "module",
   "main": "./out/main/index.js",
   "engines": {

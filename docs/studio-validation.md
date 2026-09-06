@@ -77,3 +77,11 @@ uv run python -m scripts.benchmark_studio
 - 一致性检查是所选章节和可选前两章参考内的带证据疑点，不是全书穷尽证明。真实模型质量和自愿试用尚未进行，不作准确率承诺。
 - Desktop 其他长篇功能、云同步、自动发布和段落级恢复后置。macOS 安装包、签名和公证仍由发布 CI 验证，本轮只完成 Windows 本地目录打包。
 - 保留工作树中原有改动；未执行 git commit 或 push。
+
+## CI 修正（2026-09-07）
+
+`bac5da6` 的 GitHub CI 实际未全通过：Web 通过；Desktop 在安装 pnpm 时因应用缺少 `packageManager` 失败；API 在全量 Ruff 格式检查时失败。此前本地 Ruff lint 通过不代表 format 通过，以上本地结果不能作为该次 CI 成功的证明。
+
+修复为 Desktop 固定 `pnpm@12.3.4`，复用既有 CI/发布工作流的 `package_json_file`，同步包管理器生成的锁文件元数据；API 按现有 Ruff 配置格式化，并用显式重导出声明共享测试夹具。未放宽检查、删除断言或改变业务流程。
+
+PRD 影响：否。本次仅修复工具版本声明、格式和测试夹具导入，产品范围、用户流程和验收标准不变。Web DESIGN.md 影响：否，无 Web UI 变更。

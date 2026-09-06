@@ -43,7 +43,6 @@ __all__ = [
     "StyleRule",
     "ReleaseSchedule",
     "PlotThreadUpdate",
-
     "AdminAuditEvent",
     "AICredential",
     "AIProviderConfig",
