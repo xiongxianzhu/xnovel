@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -6,14 +7,17 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createRef } from "react";
 import "../../shared/i18n";
-import { ProjectAiPanel } from "./ProjectAiPanel";
+import { ProjectAiPanel, type ProjectAiPanelHandle } from "./ProjectAiPanel";
 
 const api = vi.hoisted(() => ({
+  applyAiResultRequest: vi.fn(),
   cancelAiTaskRequest: vi.fn(),
   createAiTaskRequest: vi.fn(),
+  previewAiContextRequest: vi.fn(),
   getAiTaskRequest: vi.fn(),
   listProviderConfigsRequest: vi.fn(),
   rejectAiResultRequest: vi.fn(),
@@ -23,15 +27,99 @@ const sse = vi.hoisted(() => ({ streamSse: vi.fn() }));
 
 vi.mock("./aiApi", () => ({
   ...api,
-  applyAiResultRequest: vi.fn(),
 }));
 vi.mock("../skills/skillsApi", () => skills);
 vi.mock("../../shared/api/sse", () => sse);
 
 describe("ProjectAiPanel", () => {
+  beforeEach(() => {
+    api.previewAiContextRequest.mockResolvedValue({
+      estimated_input_tokens: 100,
+      available_input_tokens: 8000,
+      source_count: 1,
+      skill_count: 0,
+      document_version: 3,
+    });
+  });
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it("sends selected text and applies only that range after confirmation", async () => {
+    api.listProviderConfigsRequest.mockResolvedValue({
+      items: [
+        {
+          id: "provider-1",
+          display_name: "Provider",
+          enabled: true,
+          default_model_id: "model-1",
+          models: [{ id: "model-1", display_name: "Model", enabled: true }],
+        },
+      ],
+    });
+    skills.listSkillsRequest.mockResolvedValue({ items: [] });
+    api.createAiTaskRequest.mockResolvedValue({ id: "task-1" });
+    sse.streamSse.mockResolvedValue(undefined);
+    api.getAiTaskRequest.mockResolvedValue({
+      status: "succeeded",
+      context_manifest: { document_version: 3 },
+      results: [{ id: "result-1", content: "她拆开了信。" }],
+    });
+    api.applyAiResultRequest.mockResolvedValue({});
+    const ref = createRef<ProjectAiPanelHandle>();
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ProjectAiPanel
+          ref={ref}
+          onClose={vi.fn()}
+          open
+          projectId="project-1"
+          document={{
+            id: "doc-1",
+            title: "第一章",
+            kind: "manuscript",
+            parent_id: null,
+            position: 0,
+            status: "active",
+            created_at: "2026-09-05",
+            updated_at: "2026-09-05",
+          }}
+        />
+      </QueryClientProvider>,
+    );
+    await screen.findByLabelText("你的要求");
+    act(() => {
+      ref.current?.prepareSelection({
+        documentId: "doc-1",
+        content: "雨落下。她打开信封。窗外很静。",
+        start: 4,
+        end: 10,
+        version: 3,
+        task: "rewrite",
+      });
+    });
+    fireEvent.click(screen.getByRole("button", { name: "生成候选" }));
+    expect(api.createAiTaskRequest).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("button", { name: "确认生成" }));
+    await screen.findByText("她拆开了信。");
+    expect(api.createAiTaskRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selected_text: "她打开信封。",
+        task_type: "rewrite",
+      }),
+      expect.anything(),
+    );
+    expect(api.applyAiResultRequest).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "应用到选区" }));
+    fireEvent.click(await screen.findByRole("button", { name: "确认应用" }));
+    await waitFor(() =>
+      expect(api.applyAiResultRequest).toHaveBeenCalledWith("result-1", {
+        content: "雨落下。她拆开了信。窗外很静。",
+        document_id: "doc-1",
+        version: 3,
+      }),
+    );
   });
 
   it("keeps streamed output as an explicit candidate", async () => {
@@ -74,6 +162,8 @@ describe("ProjectAiPanel", () => {
       target: { value: "给我三个冲突方向" },
     });
     fireEvent.click(screen.getByRole("button", { name: "生成候选" }));
+    expect(api.createAiTaskRequest).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("button", { name: "确认生成" }));
 
     expect(await screen.findByText("候选段落")).toBeVisible();
     expect(screen.getByText("AI 候选")).toBeVisible();
@@ -89,3 +179,12 @@ describe("ProjectAiPanel", () => {
     );
   });
 });
+
+vi.mock("../../shared/api/generated/sdk.gen", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("../../shared/api/generated/sdk.gen")
+  >()),
+  getWritingRecall: vi.fn(async () => ({
+    data: { data: { summaries: [], facts: [], threads: [], stale_count: 0 } },
+  })),
+}));

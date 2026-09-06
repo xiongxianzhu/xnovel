@@ -1,7 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { App } from "./app/App";
 import { AppProviders } from "./app/providers/AppProviders";
 import { configureApiClient } from "./shared/api/client";
 import { setLocale } from "./shared/i18n";
@@ -22,8 +21,6 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
+    <AppProviders />
   </StrictMode>,
 );

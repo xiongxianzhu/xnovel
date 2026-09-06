@@ -1,3 +1,4 @@
+import { LoginAuditListPage } from "./UserPages";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Button, Input, Modal, Skeleton, Table, Tag } from "antd";
 import type { TableColumnsType } from "antd";
@@ -18,7 +19,7 @@ import type {
 const PAGE_SIZE = 50;
 
 export function AdminLoginAuditPage() {
-  return <AdminAuditPage mode="login" />;
+  return <LoginAuditListPage />;
 }
 
 export function AdminOperationAuditPage() {

@@ -1,5 +1,14 @@
+import { UNSAFE_DataRouterContext, useBlocker } from "react-router-dom";
 import { Alert, Button, Modal } from "antd";
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -9,6 +18,7 @@ import {
 
 type PendingDecision = {
   resolve: (allowed: boolean) => void;
+  kind: "manuscript" | "form";
 };
 
 export function EditorNavigationProvider({
@@ -17,6 +27,7 @@ export function EditorNavigationProvider({
   children: ReactNode;
 }) {
   const { t } = useTranslation(["common", "projects"]);
+  const dataRouter = useContext(UNSAFE_DataRouterContext);
   const guardRef = useRef<EditorLeaveGuard | null>(null);
   const decisionPendingRef = useRef(false);
   const [pending, setPending] = useState<PendingDecision | null>(null);
@@ -41,7 +52,7 @@ export function EditorNavigationProvider({
     decisionPendingRef.current = true;
     return new Promise<boolean>((resolve) => {
       setError(null);
-      setPending({ resolve });
+      setPending({ resolve, kind: guard.kind ?? "manuscript" });
     });
   }, []);
 
@@ -72,16 +83,32 @@ export function EditorNavigationProvider({
 
   return (
     <EditorNavigationContext.Provider value={value}>
+      {dataRouter ? (
+        <RouteLeaveBlocker
+          isBlocked={() => guardRef.current?.isBlocked() ?? false}
+          request={requestDocumentChange}
+        />
+      ) : null}
       {children}
       <Modal
         closable={!saving}
         footer={null}
         onCancel={() => finish(false)}
         open={Boolean(pending)}
-        title={t("projects:unsavedChangesTitle")}
+        title={t(
+          pending?.kind === "form"
+            ? "studio:formUnsaved"
+            : "projects:unsavedChangesTitle",
+        )}
       >
         <div className="document-confirm-dialog">
-          <p>{t("projects:unsavedChangesDescription")}</p>
+          <p>
+            {t(
+              pending?.kind === "form"
+                ? "studio:formLeaveDescription"
+                : "projects:unsavedChangesDescription",
+            )}
+          </p>
           {error ? <Alert showIcon title={error} type="error" /> : null}
           <div className="document-dialog-actions document-switch-actions">
             <Button disabled={saving} onClick={() => finish(false)}>
@@ -90,8 +117,12 @@ export function EditorNavigationProvider({
             <Button
               disabled={saving}
               onClick={() => {
-                guardRef.current?.stash();
-                finish(true);
+                try {
+                  guardRef.current?.stash();
+                  finish(true);
+                } catch {
+                  setError(t("common:requestFailed"));
+                }
               }}
             >
               {t("projects:stashAndSwitch")}
@@ -108,4 +139,30 @@ export function EditorNavigationProvider({
       </Modal>
     </EditorNavigationContext.Provider>
   );
+}
+
+function RouteLeaveBlocker({
+  isBlocked,
+  request,
+}: {
+  isBlocked: () => boolean;
+  request: () => Promise<boolean>;
+}) {
+  const waiting = useRef(false);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      (currentLocation.pathname !== nextLocation.pathname ||
+        currentLocation.search !== nextLocation.search) &&
+      isBlocked(),
+  );
+  useEffect(() => {
+    if (blocker.state !== "blocked" || waiting.current) return;
+    waiting.current = true;
+    void request().then((allowed) => {
+      waiting.current = false;
+      if (allowed) blocker.proceed();
+      else blocker.reset();
+    });
+  }, [blocker, request]);
+  return null;
 }

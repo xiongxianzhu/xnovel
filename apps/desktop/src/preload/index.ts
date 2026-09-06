@@ -25,6 +25,14 @@ const api: XnovelDesktopApi = {
     deleteDocument: (documentId) =>
       invoke("projects:documents-delete", documentId),
     content: (documentId) => invoke("projects:content", documentId),
+    revisions: (documentId, page) =>
+      invoke("projects:revisions", documentId, page),
+    revision: (documentId, revisionId) =>
+      invoke("projects:revision", documentId, revisionId),
+    checkpoint: (documentId, name, version) =>
+      invoke("projects:checkpoint", documentId, name, version),
+    restoreRevision: (documentId, revisionId, version) =>
+      invoke("projects:revision-restore", documentId, revisionId, version),
     save: (documentId, content, version) =>
       invoke("projects:save", documentId, content, version),
   },

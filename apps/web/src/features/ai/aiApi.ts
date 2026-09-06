@@ -1,4 +1,5 @@
 import {
+  previewAiContext,
   applyAiResult,
   cancelAiTask,
   createAiProviderConfig,
@@ -131,4 +132,9 @@ export async function rejectAiResultRequest(
   return (
     await rejectAiResult({ client: apiClient, path: { result_id: resultId } })
   ).data.data;
+}
+
+export async function previewAiContextRequest(payload: AiTaskCreateRequest) {
+  return (await previewAiContext({ client: apiClient, body: payload })).data
+    .data;
 }

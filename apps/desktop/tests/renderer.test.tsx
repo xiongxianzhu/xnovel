@@ -55,6 +55,15 @@ it("completes the local create-open flow and keeps credential input masked", asy
   let saveCount = 0;
   const api: XnovelDesktopApi = {
     projects: {
+      revisions: vi.fn(async (_id: string, page: number) => ({
+        items: [],
+        page,
+        pageSize: 50,
+        total: 0,
+      })),
+      revision: vi.fn(),
+      checkpoint: vi.fn(),
+      restoreRevision: vi.fn(),
       list: vi.fn(async () => projects),
       create: vi.fn(async () => {
         projects = [project];
@@ -248,6 +257,15 @@ function createFixture(
   const documents = [manuscript];
   const api: XnovelDesktopApi = {
     projects: {
+      revisions: vi.fn(async (_id: string, page: number) => ({
+        items: [],
+        page,
+        pageSize: 50,
+        total: 0,
+      })),
+      revision: vi.fn(),
+      checkpoint: vi.fn(),
+      restoreRevision: vi.fn(),
       list: vi.fn(async () => [project]),
       create: vi.fn(async () => ({ project, document: manuscript })),
       remove: vi.fn(async () => undefined),

@@ -304,6 +304,70 @@ async def test_only_admin_can_upload_global_logo_and_action_is_audited(
 
     assert uploaded.status_code == 200, uploaded.text
     assert public.json()["data"]["logo_url"] == uploaded.json()["data"]["url"]
+    assert public.json()["data"]["site_name"] == "xnovel"
     async with session_factory() as session:
         audit = (await session.exec(select(AdminAuditEvent))).one()
         assert audit.action == "site.logo_changed"
+
+
+@pytest.mark.anyio
+async def test_site_name_is_admin_only_persisted_and_audited(
+    client: AsyncClient, session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    public = await client.get("/api/v1/site-settings/public")
+    assert public.json()["data"]["site_name"] == "xnovel"
+    anonymous = await client.patch("/api/admin/v1/site-settings", json={"site_name": "不应生效"})
+    assert anonymous.status_code == 401
+    user = await _create_user(session_factory)
+    token = await _login(client, user)
+    denied = await client.patch(
+        "/api/admin/v1/site-settings", headers={"Authorization": f"Bearer {token}"}, json={"site_name": "不应生效"}
+    )
+    assert denied.status_code == 403
+    admin = await _create_user(session_factory, role="admin")
+    token = await _login(client, admin)
+    headers = {"Authorization": f"Bearer {token}"}
+    uploaded = await client.post(
+        "/api/admin/v1/site-settings/logo", headers=headers,
+        files={"file": ("logo.png", _png_bytes(), "image/png")},
+    )
+    for _ in range(2):
+        changed = await client.patch(
+            "/api/admin/v1/site-settings", headers=headers, json={"site_name": "  墨雨写作室  "}
+        )
+        assert changed.status_code == 200, changed.text
+    public = await client.get("/api/v1/site-settings/public")
+    assert public.json()["data"] == {
+        "site_name": "墨雨写作室", "registration_enabled": False, "logo_url": uploaded.json()["data"]["url"]
+    }
+    async with session_factory() as session:
+        setting = await session.get(SiteSetting, 1)
+        assert setting is not None and setting.site_name == "墨雨写作室"
+        assert setting.updated_by == admin.id
+        statement = select(AdminAuditEvent).where(AdminAuditEvent.action == "site.name_changed")
+        audits = (await session.exec(statement)).all()
+        assert len(audits) == 1
+        assert audits[0].change_summary == {"site_name_changed": True}
+    removed = await client.delete("/api/admin/v1/site-settings/logo", headers=headers)
+    assert removed.status_code == 200
+    public = await client.get("/api/v1/site-settings/public")
+    assert public.json()["data"]["logo_url"] is None
+    assert public.json()["data"]["site_name"] == "墨雨写作室"
+
+
+@pytest.mark.anyio
+async def test_site_name_validation_preserves_settings(
+    client: AsyncClient, session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    admin = await _create_user(session_factory, role="admin")
+    token = await _login(client, admin)
+    headers = {"Authorization": f"Bearer {token}"}
+    for body in ({"site_name": " \t\n "}, {"site_name": "字" * 101}, {"site_name": None},
+                 {"site_name": "新名称", "registration_enabled": True}):
+        response = await client.patch("/api/admin/v1/site-settings", headers=headers, json=body)
+        assert response.status_code == 422, response.text
+    public = await client.get("/api/v1/site-settings/public")
+    assert public.json()["data"]["site_name"] == "xnovel"
+    assert public.json()["data"]["registration_enabled"] is False
+    valid = await client.patch("/api/admin/v1/site-settings", headers=headers, json={"site_name": "字" * 100})
+    assert valid.status_code == 200

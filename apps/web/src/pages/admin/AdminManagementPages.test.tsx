@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -35,7 +36,9 @@ function renderPage(children: ReactNode) {
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -74,7 +77,10 @@ describe("admin management pages", () => {
 
     expect(await screen.findByText("林遥")).toBeInTheDocument();
     expect(screen.getByText("w***@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "创建用户" })).toBeEnabled();
+    expect(screen.getByRole("link", { name: "创建用户" })).toHaveAttribute(
+      "href",
+      "/admin/users/new",
+    );
   });
 
   it("shows a recoverable users error state", async () => {

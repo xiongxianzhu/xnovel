@@ -148,8 +148,19 @@ def test_all_persistent_tables_and_columns_have_chinese_comments() -> None:
         column_comments.update(migration["COLUMN_COMMENTS"])
     author_migration = run_path(str(versions_path / "20260830_0010_project_author.py"))
     column_comments["projects"].update(author_migration["COLUMN_COMMENTS"]["projects"])
+    site_migration = run_path(str(versions_path / "20260905_0011_site_name.py"))
+    column_comments["site_settings"].update(site_migration["COLUMN_COMMENTS"]["site_settings"])
     column_comments["site_settings"]["logo_original_name"] = "Web 全局 Logo 清理后的原始文件名"
     column_comments["users"]["must_change_password"] = "是否必须完成首次密码修改"
+    for name in (
+        "20260906_0012_document_revisions.py",
+        "20260906_0013_studio_records.py",
+        "20260906_0014_batches_and_history.py",
+    ):
+        migration = run_path(str(versions_path / name))
+        table_comments.update(migration["TABLE_COMMENTS"])
+        for table_name, comments in migration["COLUMN_COMMENTS"].items():
+            column_comments.setdefault(table_name, {}).update(comments)
     persistent_tables = {
         name: table for name, table in SQLModel.metadata.tables.items() if not name.startswith("test_")
     }

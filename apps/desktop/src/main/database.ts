@@ -11,6 +11,8 @@ import type {
   DesktopDraft,
   DesktopPreferences,
   DesktopProject,
+  DesktopRevisionDetail,
+  DesktopRevisionPage,
   ProviderInput,
   ProviderSummary,
   ThemeMode,
@@ -144,6 +146,15 @@ export const SCHEMA_COMMENTS = {
       updated_at: "最后写入时间",
     },
   },
+  document_checkpoints: {
+    table: "作者命名的长期正文检查点",
+    columns: {
+      revision_id: "关联不可变历史快照",
+      name: "作者命名，最多100字",
+      created_at: "创建时间",
+      updated_at: "检查点名称最后更新时间",
+    },
+  },
 } as const;
 
 export type DesktopMigration = {
@@ -183,11 +194,17 @@ export const DESKTOP_MIGRATIONS: readonly DesktopMigration[] = [
       CREATE TABLE editor_drafts (document_id TEXT PRIMARY KEY REFERENCES documents(id) ON DELETE CASCADE, base_version INTEGER NOT NULL CHECK(base_version > 0), content TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL) STRICT;
     `,
   },
+  {
+    version: 4,
+    destructive: false,
+    sql: `CREATE TABLE document_checkpoints (revision_id TEXT PRIMARY KEY REFERENCES document_revisions(id) ON DELETE CASCADE, name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 100), created_at TEXT NOT NULL, updated_at TEXT NOT NULL) STRICT;`,
+  },
 ] as const;
 
 export class DesktopDatabase {
   readonly db: DatabaseSync;
   readonly path: string;
+  private historyTimer?: ReturnType<typeof setInterval>;
 
   private constructor(path: string) {
     this.path = path;
@@ -242,10 +259,22 @@ export class DesktopDatabase {
       }
     }
     store.ensureSettings();
+    if (Math.max(current, ...migrationPlan.map((item) => item.version)) >= 4) {
+      store.cleanupRevisions();
+      store.historyTimer = setInterval(() => {
+        try {
+          store.cleanupRevisions();
+        } catch {
+          console.warn("HISTORY_CLEANUP_DEFERRED");
+        }
+      }, 3600000);
+      store.historyTimer.unref();
+    }
     return store;
   }
 
   close(): void {
+    if (this.historyTimer) clearInterval(this.historyTimer);
     if (this.db.isOpen) this.db.close();
   }
 
@@ -715,19 +744,20 @@ export class DesktopDatabase {
       throw new Error("CONTENT_VERSION_CONFLICT");
     this.db.exec("BEGIN IMMEDIATE");
     try {
-      this.db
-        .prepare(
-          "INSERT INTO document_revisions(id,document_id,content,version,word_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)",
-        )
-        .run(
-          uuidv7(),
-          documentId,
-          current.content,
-          current.version,
-          current.wordCount,
-          timestamp,
-          timestamp,
-        );
+      if (current.content !== text)
+        this.db
+          .prepare(
+            "INSERT INTO document_revisions(id,document_id,content,version,word_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(document_id,version) DO NOTHING",
+          )
+          .run(
+            uuidv7(),
+            documentId,
+            current.content,
+            current.version,
+            current.wordCount,
+            timestamp,
+            timestamp,
+          );
       const result = this.db
         .prepare(
           "UPDATE document_contents SET content=?,version=version+1,word_count=?,updated_at=? WHERE document_id=? AND version=?",
@@ -748,6 +778,110 @@ export class DesktopDatabase {
       throw error;
     }
     return this.getContent(documentId);
+  }
+
+  cleanupRevisions(): void {
+    const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
+    this.db
+      .prepare(
+        "DELETE FROM document_revisions WHERE created_at<? AND id NOT IN (SELECT revision_id FROM document_checkpoints)",
+      )
+      .run(cutoff);
+  }
+
+  listRevisions(documentId: string, page = 1): DesktopRevisionPage {
+    this.documentRow(documentId);
+    if (!Number.isSafeInteger(page) || page < 1)
+      throw new Error("INVALID_PAGE");
+    const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
+    this.db
+      .prepare(
+        "DELETE FROM document_revisions WHERE document_id=? AND created_at<? AND id NOT IN (SELECT revision_id FROM document_checkpoints)",
+      )
+      .run(uuid(documentId), cutoff);
+    const total = (
+      this.db
+        .prepare(
+          "SELECT COUNT(*) AS total FROM document_revisions WHERE document_id=?",
+        )
+        .get(documentId) as { total: number }
+    ).total;
+    const rows = this.db
+      .prepare(
+        "SELECT r.id,r.document_id AS documentId,r.version,r.word_count AS wordCount,r.created_at AS createdAt,c.name AS checkpointName FROM document_revisions r LEFT JOIN document_checkpoints c ON c.revision_id=r.id WHERE r.document_id=? ORDER BY r.version DESC LIMIT 50 OFFSET ?",
+      )
+      .all(documentId, (page - 1) * 50) as DesktopRevisionDetail[];
+    return { items: rows, total, page, pageSize: 50 };
+  }
+
+  getRevision(documentId: string, revisionId: string): DesktopRevisionDetail {
+    this.documentRow(documentId);
+    const row = this.db
+      .prepare(
+        "SELECT r.id,r.document_id AS documentId,r.version,r.word_count AS wordCount,r.created_at AS createdAt,r.content,c.name AS checkpointName FROM document_revisions r LEFT JOIN document_checkpoints c ON c.revision_id=r.id WHERE r.document_id=? AND r.id=?",
+      )
+      .get(uuid(documentId), uuid(revisionId)) as
+      DesktopRevisionDetail | undefined;
+    if (!row) throw new Error("REVISION_NOT_FOUND");
+    return row;
+  }
+
+  createCheckpoint(
+    documentId: string,
+    name: string,
+    version: number,
+  ): DesktopRevisionDetail {
+    if (!name.trim() || name.trim().length > 100)
+      throw new Error("INVALID_CHECKPOINT_NAME");
+    this.db.exec("BEGIN IMMEDIATE");
+    let revisionId: string;
+    try {
+      const current = this.getContent(documentId);
+      if (current.version !== version)
+        throw new Error("CONTENT_VERSION_CONFLICT");
+      const timestamp = now();
+      const existing = this.db
+        .prepare(
+          "SELECT id FROM document_revisions WHERE document_id=? AND version=?",
+        )
+        .get(uuid(documentId), version) as { id: string } | undefined;
+      revisionId = existing?.id ?? uuidv7();
+      if (!existing)
+        this.db
+          .prepare(
+            "INSERT INTO document_revisions(id,document_id,content,version,word_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(document_id,version) DO NOTHING",
+          )
+          .run(
+            revisionId,
+            documentId,
+            current.content,
+            current.version,
+            current.wordCount,
+            timestamp,
+            timestamp,
+          );
+      this.db
+        .prepare(
+          "INSERT INTO document_checkpoints(revision_id,name,created_at,updated_at) VALUES (?,?,?,?) ON CONFLICT(revision_id) DO UPDATE SET name=excluded.name,updated_at=excluded.updated_at",
+        )
+        .run(revisionId, name.trim(), timestamp, timestamp);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+    return this.getRevision(documentId, revisionId);
+  }
+
+  restoreRevision(
+    documentId: string,
+    revisionId: string,
+    version: number,
+  ): DesktopContent {
+    const doc = this.documentRow(documentId);
+    if (doc.deleted_at) throw new Error("DOCUMENT_ARCHIVED");
+    const revision = this.getRevision(documentId, revisionId);
+    return this.saveContent(documentId, revision.content, version);
   }
 
   getPreferences(): DesktopPreferences {
@@ -1010,19 +1144,20 @@ export class DesktopDatabase {
         const current = this.getContent(input.documentId);
         if (current.version !== input.version)
           throw new Error("CONTENT_VERSION_CONFLICT");
-        this.db
-          .prepare(
-            "INSERT INTO document_revisions(id,document_id,content,version,word_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)",
-          )
-          .run(
-            uuidv7(),
-            input.documentId,
-            current.content,
-            current.version,
-            current.wordCount,
-            timestamp,
-            timestamp,
-          );
+        if (current.content !== row.content)
+          this.db
+            .prepare(
+              "INSERT INTO document_revisions(id,document_id,content,version,word_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(document_id,version) DO NOTHING",
+            )
+            .run(
+              uuidv7(),
+              input.documentId,
+              current.content,
+              current.version,
+              current.wordCount,
+              timestamp,
+              timestamp,
+            );
         const result = this.db
           .prepare(
             "UPDATE document_contents SET content=?,version=version+1,word_count=?,updated_at=? WHERE document_id=? AND version=?",

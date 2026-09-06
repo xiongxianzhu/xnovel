@@ -25,6 +25,16 @@ Web 静态资源、FastAPI 和 PostgreSQL 分别部署。Electron 打包 React �
 | API     | `http://127.0.0.1:8000`      | `apps/api/.env` |
 | OpenAPI | `http://127.0.0.1:8000/docs` | FastAPI         |
 
+### 从仓库根目录启动 Web
+
+首次运行时，在仓库根目录执行 `pnpm -F web install`，并将 `apps/web/.env.example` 复制为 `apps/web/.env`。已有环境文件时保留原配置。
+
+```bash
+pnpm -F web dev
+```
+
+默认访问 `http://127.0.0.1:5173`。该命令只启动 Web，登录和业务接口仍需单独启动 API。原有的 `cd apps/web` 后执行 `pnpm dev` 方式继续可用。
+
 ### 本地创建 PostgreSQL 数据库
 
 首次启动 API 前，确认 PostgreSQL 服务已经启动。使用非超级用户 `xnovel_app`，设置强密码后创建由该用户拥有的开发数据库：
@@ -285,3 +295,26 @@ Desktop Logo 随安装包固定，不从数据库或运行时配置加载。主�
 - Web：锁定依赖安装、生成 API 客户端的文件清单与字节校验、`pnpm check` 和生产构建。
 
 常规 CI 的 Desktop Job 只拥有 `contents: read`，执行锁文件安装、静态检查、测试和三段构建。`desktop-release.yml` 仅在 SemVer Tag 或手动触发时运行 Windows x64、macOS x64、macOS arm64 矩阵；Tag 发布使用 GitHub Release、平台签名 Secret 与 macOS 公证 Secret，手动验证构建禁用签名自动发现且不发布。安装和更新均不把 `userData` 纳入应用文件。
+
+### 站点品牌配置升级
+
+发布包含站点名称配置的版本前，执行 `uv run alembic upgrade head`，确保数据库到达 `20260905_0011`。该迁移为旧站点填入默认名称 `xnovel`，不改变 Logo 和注册开关。管理员登录后从“系统设置”保存名称或上传 Logo；无需新增环境变量。回滚应用时可保留新增字段；如需降级数据库，应先停用新版本，再降到 `20260830_0010`，此操作会丢弃自定义站点名称，保留 Logo 和注册配置。
+
+## 长篇工作台升级与运行
+
+升级前备份 PostgreSQL 和 Skill 存储，然后在 `apps/api` 执行：
+
+```bash
+uv run alembic upgrade head
+uv run alembic current
+```
+
+当前迁移头为 `20260906_0015`。升级角色需能创建 `pg_trgm` 扩展和 GIN 索引；托管数据库可先由管理员安装扩展。`0012`～`0014` 新增正文历史、业务资料与批次数据，`0015` 只补齐既有邮箱列注释。
+
+API 保持单进程运行。启动时将未完成 AI 调用标记失败、批次标记暂停；用户登录后选择继续未开始项或重试失败项。不要通过启动第二个 worker 尝试加速批次，也不要在升级时自动重跑模型调用。
+
+API 每小时清理过期历史：自动正文快照 90 天、普通终态 AI 历史 30 天；命名检查点、收藏/已确认结果、业务资料、审计和有效 Skill 版本保留。备份仍按现有策略独立保留。Desktop Schema v4 会自动升级并保留升级前备份，其历史清理在主进程执行。
+
+回滚应用前先评估新数据依赖。降级迁移会删除新增业务数据，不能作为无损回滚；需要恢复升级前数据库备份并保留当前数据库副本。Windows 目录打包是本轮本地验证项；macOS 安装包、签名与公证继续由发布 CI 执行。
+
+本地性能复核可在专用、可丢弃的 localhost `xnovel_test` 数据库中执行 `uv run python -m scripts.benchmark_studio`；该脚本只创建合成作品并拒绝其他数据库目标，不用于生产探测。配置与实测见 [验收记录](studio-validation.md)。

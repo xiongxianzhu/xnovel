@@ -11,6 +11,9 @@ importers:
       '@tanstack/react-query':
         specifier: 5.101.4
         version: 5.101.4(react@19.2.8)
+      '@xnovel/text-diff':
+        specifier: link:../../packages/text-diff
+        version: link:../../packages/text-diff
       '@xnovel/theme':
         specifier: link:../../packages/theme
         version: link:../../packages/theme

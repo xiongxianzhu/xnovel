@@ -6,15 +6,15 @@ import asyncio
 import os
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
-from pathlib import Path
-from runpy import run_path
 from uuid import uuid4
 
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlmodel import col, select
+from sqlmodel import SQLModel, col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.exceptions import APIException
@@ -45,7 +45,7 @@ async def postgres_factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     async with factory() as session:
         revision = (await session.execute(text("SELECT version_num FROM alembic_version"))).scalar_one()
         seeded_setting = await session.get(SiteSetting, 1)
-        assert revision == "20260816_0002"
+        assert revision == ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()
         assert seeded_setting is not None and seeded_setting.registration_enabled is False
         await _reset_database(session)
     try:
@@ -85,10 +85,11 @@ async def _reset_database(session: AsyncSession) -> None:
 async def test_postgres_comments_match_migration_contract(
     postgres_factory: async_sessionmaker[AsyncSession],
 ) -> None:
-    migration_path = Path(__file__).parents[1] / "alembic" / "versions" / "20260816_0002_persistence_comments.py"
-    migration = run_path(str(migration_path))
-    expected_tables: dict[str, str] = migration["TABLE_COMMENTS"]
-    expected_columns: dict[str, dict[str, str]] = migration["COLUMN_COMMENTS"]
+    tables = {name: table for name, table in SQLModel.metadata.tables.items() if not name.startswith("test_")}
+    expected_tables = {name: table.comment for name, table in tables.items()}
+    expected_columns = {
+        name: {column.name: column.comment for column in table.columns} for name, table in tables.items()
+    }
 
     async with postgres_factory() as session:
         table_rows = (
@@ -97,8 +98,7 @@ async def test_postgres_comments_match_migration_contract(
                     "SELECT c.relname AS table_name, obj_description(c.oid, 'pg_class') AS comment "
                     "FROM pg_class AS c JOIN pg_namespace AS n ON n.oid = c.relnamespace "
                     "WHERE n.nspname = current_schema() AND c.relkind = 'r' "
-                    "AND c.relname IN ('users', 'user_preferences', 'site_settings', "
-                    "'admin_audit_events', 'auth_rate_limit_buckets')"
+                    "AND c.relname <> 'alembic_version' AND c.relname NOT LIKE 'test_%'"
                 )
             )
         ).all()
@@ -111,8 +111,7 @@ async def test_postgres_comments_match_migration_contract(
                     "JOIN pg_attribute AS a ON a.attrelid = c.oid "
                     "WHERE n.nspname = current_schema() AND c.relkind = 'r' "
                     "AND a.attnum > 0 AND NOT a.attisdropped "
-                    "AND c.relname IN ('users', 'user_preferences', 'site_settings', "
-                    "'admin_audit_events', 'auth_rate_limit_buckets')"
+                    "AND c.relname <> 'alembic_version' AND c.relname NOT LIKE 'test_%'"
                 )
             )
         ).all()
@@ -343,7 +342,7 @@ async def test_postgres_rate_limit_commit_survives_registration_validation_failu
                 payload=RegisterRequest(
                     username="writer",
                     email="writer@example.com",
-                    password="too-short",
+                    password="short",
                     nickname="作者",
                 ),
                 client_ip="192.0.2.30",
@@ -439,3 +438,58 @@ async def test_concurrent_registration_keeps_one_identity(
 
     statuses = await asyncio.gather(attempt("192.0.2.51"), attempt("192.0.2.52"))
     assert sorted(statuses) == [201, 409]
+
+
+@pytest.mark.anyio
+async def test_postgres_history_save_race_and_import_receipt(postgres_factory):
+    from app.models.account import User
+    from app.models.document import Document
+    from app.models.document_content import DocumentContent
+    from app.models.document_revision import DocumentRevision
+    from app.schemas.manuscript_tools import ImportChapter, ImportCommit
+    from app.schemas.projects import DocumentContentUpdateRequest, ProjectCreateRequest
+    from app.services.manuscript_tools import commit_import
+    from app.services.projects import create_project, save_document_content
+
+    async with postgres_factory() as session:
+        owner = User(username="history-race", password_hash="synthetic", nickname="合成作者")
+        session.add(owner)
+        await session.commit()
+        project = await create_project(session, owner_id=owner.id, payload=ProjectCreateRequest(title="合成历史"))
+        owner_id, project_id, document_id = owner.id, project.id, project.initial_document.id
+
+    async def save(content):
+        async with postgres_factory() as session:
+            try:
+                await save_document_content(
+                    session,
+                    owner_id=owner_id,
+                    project_id=project_id,
+                    document_id=document_id,
+                    payload=DocumentContentUpdateRequest(content=content, content_format="plain_text", version=1),
+                )
+                return 200
+            except APIException as error:
+                return error.status_code
+
+    assert sorted(await asyncio.gather(save("作者甲稿"), save("作者乙稿"))) == [200, 409]
+    async with postgres_factory() as session:
+        current = await session.get(DocumentContent, document_id)
+        history = (
+            await session.exec(select(DocumentRevision).where(col(DocumentRevision.document_id) == document_id))
+        ).all()
+        assert current.version == 2 and len(history) == 1 and history[0].version == 1
+
+    payload = ImportCommit(
+        request_id=uuid4(), title="合成并发导入", chapters=[ImportChapter(title="第一章", content="合成正文")]
+    )
+
+    async def import_once():
+        async with postgres_factory() as session:
+            return await commit_import(session, owner_id, payload)
+
+    left, right = await asyncio.gather(import_once(), import_once())
+    assert left.project_id == right.project_id and left.imported == right.imported == 1
+    async with postgres_factory() as session:
+        documents = (await session.exec(select(Document).where(col(Document.project_id) == left.project_id))).all()
+        assert len(documents) == 1

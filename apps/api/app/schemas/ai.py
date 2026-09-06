@@ -12,7 +12,9 @@ from app.schemas.common import APIResponse
 
 ProviderProtocol = Literal["openai_chat", "openai_responses", "anthropic", "google"]
 ProviderSource = Literal["builtin", "custom"]
-AITaskType = Literal["brainstorm", "outline", "rewrite", "expand", "compress", "consistency", "extract_settings"]
+AITaskType = Literal[
+    "brainstorm", "outline", "rewrite", "expand", "compress", "consistency", "extract_settings", "summary"
+]
 AITaskStatus = Literal["queued", "running", "succeeded", "failed", "cancelled"]
 SkillStatus = Literal["ready", "quarantined", "deleting"]
 
@@ -138,6 +140,7 @@ class ProviderConnectionTestData(BaseModel):
 class AITaskCreateRequest(BaseModel):
     project_id: UUID
     document_id: UUID | None = None
+    expected_document_version: int | None = Field(default=None, ge=1)
     provider_config_id: UUID
     model_id: UUID | None = None
     task_type: AITaskType
@@ -145,6 +148,8 @@ class AITaskCreateRequest(BaseModel):
     selected_text: str | None = Field(default=None, max_length=200000)
     max_output_tokens: int = Field(default=1024, gt=0, le=8192)
     skill_ids: list[UUID] = Field(default_factory=list, max_length=20)
+    summary_ids: list[UUID] = Field(default_factory=list, max_length=20)
+    fact_ids: list[UUID] = Field(default_factory=list, max_length=50)
 
     @field_validator("skill_ids")
     @classmethod
@@ -158,7 +163,9 @@ class AIResultData(BaseModel):
     id: UUID
     sequence: int
     content: str
-    status: Literal["candidate", "applied", "rejected"]
+    status: Literal["candidate", "applied", "accepted", "rejected"]
+    purpose: Literal["manuscript", "summary", "analysis"] = "manuscript"
+    pinned: bool = False
     applied_document_id: UUID | None
     decided_at: datetime | None
 
@@ -222,6 +229,10 @@ class SkillData(BaseModel):
 
 class SkillListData(BaseModel):
     items: list[SkillData]
+    page: int = 1
+    page_size: int = 50
+    total: int = 0
+    pages: int = 0
 
 
 class SkillUpdateRequest(BaseModel):
@@ -258,6 +269,10 @@ class AdminSkillData(BaseModel):
 
 class AdminSkillListData(BaseModel):
     items: list[AdminSkillData]
+    page: int = 1
+    page_size: int = 50
+    total: int = 0
+    pages: int = 0
 
 
 class SkillQuarantineRequest(BaseModel):

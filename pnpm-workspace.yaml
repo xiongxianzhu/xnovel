@@ -1,0 +1,6 @@
+packages:
+  - apps/web
+  - packages/theme
+  - packages/text-diff
+
+sharedWorkspaceLockfile: false

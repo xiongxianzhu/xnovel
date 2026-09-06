@@ -1,0 +1,316 @@
+.studio-page {
+  min-width: 0;
+  padding: 24px;
+}
+.studio-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 16px;
+}
+.studio-heading h1 {
+  margin: 8px 0 0;
+  font-size: 24px;
+}
+.studio-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.studio-page a,
+.studio-quick-panel a {
+  color: var(--color-accent);
+}
+.studio-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  text-decoration: none;
+}
+.studio-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+.studio-list > li {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+}
+.studio-list > li > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.studio-list h2,
+.studio-list h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.studio-list p {
+  margin: 8px 0;
+}
+.studio-excerpt {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--color-text-muted);
+}
+.studio-state {
+  font-size: 12px;
+  padding: 4px 6px;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  display: inline-block;
+}
+.studio-state-warning {
+  color: var(--color-warning);
+}
+.studio-form {
+  max-width: 880px;
+  display: grid;
+  gap: 16px;
+}
+.studio-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.studio-field input,
+.studio-field select,
+.studio-field textarea,
+.studio-filter input,
+.studio-filter select {
+  width: 100%;
+  min-height: 44px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: 10px 12px;
+  font: inherit;
+  box-sizing: border-box;
+}
+.studio-field textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.7;
+}
+.studio-field textarea.studio-body {
+  min-height: 240px;
+}
+.studio-field input:focus-visible,
+.studio-field select:focus-visible,
+.studio-field textarea:focus-visible,
+.studio-page a:focus-visible,
+.studio-filter input:focus-visible,
+.studio-filter select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.studio-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.studio-filter > label {
+  display: grid;
+  gap: 8px;
+  min-width: 160px;
+  flex: 1;
+}
+.studio-record-body {
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 24px 0;
+}
+.studio-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+.studio-meta {
+  display: grid;
+  grid-template-columns: minmax(100px, 180px) minmax(0, 1fr);
+  gap: 12px;
+}
+.studio-meta dt {
+  color: var(--color-text-muted);
+}
+.studio-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.studio-hub {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 24px;
+}
+.studio-hub a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  min-height: 44px;
+  border-bottom: 1px solid var(--color-border);
+  text-decoration: none;
+}
+.project-tools-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+.project-tools-nav a {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  text-decoration: none;
+  color: var(--color-text);
+  font-size: 13px;
+}
+.project-tools-nav a:hover {
+  background: var(--color-surface-muted);
+}
+.studio-quick-panel {
+  width: 360px;
+  min-width: 0;
+  flex-shrink: 0;
+  padding: 16px;
+  border-left: 1px solid var(--color-border);
+  overflow-y: auto;
+}
+.studio-quick-panel h2 {
+  font-size: 18px;
+}
+.studio-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.studio-compare section {
+  min-width: 0;
+}
+.studio-compare pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.8;
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+.studio-key-value {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 8px;
+}
+.studio-source-list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  padding: 8px;
+}
+.studio-source-list label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.studio-source-list input {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+}
+.studio-notice {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+@media (max-width: 1023px) {
+  .studio-hub {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .studio-quick-panel {
+    width: auto;
+  }
+}
+@media (max-width: 767px) {
+  .studio-page {
+    padding: 16px;
+  }
+  .studio-heading,
+  .studio-list > li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .studio-compare,
+  .studio-hub {
+    grid-template-columns: 1fr;
+  }
+  .studio-meta {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .studio-meta dd {
+    margin-bottom: 12px;
+  }
+  .studio-key-value {
+    grid-template-columns: 1fr;
+  }
+  .studio-filter > label {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+}
+
+.studio-form-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.studio-meta > div {
+  display: contents;
+}
+.studio-filter input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+}
+.studio-form label:has(> input[type="checkbox"]) {
+  min-height: 44px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.studio-page input[type="checkbox"],
+.studio-quick-panel input[type="checkbox"] {
+  accent-color: var(--color-accent);
+}
+.studio-page input[type="checkbox"]:focus-visible,
+.studio-page summary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}

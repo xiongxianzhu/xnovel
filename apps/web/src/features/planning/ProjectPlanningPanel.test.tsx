@@ -1,11 +1,6 @@
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DocumentSummary } from "../../shared/api/generated/types.gen";
@@ -45,14 +40,17 @@ function renderPanel() {
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <ProjectPlanningPanel
-        document={manuscript}
-        onClose={vi.fn()}
-        open
-        projectId="project-1"
-      />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <ProjectPlanningPanel
+          document={manuscript}
+          onClose={vi.fn()}
+          open
+          projectId="project-1"
+        />
+        <LocationProbe />
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -107,41 +105,35 @@ describe("ProjectPlanningPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("creates a character from a labeled form", async () => {
+  it("opens character editing and creation in dedicated pages", async () => {
     renderPanel();
     expect(
       await screen.findByRole("button", { name: "编辑人物" }),
     ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "新建人物" }));
-    fireEvent.change(screen.getByLabelText("人物名称"), {
-      target: { value: "林雾" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: /保\s*存/ }));
-
-    await waitFor(() =>
-      expect(api.createCharacterRequest).toHaveBeenCalledWith(
-        "project-1",
-        expect.objectContaining({ name: "林雾" }),
-      ),
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/projects/project-1/characters/new",
     );
+    expect(api.createCharacterRequest).not.toHaveBeenCalled();
   });
-
-  it("saves explicit manuscript references", async () => {
+  it("links to the standalone reference editor without changing references", async () => {
     renderPanel();
     fireEvent.click(screen.getByRole("tab", { name: "正文引用" }));
-    fireEvent.click(await screen.findByRole("checkbox", { name: "沈砚" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "雾城" }));
-    fireEvent.click(screen.getByRole("button", { name: "保存引用" }));
-
-    await waitFor(() =>
-      expect(api.updateDocumentReferencesRequest).toHaveBeenCalledWith(
-        "project-1",
-        "document-1",
-        {
-          character_ids: ["character-1"],
-          world_entry_ids: ["world-1"],
-        },
-      ),
+    const link = await screen.findByRole("link", { name: "编辑" });
+    expect(link).toHaveAttribute(
+      "href",
+      "/projects/project-1/references/document-1/edit",
     );
+    expect(api.updateDocumentReferencesRequest).not.toHaveBeenCalled();
   });
 });
+
+function LocationProbe() {
+  const location = useLocation();
+  return (
+    <output data-testid="route-location">
+      {location.pathname}
+      {location.search}
+    </output>
+  );
+}

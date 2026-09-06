@@ -1,4 +1,5 @@
-import { Alert, Button, Checkbox, Input, Modal, Skeleton } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { Alert, Button, Modal, Skeleton } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
@@ -21,18 +22,11 @@ import {
 import { useTranslation } from "react-i18next";
 
 import type {
-  CharacterCreateRequest,
   CharacterData,
-  CharacterUpdateRequest,
-  DocumentReferencesData,
   DocumentSummary,
-  WorldEntryCreateRequest,
   WorldEntryData,
-  WorldEntryUpdateRequest,
 } from "../../shared/api/generated/types.gen";
 import {
-  createCharacterRequest,
-  createWorldEntryRequest,
   deleteCharacterRequest,
   deleteWorldEntryRequest,
   getDocumentReferencesRequest,
@@ -40,15 +34,11 @@ import {
   listWorldEntriesRequest,
   reorderCharactersRequest,
   reorderWorldEntriesRequest,
-  updateCharacterRequest,
-  updateDocumentReferencesRequest,
-  updateWorldEntryRequest,
 } from "./planningApi";
 import {
   flattenWorldEntries,
   prepareCharacterMove,
   prepareWorldMove,
-  worldDescendants,
 } from "./planningState";
 
 const characterKey = (projectId: string) =>
@@ -57,7 +47,6 @@ const worldKey = (projectId: string) =>
   ["projects", projectId, "world-entries"] as const;
 const referenceKey = (projectId: string, documentId: string) =>
   ["projects", projectId, "documents", documentId, "references"] as const;
-type KeyValuePair = [string, string];
 
 export function ProjectPlanningPanel({
   document,
@@ -165,42 +154,17 @@ export function ProjectPlanningPanel({
 }
 
 function CharacterManager({ projectId }: { projectId: string }) {
+  const navigate = useNavigate();
   const { t } = useTranslation(["common", "projects"]);
   const queryClient = useQueryClient();
   const query = useQuery({
     queryFn: () => listCharactersRequest(projectId),
     queryKey: characterKey(projectId),
   });
-  const [editing, setEditing] = useState<CharacterData | "new" | null>(null);
   const [deleting, setDeleting] = useState<CharacterData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: characterKey(projectId) });
-  const create = useMutation({
-    mutationFn: (payload: CharacterCreateRequest) =>
-      createCharacterRequest(projectId, payload),
-    onError: () => setError(t("common:requestFailed")),
-    onSuccess: async () => {
-      setEditing(null);
-      setError(null);
-      await refresh();
-    },
-  });
-  const update = useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string;
-      payload: CharacterUpdateRequest;
-    }) => updateCharacterRequest(projectId, id, payload),
-    onError: () => setError(t("common:requestFailed")),
-    onSuccess: async () => {
-      setEditing(null);
-      setError(null);
-      await refresh();
-    },
-  });
   const remove = useMutation({
     mutationFn: (id: string) => deleteCharacterRequest(projectId, id),
     onError: () => setError(t("common:requestFailed")),
@@ -222,7 +186,7 @@ function CharacterManager({ projectId }: { projectId: string }) {
       <div className="planning-section-actions">
         <Button
           icon={<Plus aria-hidden size={16} />}
-          onClick={() => setEditing("new")}
+          onClick={() => navigate(`/projects/${projectId}/characters/new`)}
           type="primary"
         >
           {t("projects:newCharacter")}
@@ -251,7 +215,11 @@ function CharacterManager({ projectId }: { projectId: string }) {
               <div className="planning-row-main">
                 <UserRound aria-hidden size={17} />
                 <div>
-                  <strong>{character.name}</strong>
+                  <Link
+                    to={`/projects/${projectId}/characters/${character.id}`}
+                  >
+                    {character.name}
+                  </Link>
                   <span>{character.summary || t("projects:noSummary")}</span>
                 </div>
               </div>
@@ -280,7 +248,11 @@ function CharacterManager({ projectId }: { projectId: string }) {
                 </IconAction>
                 <IconAction
                   label={t("projects:editCharacter")}
-                  onClick={() => setEditing(character)}
+                  onClick={() =>
+                    navigate(
+                      `/projects/${projectId}/characters/${character.id}/edit`,
+                    )
+                  }
                 >
                   <Pencil aria-hidden size={16} />
                 </IconAction>
@@ -295,18 +267,7 @@ function CharacterManager({ projectId }: { projectId: string }) {
           ))}
         </div>
       )}
-      <CharacterDialog
-        busy={create.isPending || update.isPending}
-        initial={editing === "new" ? undefined : (editing ?? undefined)}
-        key={editing === "new" ? "new" : (editing?.id ?? "closed")}
-        onCancel={() => setEditing(null)}
-        onSubmit={(payload) =>
-          editing && editing !== "new"
-            ? update.mutate({ id: editing.id, payload })
-            : create.mutate(payload as CharacterCreateRequest)
-        }
-        open={Boolean(editing)}
-      />
+
       <DeleteDialog
         busy={remove.isPending}
         description={
@@ -324,44 +285,17 @@ function CharacterManager({ projectId }: { projectId: string }) {
 }
 
 function WorldManager({ projectId }: { projectId: string }) {
+  const navigate = useNavigate();
   const { t } = useTranslation(["common", "projects"]);
   const queryClient = useQueryClient();
   const query = useQuery({
     queryFn: () => listWorldEntriesRequest(projectId),
     queryKey: worldKey(projectId),
   });
-  const [editing, setEditing] = useState<{
-    initial?: WorldEntryData;
-    parentId?: string | null;
-  } | null>(null);
-  const [moving, setMoving] = useState<WorldEntryData | null>(null);
   const [deleting, setDeleting] = useState<WorldEntryData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: worldKey(projectId) });
-  const create = useMutation({
-    mutationFn: (payload: WorldEntryCreateRequest) =>
-      createWorldEntryRequest(projectId, payload),
-    onError: () => setError(t("common:requestFailed")),
-    onSuccess: async () => {
-      setEditing(null);
-      await refresh();
-    },
-  });
-  const update = useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string;
-      payload: WorldEntryUpdateRequest;
-    }) => updateWorldEntryRequest(projectId, id, payload),
-    onError: () => setError(t("common:requestFailed")),
-    onSuccess: async () => {
-      setEditing(null);
-      await refresh();
-    },
-  });
   const remove = useMutation({
     mutationFn: (id: string) => deleteWorldEntryRequest(projectId, id),
     onError: () => setError(t("projects:worldEntryNotEmpty")),
@@ -375,7 +309,6 @@ function WorldManager({ projectId }: { projectId: string }) {
       reorderWorldEntriesRequest(projectId, payload),
     onError: () => setError(t("projects:planningChanged")),
     onSuccess: (data) => {
-      setMoving(null);
       queryClient.setQueryData(worldKey(projectId), data);
     },
   });
@@ -386,7 +319,7 @@ function WorldManager({ projectId }: { projectId: string }) {
       <div className="planning-section-actions">
         <Button
           icon={<Plus aria-hidden size={16} />}
-          onClick={() => setEditing({ parentId: null })}
+          onClick={() => navigate(`/projects/${projectId}/world/new`)}
           type="primary"
         >
           {t("projects:newWorldEntry")}
@@ -424,7 +357,9 @@ function WorldManager({ projectId }: { projectId: string }) {
               >
                 <div className="planning-row-main planning-tree-row-main">
                   <div>
-                    <strong>{entry.title}</strong>
+                    <Link to={`/projects/${projectId}/world/${entry.id}`}>
+                      {entry.title}
+                    </Link>
                     <span>{t(`projects:worldCategory.${entry.category}`)}</span>
                   </div>
                 </div>
@@ -463,19 +398,27 @@ function WorldManager({ projectId }: { projectId: string }) {
                   </IconAction>
                   <IconAction
                     label={t("projects:newChildWorldEntry")}
-                    onClick={() => setEditing({ parentId: entry.id })}
+                    onClick={() =>
+                      navigate(
+                        `/projects/${projectId}/world/new?parent=${entry.id}`,
+                      )
+                    }
                   >
                     <Plus aria-hidden size={16} />
                   </IconAction>
                   <IconAction
                     label={t("projects:moveTo")}
-                    onClick={() => setMoving(entry)}
+                    onClick={() =>
+                      navigate(`/projects/${projectId}/world/${entry.id}/move`)
+                    }
                   >
                     <Link2 aria-hidden size={16} />
                   </IconAction>
                   <IconAction
                     label={t("projects:editWorldEntry")}
-                    onClick={() => setEditing({ initial: entry })}
+                    onClick={() =>
+                      navigate(`/projects/${projectId}/world/${entry.id}/edit`)
+                    }
                   >
                     <Pencil aria-hidden size={16} />
                   </IconAction>
@@ -491,35 +434,7 @@ function WorldManager({ projectId }: { projectId: string }) {
           })}
         </div>
       )}
-      <WorldEntryDialog
-        busy={create.isPending || update.isPending}
-        initial={editing?.initial}
-        key={editing?.initial?.id ?? `new-${editing?.parentId ?? "root"}`}
-        onCancel={() => setEditing(null)}
-        onSubmit={(payload) =>
-          editing?.initial
-            ? update.mutate({ id: editing.initial.id, payload })
-            : create.mutate({
-                ...payload,
-                parent_id: editing?.parentId ?? null,
-              } as WorldEntryCreateRequest)
-        }
-        open={Boolean(editing)}
-      />
-      <MoveWorldDialog
-        busy={reorder.isPending}
-        entries={items}
-        entry={moving}
-        key={moving?.id ?? "closed"}
-        onCancel={() => setMoving(null)}
-        onSubmit={(parentId) => {
-          if (!moving) return;
-          const index = items.filter(
-            (item) => item.parent_id === parentId && item.id !== moving.id,
-          ).length;
-          reorder.mutate(prepareWorldMove(items, moving.id, parentId, index));
-        }}
-      />
+
       <DeleteDialog
         busy={remove.isPending}
         description={
@@ -579,408 +494,40 @@ function ReferencesManager({
     );
   }
   return (
-    <ReferencesEditor
-      characters={characters.data.items}
-      documentId={document.id}
-      initial={references.data}
-      key={`${document.id}-${references.data.updated_at}`}
-      projectId={projectId}
-      worldEntries={world.data.items}
-    />
-  );
-}
-
-function ReferencesEditor({
-  characters,
-  documentId,
-  initial,
-  projectId,
-  worldEntries,
-}: {
-  characters: CharacterData[];
-  documentId: string;
-  initial: DocumentReferencesData;
-  projectId: string;
-  worldEntries: WorldEntryData[];
-}) {
-  const { t } = useTranslation("projects");
-  const queryClient = useQueryClient();
-  const [characterIds, setCharacterIds] = useState(
-    new Set(initial.character_ids),
-  );
-  const [worldIds, setWorldIds] = useState(new Set(initial.world_entry_ids));
-  const [search, setSearch] = useState("");
-  const mutation = useMutation({
-    mutationFn: () =>
-      updateDocumentReferencesRequest(projectId, documentId, {
-        character_ids: [...characterIds],
-        world_entry_ids: [...worldIds],
-      }),
-    onSuccess: (data) =>
-      queryClient.setQueryData(referenceKey(projectId, documentId), data),
-  });
-  const filter = search.trim().toLocaleLowerCase();
-  const visibleCharacters = characters.filter((item) =>
-    item.name.toLocaleLowerCase().includes(filter),
-  );
-  const visibleWorld = worldEntries.filter((item) =>
-    item.title.toLocaleLowerCase().includes(filter),
-  );
-  return (
-    <section className="reference-editor">
-      <label htmlFor="reference-search">{t("searchReferences")}</label>
-      <Input
-        id="reference-search"
-        onChange={(event) => setSearch(event.target.value)}
-        value={search}
-      />
-      {mutation.isError ? (
-        <Alert showIcon title={t("referenceSaveFailed")} type="error" />
-      ) : null}
-      <ReferenceGroup
-        items={visibleCharacters.map((item) => ({
-          id: item.id,
-          label: item.name,
-        }))}
-        onChange={setCharacterIds}
-        selected={characterIds}
-        title={t("planningTab.characters")}
-      />
-      <ReferenceGroup
-        items={visibleWorld.map((item) => ({ id: item.id, label: item.title }))}
-        onChange={setWorldIds}
-        selected={worldIds}
-        title={t("planningTab.world")}
-      />
-      <Button
-        loading={mutation.isPending}
-        onClick={() => mutation.mutate()}
-        type="primary"
-      >
-        {t("saveReferences")}
-      </Button>
-    </section>
-  );
-}
-
-function ReferenceGroup({
-  items,
-  onChange,
-  selected,
-  title,
-}: {
-  items: Array<{ id: string; label: string }>;
-  onChange: (value: Set<string>) => void;
-  selected: Set<string>;
-  title: string;
-}) {
-  return (
-    <fieldset className="reference-group">
-      <legend>{title}</legend>
-      {items.length ? (
-        items.map((item) => (
-          <Checkbox
-            checked={selected.has(item.id)}
-            key={item.id}
-            onChange={(event) => {
-              const next = new Set(selected);
-              if (event.target.checked) next.add(item.id);
-              else next.delete(item.id);
-              onChange(next);
-            }}
-          >
-            {item.label}
-          </Checkbox>
-        ))
-      ) : (
-        <span className="reference-empty">-</span>
-      )}
-    </fieldset>
-  );
-}
-
-function CharacterDialog({
-  busy,
-  initial,
-  onCancel,
-  onSubmit,
-  open,
-}: {
-  busy: boolean;
-  initial?: CharacterData;
-  onCancel: () => void;
-  onSubmit: (payload: CharacterCreateRequest | CharacterUpdateRequest) => void;
-  open: boolean;
-}) {
-  const { t } = useTranslation("projects");
-  const [name, setName] = useState(initial?.name ?? "");
-  const [aliases, setAliases] = useState(initial?.aliases.join("，") ?? "");
-  const [summary, setSummary] = useState(initial?.summary ?? "");
-  const [profile, setProfile] = useState<KeyValuePair[]>(
-    Object.entries(initial?.profile ?? {}),
-  );
-  return (
-    <Modal
-      footer={null}
-      onCancel={onCancel}
-      open={open}
-      title={t(initial ? "editCharacter" : "newCharacter")}
-    >
-      <form
-        className="planning-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit({
-            aliases: aliases
-              .split(/[，,]/)
-              .map((item) => item.trim())
-              .filter(Boolean),
-            name: name.trim(),
-            profile: Object.fromEntries(
-              profile
-                .filter(([key]) => key.trim())
-                .map(([key, value]) => [key.trim(), value]),
-            ),
-            summary,
-          });
-        }}
-      >
-        <label>
-          {t("characterName")}
-          <Input
-            maxLength={200}
-            onChange={(event) => setName(event.target.value)}
-            required
-            value={name}
-          />
-        </label>
-        <label>
-          {t("characterAliases")}
-          <Input
-            onChange={(event) => setAliases(event.target.value)}
-            value={aliases}
-          />
-        </label>
-        <label>
-          {t("characterSummary")}
-          <Input.TextArea
-            maxLength={5000}
-            onChange={(event) => setSummary(event.target.value)}
-            rows={4}
-            value={summary}
-          />
-        </label>
-        <KeyValueEditor
-          label={t("characterProfile")}
-          onChange={setProfile}
-          values={profile}
-        />
-        <FormActions busy={busy} onCancel={onCancel} />
-      </form>
-    </Modal>
-  );
-}
-
-function WorldEntryDialog({
-  busy,
-  initial,
-  onCancel,
-  onSubmit,
-  open,
-}: {
-  busy: boolean;
-  initial?: WorldEntryData;
-  onCancel: () => void;
-  onSubmit: (
-    payload: WorldEntryCreateRequest | WorldEntryUpdateRequest,
-  ) => void;
-  open: boolean;
-}) {
-  const { t } = useTranslation("projects");
-  const [title, setTitle] = useState(initial?.title ?? "");
-  const [category, setCategory] = useState<WorldEntryData["category"]>(
-    initial?.category ?? "other",
-  );
-  const [content, setContent] = useState(initial?.content ?? "");
-  const [attributes, setAttributes] = useState<KeyValuePair[]>(
-    Object.entries(initial?.attributes ?? {}),
-  );
-  return (
-    <Modal
-      footer={null}
-      onCancel={onCancel}
-      open={open}
-      title={t(initial ? "editWorldEntry" : "newWorldEntry")}
-    >
-      <form
-        className="planning-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit({
-            attributes: Object.fromEntries(
-              attributes
-                .filter(([key]) => key.trim())
-                .map(([key, value]) => [key.trim(), value]),
-            ),
-            category,
-            content,
-            title: title.trim(),
-          });
-        }}
-      >
-        <label>
-          {t("worldEntryTitle")}
-          <Input
-            maxLength={200}
-            onChange={(event) => setTitle(event.target.value)}
-            required
-            value={title}
-          />
-        </label>
-        <label>
-          {t("worldEntryCategory")}
-          <select
-            onChange={(event) =>
-              setCategory(event.target.value as WorldEntryData["category"])
-            }
-            value={category}
-          >
-            {(
-              ["location", "faction", "item", "rule", "event", "other"] as const
-            ).map((value) => (
-              <option key={value} value={value}>
-                {t(`worldCategory.${value}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {t("worldEntryContent")}
-          <Input.TextArea
-            maxLength={50000}
-            onChange={(event) => setContent(event.target.value)}
-            rows={6}
-            value={content}
-          />
-        </label>
-        <KeyValueEditor
-          label={t("worldEntryAttributes")}
-          onChange={setAttributes}
-          values={attributes}
-        />
-        <FormActions busy={busy} onCancel={onCancel} />
-      </form>
-    </Modal>
-  );
-}
-
-function KeyValueEditor({
-  label,
-  onChange,
-  values,
-}: {
-  label: string;
-  onChange: (values: KeyValuePair[]) => void;
-  values: KeyValuePair[];
-}) {
-  const { t } = useTranslation("projects");
-  return (
-    <fieldset className="key-value-editor">
-      <legend>{label}</legend>
-      {values.map(([key, value], index) => (
-        <div className="key-value-row" key={index}>
-          <Input
-            aria-label={t("attributeKey")}
-            onChange={(event) =>
-              onChange(
-                values.map((item, itemIndex): KeyValuePair =>
-                  itemIndex === index ? [event.target.value, item[1]] : item,
-                ),
-              )
-            }
-            value={key}
-          />
-          <Input
-            aria-label={t("attributeValue")}
-            onChange={(event) =>
-              onChange(
-                values.map((item, itemIndex): KeyValuePair =>
-                  itemIndex === index ? [item[0], event.target.value] : item,
-                ),
-              )
-            }
-            value={value}
-          />
-          <button
-            aria-label={t("removeAttribute")}
-            onClick={() =>
-              onChange(values.filter((_, itemIndex) => itemIndex !== index))
-            }
-            type="button"
-          >
-            <X aria-hidden size={16} />
-          </button>
-        </div>
-      ))}
-      <Button onClick={() => onChange([...values, ["", ""]])}>
-        {t("addAttribute")}
-      </Button>
-    </fieldset>
-  );
-}
-
-function MoveWorldDialog({
-  busy,
-  entries,
-  entry,
-  onCancel,
-  onSubmit,
-}: {
-  busy: boolean;
-  entries: WorldEntryData[];
-  entry: WorldEntryData | null;
-  onCancel: () => void;
-  onSubmit: (parentId: string | null) => void;
-}) {
-  const { t } = useTranslation("projects");
-  const [parentId, setParentId] = useState(entry?.parent_id ?? "");
-  const excluded = entry
-    ? worldDescendants(entries, entry.id)
-    : new Set<string>();
-  const choices = entries.filter(
-    (item) => item.id !== entry?.id && !excluded.has(item.id),
-  );
-  return (
-    <Modal
-      footer={null}
-      onCancel={onCancel}
-      open={Boolean(entry)}
-      title={t("moveTo")}
-    >
-      <form
-        className="planning-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit(parentId || null);
-        }}
-      >
-        <label>
-          {t("destination")}
-          <select
-            onChange={(event) => setParentId(event.target.value)}
-            value={parentId}
-          >
-            <option value="">{t("rootLevel")}</option>
-            {choices.map((item) => (
-              <option key={item.id} value={item.id}>
+    <div>
+      <ul>
+        {characters.data.items
+          .filter((item) => references.data.character_ids.includes(item.id))
+          .map((item) => (
+            <li key={item.id}>
+              <Link to={`/projects/${projectId}/characters/${item.id}`}>
+                {item.name}
+              </Link>
+            </li>
+          ))}
+        {world.data.items
+          .filter((item) => references.data.world_entry_ids.includes(item.id))
+          .map((item) => (
+            <li key={item.id}>
+              <Link to={`/projects/${projectId}/world/${item.id}`}>
                 {item.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <FormActions busy={busy} onCancel={onCancel} submitLabel={t("move")} />
-      </form>
-    </Modal>
+              </Link>
+            </li>
+          ))}
+      </ul>
+      <Link
+        className="studio-link-button"
+        to={`/projects/${projectId}/references/${document.id}`}
+      >
+        {t("studio:details")}
+      </Link>
+      <Link
+        className="studio-link-button"
+        to={`/projects/${projectId}/references/${document.id}/edit`}
+      >
+        {t("studio:edit")}
+      </Link>
+    </div>
   );
 }
 
@@ -1012,28 +559,6 @@ function DeleteDialog({
         </Button>
       </div>
     </Modal>
-  );
-}
-
-function FormActions({
-  busy,
-  onCancel,
-  submitLabel,
-}: {
-  busy: boolean;
-  onCancel: () => void;
-  submitLabel?: string;
-}) {
-  const { t } = useTranslation("common");
-  return (
-    <div className="document-dialog-actions">
-      <Button disabled={busy} onClick={onCancel}>
-        {t("cancel")}
-      </Button>
-      <Button htmlType="submit" loading={busy} type="primary">
-        {submitLabel ?? t("save")}
-      </Button>
-    </div>
   );
 }
 

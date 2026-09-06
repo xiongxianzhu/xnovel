@@ -38,7 +38,8 @@
     "lucide-react": "1.33.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "uuid": "13.0.0"
+    "uuid": "13.0.0",
+    "@xnovel/text-diff": "link:../../packages/text-diff"
   },
   "devDependencies": {
     "@electron/notarize": "3.1.1",

@@ -2,11 +2,13 @@ import { Alert, Button, Dropdown } from "antd";
 import { Download } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { exportProjectRequest, type ProjectExportFormat } from "./planningApi";
 
 export function ProjectExportButton({ projectId }: { projectId: string }) {
   const { t } = useTranslation(["common", "projects"]);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -41,10 +43,14 @@ export function ProjectExportButton({ projectId }: { projectId: string }) {
       <Dropdown
         menu={{
           items: [
+            { key: "review", label: t("studio:export") },
             { key: "markdown", label: t("projects:exportMarkdown") },
             { key: "plain_text", label: t("projects:exportPlainText") },
           ],
-          onClick: ({ key }) => void download(key as ProjectExportFormat),
+          onClick: ({ key }) =>
+            key === "review"
+              ? navigate(`/projects/${projectId}/export`)
+              : void download(key as ProjectExportFormat),
         }}
         trigger={["click"]}
       >

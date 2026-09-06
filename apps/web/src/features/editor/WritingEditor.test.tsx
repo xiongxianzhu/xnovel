@@ -34,7 +34,11 @@ const initial: DocumentContentData = {
   word_count: 0,
 };
 
-function renderEditor() {
+function renderEditor(
+  onSelectionAction?: (
+    action: import("./selectionAction").SelectionAction,
+  ) => void,
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -46,6 +50,7 @@ function renderEditor() {
           documentTitle="第一章"
           projectId="project-1"
           userId="user-1"
+          onSelectionAction={onSelectionAction}
         />
       </EditorNavigationProvider>
     </QueryClientProvider>,
@@ -53,6 +58,32 @@ function renderEditor() {
 }
 
 describe("WritingEditor", () => {
+  it("hands the exact selected passage and source version to AI without changing the manuscript", async () => {
+    api.getDocumentContentRequest.mockResolvedValue({
+      ...initial,
+      content: "雨落下。她打开信封。窗外很静。",
+      version: 3,
+    });
+    const request = vi.fn();
+    renderEditor(request);
+    const editor = (await screen.findByRole("textbox", {
+      name: "正文编辑器",
+    })) as HTMLTextAreaElement;
+    editor.setSelectionRange(4, 10);
+    fireEvent.select(editor);
+    fireEvent.click(screen.getByRole("button", { name: "润色" }));
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: "document-1",
+        start: 4,
+        end: 10,
+        version: 3,
+        task: "rewrite",
+      }),
+    );
+    expect(editor.value).toBe("雨落下。她打开信封。窗外很静。");
+    expect(api.saveDocumentContentRequest).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     sessionStorage.clear();
     api.getDocumentContentRequest.mockResolvedValue(initial);

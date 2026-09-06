@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import math
 import shutil
 import unicodedata
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid7
 
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -151,23 +154,42 @@ async def _owned_skill(
     return skill
 
 
-async def list_skills(session: AsyncSession, *, owner_id: UUID) -> SkillListData:
-    try:
-        skills = list(
-            (
-                await session.exec(
-                    select(Skill)
-                    .where(col(Skill.owner_id) == owner_id, col(Skill.deleted_at).is_(None))
-                    .order_by(col(Skill.updated_at).desc(), col(Skill.id).desc())
-                )
-            ).all()
+async def list_skills(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    page: int = 1,
+    page_size: int = 50,
+    q: str = "",
+    enabled: bool | None = None,
+) -> SkillListData:
+    filters = [col(Skill.owner_id) == owner_id, col(Skill.deleted_at).is_(None)]
+    if q.strip():
+        filters.append(
+            or_(
+                col(Skill.name).icontains(q.strip(), autoescape=True),
+                col(Skill.description).icontains(q.strip(), autoescape=True),
+            )
         )
-        items = [await _skill_data(session, item) for item in skills]
-    except APIException:
-        raise
-    except SQLAlchemyError as exc:
-        raise _unavailable("skill_database_unavailable") from exc
-    return SkillListData(items=items)
+    if enabled is not None:
+        filters.append(col(Skill.enabled) == enabled)
+    total = (await session.exec(select(func.count()).select_from(Skill).where(*filters))).one()
+    rows = (
+        await session.exec(
+            select(Skill)
+            .where(*filters)
+            .order_by(col(Skill.updated_at).desc(), col(Skill.id).desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+    ).all()
+    return SkillListData(
+        items=[await _skill_data(session, row) for row in rows],
+        page=page,
+        page_size=page_size,
+        total=total,
+        pages=math.ceil(total / page_size),
+    )
 
 
 async def get_skill(session: AsyncSession, *, owner_id: UUID, skill_id: UUID) -> SkillData:
@@ -402,13 +424,29 @@ async def delete_skill(
         raise _unavailable("skill_database_unavailable") from exc
 
 
-async def list_admin_skills(session: AsyncSession) -> AdminSkillListData:
-    try:
-        skills = list((await session.exec(select(Skill).order_by(col(Skill.updated_at).desc()))).all())
-        items = [await _admin_data(session, item) for item in skills if item.deleted_at is None]
-    except SQLAlchemyError as exc:
-        raise _unavailable("skill_database_unavailable") from exc
-    return AdminSkillListData(items=items)
+async def list_admin_skills(
+    session: AsyncSession, page: int = 1, page_size: int = 50, q: str = ""
+) -> AdminSkillListData:
+    filters: list[ColumnElement[bool]] = [col(Skill.deleted_at).is_(None)]
+    if q.strip():
+        filters.append(col(Skill.name).icontains(q.strip(), autoescape=True))
+    total = (await session.exec(select(func.count()).select_from(Skill).where(*filters))).one()
+    rows = (
+        await session.exec(
+            select(Skill)
+            .where(*filters)
+            .order_by(col(Skill.updated_at).desc(), col(Skill.id).desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+    ).all()
+    return AdminSkillListData(
+        items=[await _admin_data(session, row) for row in rows],
+        page=page,
+        page_size=page_size,
+        total=total,
+        pages=math.ceil(total / page_size),
+    )
 
 
 async def _admin_data(session: AsyncSession, skill: Skill) -> AdminSkillData:

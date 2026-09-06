@@ -2,10 +2,10 @@ import type { LucideIcon } from "lucide-react";
 import {
   BookOpenText,
   Brain,
-  FileCode2,
-  ChartNoAxesColumnIncreasing,
+  Puzzle,
+  LayoutDashboard,
   Settings,
-  List,
+  ScrollText,
   LogIn,
   Users,
 } from "lucide-react";
@@ -23,7 +23,7 @@ export const workspaceNavigation: NavigationItem[] = [
     key: "dashboard",
     labelKey: "dashboard",
     path: "/dashboard",
-    icon: ChartNoAxesColumnIncreasing,
+    icon: LayoutDashboard,
   },
   {
     key: "projects",
@@ -41,7 +41,7 @@ export const workspaceNavigation: NavigationItem[] = [
     key: "skills",
     labelKey: "skills",
     path: "/skills",
-    icon: FileCode2,
+    icon: Puzzle,
   },
   {
     key: "settings",
@@ -52,13 +52,6 @@ export const workspaceNavigation: NavigationItem[] = [
 ];
 
 export const administrationNavigation: NavigationItem[] = [
-  {
-    key: "adminSkills",
-    labelKey: "adminSkills",
-    path: "/admin/skills",
-    icon: FileCode2,
-    adminOnly: true,
-  },
   {
     key: "users",
     labelKey: "users",
@@ -77,7 +70,7 @@ export const administrationNavigation: NavigationItem[] = [
     key: "operationAudit",
     labelKey: "operationAudit",
     path: "/admin/audit/operations",
-    icon: List,
+    icon: ScrollText,
     adminOnly: true,
   },
 ];

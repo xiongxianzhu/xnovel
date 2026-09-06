@@ -33,6 +33,21 @@ export type DesktopDraft = {
   createdAt: string;
   updatedAt: string;
 };
+export type DesktopRevision = {
+  id: string;
+  documentId: string;
+  version: number;
+  wordCount: number;
+  checkpointName: string | null;
+  createdAt: string;
+};
+export type DesktopRevisionDetail = DesktopRevision & { content: string };
+export type DesktopRevisionPage = {
+  items: DesktopRevision[];
+  page: number;
+  total: number;
+  pageSize: number;
+};
 export type DesktopPreferences = {
   themePalette: ThemePalette;
   themeMode: ThemeMode;
@@ -97,6 +112,21 @@ export type XnovelDesktopApi = {
     ): Promise<DesktopDocument>;
     deleteDocument(documentId: string): Promise<DesktopDocument[]>;
     content(documentId: string): Promise<DesktopContent>;
+    revisions(documentId: string, page: number): Promise<DesktopRevisionPage>;
+    revision(
+      documentId: string,
+      revisionId: string,
+    ): Promise<DesktopRevisionDetail>;
+    checkpoint(
+      documentId: string,
+      name: string,
+      version: number,
+    ): Promise<DesktopRevisionDetail>;
+    restoreRevision(
+      documentId: string,
+      revisionId: string,
+      version: number,
+    ): Promise<DesktopContent>;
     save(
       documentId: string,
       content: string,

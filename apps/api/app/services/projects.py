@@ -701,6 +701,10 @@ async def save_document_content(
         if content.version != payload.version:
             raise _conflict(CONFLICT_CONTENT_VERSION)
 
+        if content.content != payload.content or content.content_format != payload.content_format:
+            from app.services.document_revisions import capture_revision
+
+            await capture_revision(session, content)
         now = _touch_project(project)
         content.content = payload.content
         content.content_format = payload.content_format

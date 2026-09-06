@@ -13,6 +13,14 @@
 7. [`deployment.md`](deployment.md)：了解本地运行、发布和回滚要求。
 8. [`tasks.md`](tasks.md)：按阶段选择下一项可验证任务。
 
+## 需求探索
+
+- [`prd-longform-workbench.md`](prd-longform-workbench.md)：长篇连载工作台的原始候选需求与方案记录；当前交付范围以主 PRD 为准。
+
+## 验收记录
+
+- [`studio-validation.md`](studio-validation.md)：T-411～T-413、T-601～T-618 的实现范围、验证结果和限制。
+
 ## 文档维护规则
 
 - 产品范围变化时更新 `prd.md`。

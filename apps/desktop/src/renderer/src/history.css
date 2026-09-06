@@ -1,0 +1,79 @@
+.desktop-history-dialog {
+  width: min(100%, 1000px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.desktop-history-dialog header,
+.desktop-history-dialog form,
+.desktop-history-dialog nav,
+.desktop-history-dialog li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.desktop-history-dialog form {
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+.desktop-history-dialog label {
+  display: grid;
+  gap: 8px;
+}
+.desktop-history-dialog input {
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.desktop-history-dialog ul {
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.desktop-history-dialog li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.desktop-history-dialog > .desktop-history-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.desktop-history-comparison section {
+  min-width: 0;
+}
+.desktop-history-comparison pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.8;
+  padding: 12px;
+  border: 1px solid var(--border);
+  max-height: 40vh;
+  overflow: auto;
+}
+.desktop-history-comparison del {
+  color: var(--danger);
+}
+.desktop-history-comparison ins {
+  color: var(--accent);
+}
+.desktop-history-dialog > .history-confirm {
+  justify-content: flex-start;
+}
+.history-confirm p {
+  flex-basis: 100%;
+}
+@media (max-width: 720px) {
+  .desktop-history-dialog > .desktop-history-comparison {
+    grid-template-columns: 1fr;
+  }
+  .desktop-history-dialog form {
+    flex-wrap: wrap;
+  }
+}

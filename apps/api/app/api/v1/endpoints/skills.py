@@ -55,8 +55,16 @@ _MUTATION = _AUTH | {
 async def get_skills(
     context: PasswordChangeCompletedContextDep,
     session: SessionDep,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=100),
+    q: str = Query(default="", max_length=200),
+    enabled: bool | None = None,
 ) -> SkillListResponse:
-    return SkillListResponse(code=0, msg="SUCCESS", data=await list_skills(session, owner_id=context.user.id))
+    return SkillListResponse(
+        code=0,
+        msg="SUCCESS",
+        data=await list_skills(session, owner_id=context.user.id, page=page, page_size=page_size, q=q, enabled=enabled),
+    )
 
 
 @router.post(

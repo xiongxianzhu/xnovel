@@ -1,0 +1,214 @@
+.writing-workspace {
+  height: calc(100dvh - 64px);
+  min-height: 620px;
+  padding: 0;
+  background: var(--color-surface);
+}
+
+.app-shell:has(.writing-workspace) .document-sidebar-header {
+  display: none;
+}
+
+.app-shell:has(.writing-workspace) .document-sidebar-toolbar > .ant-btn {
+  border-color: var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  box-shadow: none;
+}
+
+.app-shell:has(.writing-workspace) .document-view-switch {
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+}
+
+.app-shell:has(.writing-workspace) .document-view-switch button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+}
+
+.app-shell:has(.writing-workspace)
+  .document-view-switch
+  button[aria-pressed="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.writing-workspace .project-workspace-layout {
+  min-height: 0;
+  gap: 0;
+}
+
+.writing-workspace .writing-editor {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.writing-workspace .writing-editor-toolbar {
+  flex-shrink: 0;
+  min-height: 64px;
+  padding: var(--space-2) var(--space-6);
+  gap: var(--space-2);
+}
+
+.writing-document-kind {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.writing-workspace .writing-editor-meta,
+.writing-workspace .project-workspace-actions {
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.writing-workspace .writing-editor-meta {
+  margin-left: auto;
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.writing-workspace .writing-editor-meta > .project-workspace-actions {
+  display: contents;
+}
+
+.writing-workspace
+  .writing-editor-meta
+  .ant-btn:not([aria-pressed="true"]):not([aria-expanded="true"]) {
+  border-color: transparent;
+  box-shadow: none;
+  background: transparent;
+}
+
+.manuscript-heading {
+  flex-shrink: 0;
+  padding: var(--space-8) max(var(--space-8), calc((100% - 1100px) / 2))
+    var(--space-4);
+}
+
+.manuscript-heading h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
+  font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.writing-workspace .manuscript-editor {
+  min-height: 200px;
+  padding: var(--space-4) max(var(--space-8), calc((100% - 1100px) / 2))
+    var(--space-8);
+  font-size: 20px;
+  line-height: 1.9;
+  caret-color: var(--color-accent);
+  scrollbar-color: var(--color-border) var(--color-surface);
+}
+
+.writing-workspace .manuscript-editor::selection {
+  background: var(--color-surface-muted);
+}
+
+.writing-editor-status,
+.writing-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.writing-editor-status {
+  flex-shrink: 0;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: var(--space-1) var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.writing-status-actions .ant-btn {
+  box-shadow: none;
+}
+
+.selection-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-6);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-ai-surface);
+}
+
+.selection-actions > span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.writing-workspace .planning-panel {
+  position: static;
+  max-height: none;
+  border: 0;
+  border-left: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+.app-shell:has(.writing-workspace-focused) .document-sidebar,
+.app-shell:has(.writing-workspace-focused) .project-document-trigger {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .writing-workspace .planning-panel {
+    position: fixed;
+  }
+}
+
+@media (max-width: 767px) {
+  .writing-workspace {
+    height: auto;
+    min-height: calc(100dvh - 56px);
+    padding: 0;
+  }
+
+  .writing-workspace .writing-editor-toolbar {
+    flex-direction: row;
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .writing-workspace .writing-editor-meta {
+    display: contents;
+  }
+
+  .writing-workspace .project-workspace-actions {
+    display: contents;
+  }
+
+  .writing-document-kind {
+    display: none;
+  }
+
+  .manuscript-heading {
+    padding: var(--space-6) var(--space-5) var(--space-3);
+  }
+
+  .manuscript-heading h2 {
+    font-size: 24px;
+  }
+
+  .writing-workspace .manuscript-editor {
+    min-height: 480px;
+    padding: var(--space-3) var(--space-5) var(--space-6);
+    font-size: 18px;
+  }
+
+  .writing-editor-status,
+  .selection-actions {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+}

@@ -1,3 +1,4 @@
+import type { DesktopRevisionDetail } from "../../shared/contracts";
 import type {
   DesktopContent,
   DesktopProject,
@@ -33,6 +34,23 @@ export function installDevMock(): void {
     createdAt: now,
     updatedAt: now,
   };
+  const revisions: DesktopRevisionDetail[] = [];
+  const capture = () => {
+    let record = revisions.find((item) => item.version === content.version);
+    if (!record) {
+      record = {
+        id: crypto.randomUUID(),
+        documentId: content.documentId,
+        content: content.content,
+        version: content.version,
+        wordCount: content.wordCount,
+        createdAt: new Date().toISOString(),
+        checkpointName: null,
+      };
+      revisions.push(record);
+    }
+    return record;
+  };
   const api: XnovelDesktopApi = {
     projects: {
       list: async () => [project],
@@ -58,13 +76,52 @@ export function installDevMock(): void {
       }),
       deleteDocument: async () => [],
       content: async () => content,
-      save: async (_id, text) =>
+      revisions: async (_id, page) => ({
+        items: [...revisions]
+          .reverse()
+          .slice((page - 1) * 50, page * 50)
+          .map(({ content: _content, ...item }) => {
+            void _content;
+            return item;
+          }),
+        page,
+        pageSize: 50,
+        total: revisions.length,
+      }),
+      revision: async (_id, revisionId) => {
+        const record = revisions.find((item) => item.id === revisionId);
+        if (!record) throw new Error("REVISION_NOT_FOUND");
+        return record;
+      },
+      checkpoint: async (_id, name, version) => {
+        if (version !== content.version)
+          throw new Error("CONTENT_VERSION_CONFLICT");
+        const record = capture();
+        record.checkpointName = name;
+        return record;
+      },
+      restoreRevision: async (_id, revisionId, version) => {
+        if (version !== content.version)
+          throw new Error("CONTENT_VERSION_CONFLICT");
+        const record = revisions.find((item) => item.id === revisionId);
+        if (!record) throw new Error("REVISION_NOT_FOUND");
+        capture();
+        content = {
+          ...content,
+          content: record.content,
+          version: content.version + 1,
+        };
+        return content;
+      },
+      save: async (_id, text) => (
+        capture(),
         (content = {
           ...content,
           content: text,
           version: content.version + 1,
           updatedAt: new Date().toISOString(),
-        }),
+        })
+      ),
     },
     drafts: {
       get: async () => null,

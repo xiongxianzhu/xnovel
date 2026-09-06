@@ -18,8 +18,13 @@ import type {
 } from "../../shared/api/generated/types.gen";
 import { apiClient } from "../../shared/api/client";
 
-export async function listSkillsRequest(): Promise<SkillListData> {
-  return (await listSkills({ client: apiClient })).data.data;
+export async function listSkillsRequest(query?: {
+  page?: number;
+  page_size?: number;
+  q?: string;
+  enabled?: boolean;
+}): Promise<SkillListData> {
+  return (await listSkills({ client: apiClient, query })).data.data;
 }
 
 export async function uploadSkillRequest(file: File): Promise<SkillData> {
@@ -73,8 +78,12 @@ export async function getSkillResourceRequest(
   ).data.data;
 }
 
-export async function listAdminSkillsRequest(): Promise<AdminSkillListData> {
-  return (await listAdminSkills({ client: apiClient })).data.data;
+export async function listAdminSkillsRequest(query?: {
+  page?: number;
+  page_size?: number;
+  q?: string;
+}): Promise<AdminSkillListData> {
+  return (await listAdminSkills({ client: apiClient, query })).data.data;
 }
 
 export async function quarantineSkillRequest(

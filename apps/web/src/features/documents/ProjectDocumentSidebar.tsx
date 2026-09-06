@@ -1,12 +1,10 @@
+import { useContext } from "react";
 import {
-  Alert,
-  Button,
-  Dropdown,
-  Input,
-  Modal,
-  Skeleton,
-  type MenuProps,
-} from "antd";
+  UNSAFE_DataRouterContext,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import { Alert, Button, Dropdown, Modal, Skeleton, type MenuProps } from "antd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
@@ -27,12 +25,11 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
 import type {
-  DocumentCreateRequest,
   DocumentListData,
   DocumentReorderRequest,
   DocumentSummary,
@@ -41,12 +38,10 @@ import type {
 import { isApiError } from "../../shared/api/errors";
 import {
   buildDocumentTree,
-  descendantsOf,
   prepareDocumentMove,
   type DocumentTreeNode,
 } from "./documentTree";
 import {
-  createProjectDocumentRequest,
   deleteProjectDocumentRequest,
   reorderProjectDocumentsRequest,
   updateProjectDocumentRequest,
@@ -56,14 +51,6 @@ import {
   useProjectDocuments,
 } from "./useProjectDocuments";
 import { useEditorNavigation } from "../editor/useEditorNavigation";
-
-type EditorState =
-  | {
-      kind: "folder" | "manuscript" | "outline";
-      mode: "create";
-      parentId: string | null;
-    }
-  | { document: DocumentSummary; mode: "rename" };
 
 type ConfirmState = {
   action: "archive" | "delete" | "restore";
@@ -87,13 +74,18 @@ function conflictReason(error: unknown): string | undefined {
 export function ProjectDocumentSidebar({
   projectId,
   userId,
+  summary,
 }: {
   projectId: string;
   userId: string;
+  summary?: ReactNode;
 }) {
   const { t } = useTranslation(["common", "projects"]);
   const queryClient = useQueryClient();
   const { requestDocumentChange } = useEditorNavigation();
+  const dataRouter = useContext(UNSAFE_DataRouterContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const collapseKey = `xnovel:document-sidebar:v1:${userId}:${projectId}`;
   const [collapsed, setCollapsed] = useState(() =>
@@ -106,11 +98,7 @@ export function ProjectDocumentSidebar({
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(
     new Set(),
   );
-  const [editor, setEditor] = useState<EditorState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
-  const [moveDocument, setMoveDocument] = useState<DocumentSummary | null>(
-    null,
-  );
   const [error, setError] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -157,7 +145,11 @@ export function ProjectDocumentSidebar({
   }, [collapseKey, collapsed]);
 
   useEffect(() => {
-    if (!activeDocuments.length) return;
+    if (
+      location.pathname !== `/projects/${projectId}` ||
+      !activeDocuments.length
+    )
+      return;
     const selectedExists = activeDocuments.some(
       (document) => document.id === selectedId,
     );
@@ -166,7 +158,14 @@ export function ProjectDocumentSidebar({
       next.set("document", activeDocuments[0]!.id);
       setSearchParams(next, { replace: true });
     }
-  }, [activeDocuments, searchParams, selectedId, setSearchParams]);
+  }, [
+    activeDocuments,
+    searchParams,
+    selectedId,
+    setSearchParams,
+    location.pathname,
+    projectId,
+  ]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -225,18 +224,6 @@ export function ProjectDocumentSidebar({
       }),
     ]);
   }
-
-  const createMutation = useMutation({
-    mutationFn: (payload: DocumentCreateRequest) =>
-      createProjectDocumentRequest(projectId, payload),
-    onError: mutationError,
-    onSuccess: async (document) => {
-      setEditor(null);
-      setError(null);
-      await refreshTrees();
-      void selectDocument(document.id);
-    },
-  });
   const updateMutation = useMutation({
     mutationFn: ({
       documentId,
@@ -247,7 +234,6 @@ export function ProjectDocumentSidebar({
     }) => updateProjectDocumentRequest(projectId, documentId, payload),
     onError: mutationError,
     onSuccess: async (document) => {
-      setEditor(null);
       setConfirm(null);
       setError(null);
       await refreshTrees();
@@ -295,21 +281,23 @@ export function ProjectDocumentSidebar({
         data,
       );
       setError(null);
-      setMoveDocument(null);
     },
   });
   const busy =
-    createMutation.isPending ||
     updateMutation.isPending ||
     deleteMutation.isPending ||
     reorderMutation.isPending;
 
   async function selectDocument(documentId: string) {
-    if (documentId === selectedId) return;
-    if (!(await requestDocumentChange())) return;
+    if (
+      documentId === selectedId &&
+      location.pathname === `/projects/${projectId}`
+    )
+      return;
+    if (!dataRouter && !(await requestDocumentChange())) return;
     const next = new URLSearchParams(searchParams);
     next.set("document", documentId);
-    setSearchParams(next);
+    navigate(`/projects/${projectId}?${next.toString()}`);
     setMobileOpen(false);
     requestAnimationFrame(() => mobileTriggerRef.current?.focus());
   }
@@ -371,6 +359,7 @@ export function ProjectDocumentSidebar({
 
   const panel = (
     <>
+      {summary}
       <div className="document-sidebar-toolbar">
         <Dropdown
           menu={{
@@ -392,11 +381,7 @@ export function ProjectDocumentSidebar({
               },
             ],
             onClick: ({ key }) =>
-              setEditor({
-                kind: key as "folder" | "manuscript" | "outline",
-                mode: "create",
-                parentId: null,
-              }),
+              navigate(`/projects/${projectId}/documents/new?kind=${key}`),
           }}
           trigger={["click"]}
         >
@@ -506,22 +491,17 @@ export function ProjectDocumentSidebar({
                     action === "new-manuscript" ||
                     action === "new-outline"
                   )
-                    setEditor({
-                      kind:
-                        action === "new-folder"
-                          ? "folder"
-                          : action === "new-outline"
-                            ? "outline"
-                            : "manuscript",
-                      mode: "create",
-                      parentId:
-                        document.kind === "folder"
-                          ? document.id
-                          : document.parent_id,
-                    });
+                    navigate(
+                      `/projects/${projectId}/documents/new?kind=${action.replace("new-", "")}&parent=${document.kind === "folder" ? document.id : (document.parent_id ?? "")}`,
+                    );
                   else if (action === "rename")
-                    setEditor({ document, mode: "rename" });
-                  else if (action === "move") setMoveDocument(document);
+                    navigate(
+                      `/projects/${projectId}/documents/${document.id}/edit`,
+                    );
+                  else if (action === "move")
+                    navigate(
+                      `/projects/${projectId}/documents/${document.id}/move`,
+                    );
                   else if (action === "up") moveByOffset(document, -1);
                   else if (action === "down") moveByOffset(document, 1);
                   else setConfirm({ action, document });
@@ -632,45 +612,7 @@ export function ProjectDocumentSidebar({
           type="button"
         />
       ) : null}
-      <DocumentEditorDialog
-        key={
-          editor?.mode === "rename"
-            ? `rename-${editor.document.id}`
-            : `create-${editor?.kind ?? "none"}-${editor?.parentId ?? "root"}`
-        }
-        busy={busy}
-        editor={editor}
-        onCancel={() => setEditor(null)}
-        onSubmit={(title) => {
-          if (!editor) return;
-          if (editor.mode === "create") {
-            createMutation.mutate({
-              kind: editor.kind,
-              parent_id: editor.parentId,
-              title,
-            });
-          } else {
-            updateMutation.mutate({
-              documentId: editor.document.id,
-              payload: { title },
-            });
-          }
-        }}
-      />
-      <MoveDocumentDialog
-        key={moveDocument?.id ?? "no-move"}
-        busy={busy}
-        document={moveDocument}
-        documents={activeDocuments}
-        onCancel={() => setMoveDocument(null)}
-        onSubmit={(parentId) => {
-          if (!moveDocument) return;
-          const index = activeDocuments.filter(
-            (item) => item.parent_id === parentId,
-          ).length;
-          move(moveDocument.id, parentId, index);
-        }}
-      />
+
       <ConfirmDocumentDialog
         busy={busy}
         state={confirm}
@@ -932,148 +874,6 @@ function DocumentTreeItem({
   );
 }
 
-function DocumentEditorDialog({
-  busy,
-  editor,
-  onCancel,
-  onSubmit,
-}: {
-  busy: boolean;
-  editor: EditorState | null;
-  onCancel: () => void;
-  onSubmit: (title: string) => void;
-}) {
-  const { t } = useTranslation(["common", "projects"]);
-  const [title, setTitle] = useState(
-    editor?.mode === "rename" ? editor.document.title : "",
-  );
-  const [validation, setValidation] = useState<string | null>(null);
-
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const normalized = title.trim();
-    if (!normalized) {
-      setValidation(t("projects:documentTitleRequired"));
-      return;
-    }
-    if (normalized.length > 200) {
-      setValidation(t("projects:documentTitleTooLong"));
-      return;
-    }
-    onSubmit(normalized);
-  }
-
-  return (
-    <Modal
-      destroyOnHidden
-      footer={null}
-      onCancel={onCancel}
-      open={Boolean(editor)}
-      title={
-        editor?.mode === "rename"
-          ? t("projects:renameDocument")
-          : t(
-              editor?.kind === "folder"
-                ? "projects:newFolder"
-                : editor?.kind === "outline"
-                  ? "projects:newOutline"
-                  : "projects:newManuscript",
-            )
-      }
-    >
-      <form className="document-dialog-form" onSubmit={submit}>
-        <label htmlFor="document-title">{t("projects:documentTitle")}</label>
-        <Input
-          autoFocus
-          id="document-title"
-          maxLength={200}
-          onChange={(event) => setTitle(event.target.value)}
-          status={validation ? "error" : undefined}
-          value={title}
-        />
-        {validation ? (
-          <p className="field-error" role="alert">
-            {validation}
-          </p>
-        ) : null}
-        <div className="document-dialog-actions">
-          <Button disabled={busy} onClick={onCancel}>
-            {t("common:cancel")}
-          </Button>
-          <Button htmlType="submit" loading={busy} type="primary">
-            {t("common:save")}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-function MoveDocumentDialog({
-  busy,
-  document,
-  documents,
-  onCancel,
-  onSubmit,
-}: {
-  busy: boolean;
-  document: DocumentSummary | null;
-  documents: DocumentSummary[];
-  onCancel: () => void;
-  onSubmit: (parentId: string | null) => void;
-}) {
-  const { t } = useTranslation(["common", "projects"]);
-  const [parentId, setParentId] = useState<string>(document?.parent_id ?? "");
-  const excluded = document
-    ? descendantsOf(documents, document.id)
-    : new Set<string>();
-  const folders = documents.filter(
-    (item) =>
-      item.kind === "folder" &&
-      item.id !== document?.id &&
-      !excluded.has(item.id),
-  );
-  return (
-    <Modal
-      destroyOnHidden
-      footer={null}
-      onCancel={onCancel}
-      open={Boolean(document)}
-      title={t("projects:moveTo")}
-    >
-      <form
-        className="document-dialog-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit(parentId || null);
-        }}
-      >
-        <label htmlFor="document-parent">{t("projects:destination")}</label>
-        <select
-          id="document-parent"
-          onChange={(event) => setParentId(event.target.value)}
-          value={parentId}
-        >
-          <option value="">{t("projects:rootLevel")}</option>
-          {folders.map((folder) => (
-            <option key={folder.id} value={folder.id}>
-              {folder.title}
-            </option>
-          ))}
-        </select>
-        <div className="document-dialog-actions">
-          <Button disabled={busy} onClick={onCancel}>
-            {t("common:cancel")}
-          </Button>
-          <Button htmlType="submit" loading={busy} type="primary">
-            {t("projects:move")}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
 function ConfirmDocumentDialog({
   busy,
   onCancel,
@@ -1111,7 +911,11 @@ function ConfirmDocumentDialog({
               onClick={onConfirm}
               type="primary"
             >
-              {t(`projects:${state.action}`)}
+              {t(
+                state.action === "delete"
+                  ? "projects:deleteDocument"
+                  : `projects:${state.action}`,
+              )}
             </Button>
           </div>
         </div>

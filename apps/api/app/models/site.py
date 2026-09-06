@@ -33,6 +33,7 @@ class SiteSetting(TimestampMixin, table=True):
     __tablename__ = "site_settings"
     __table_args__ = (
         CheckConstraint("id = 1", name="ck_site_settings_singleton"),
+        CheckConstraint("length(trim(site_name)) BETWEEN 1 AND 100", name="ck_site_settings_name_length"),
         CheckConstraint(
             "(logo_storage_key IS NULL AND logo_original_name IS NULL AND logo_mime_type IS NULL "
             "AND logo_size_bytes IS NULL) OR "
@@ -58,6 +59,12 @@ class SiteSetting(TimestampMixin, table=True):
         default=False,
         nullable=False,
         sa_column_kwargs={"server_default": text("false"), "comment": "是否允许访客公开注册"},
+    )
+    site_name: str = Field(
+        default="xnovel",
+        sa_column=Column(
+            Text, nullable=False, server_default=text("'xnovel'"), comment="公开站点名称，去除首尾空白后为 1–100 个字符"
+        ),
     )
     logo_storage_key: str | None = Field(
         default=None,

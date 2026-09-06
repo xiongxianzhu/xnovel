@@ -32,6 +32,59 @@ function rowCount(store: DesktopDatabase, sql: string, id?: string): number {
 }
 
 describe("DesktopDatabase", () => {
+  it("compares named revisions and restores without losing the previous manuscript", async () => {
+    const root = await workspace();
+    const store = await DesktopDatabase.open(join(root, "history.db"));
+    const created = store.createProject("历史测试");
+    const second = store.createProject("另一部作品");
+    const first = store.saveContent(created.document.id, "原稿", 1);
+    const checkpoint = store.createCheckpoint(
+      created.document.id,
+      "修订前",
+      first.version,
+    );
+    const edited = store.saveContent(
+      created.document.id,
+      "修订稿",
+      first.version,
+    );
+    expect(
+      store
+        .listRevisions(created.document.id, 1)
+        .items.some((item) => item.checkpointName === "修订前"),
+    ).toBe(true);
+    expect(() => store.getRevision(second.document.id, checkpoint.id)).toThrow(
+      "REVISION_NOT_FOUND",
+    );
+    expect(() =>
+      store.restoreRevision(created.document.id, checkpoint.id, first.version),
+    ).toThrow("CONTENT_VERSION_CONFLICT");
+    const restored = store.restoreRevision(
+      created.document.id,
+      checkpoint.id,
+      edited.version,
+    );
+    expect(restored.content).toBe("原稿");
+    expect(restored.version).toBe(edited.version + 1);
+    const previous = store
+      .listRevisions(created.document.id, 1)
+      .items.find((item) => item.version === edited.version)!;
+    expect(store.getRevision(created.document.id, previous.id).content).toBe(
+      "修订稿",
+    );
+    expect(() => store.listRevisions(created.document.id, 0)).toThrow(
+      "INVALID_PAGE",
+    );
+    store.db
+      .prepare(
+        "UPDATE document_revisions SET created_at='2000-01-01T00:00:00.000Z', updated_at='2000-01-01T00:00:00.000Z'",
+      )
+      .run();
+    const retained = store.listRevisions(created.document.id, 1);
+    expect(retained.items).toHaveLength(1);
+    expect(retained.items[0]?.id).toBe(checkpoint.id);
+    store.close();
+  });
   it("persists the offline create-write-reopen flow with optimistic locking", async () => {
     const root = await workspace();
     const path = join(root, "xnovel.db");
@@ -75,13 +128,13 @@ describe("DesktopDatabase", () => {
           .prepare("SELECT MAX(version) AS version FROM schema_migrations")
           .get() as { version: number }
       ).version,
-    ).toBe(3);
+    ).toBe(4);
     expect((await readdir(backups)).length).toBeGreaterThan(0);
     store.close();
     await expect(
       DesktopDatabase.open(path, backups, [
         ...DESKTOP_MIGRATIONS,
-        { version: 4, destructive: true, sql: "CREATE TABLE broken (" },
+        { version: 5, destructive: true, sql: "CREATE TABLE broken (" },
       ]),
     ).rejects.toThrow();
     const raw = new DatabaseSync(path);
@@ -91,7 +144,7 @@ describe("DesktopDatabase", () => {
           .prepare("SELECT MAX(version) AS version FROM schema_migrations")
           .get() as { version: number }
       ).version,
-    ).toBe(3);
+    ).toBe(4);
     expect(
       (
         raw.prepare("SELECT COUNT(*) AS count FROM projects").get() as {

@@ -1,12 +1,24 @@
+import { RecallPanel } from "../studio/RecallPage";
+import { BookOpenText } from "lucide-react";
+import "./writing-workspace.css";
 import { Alert, Button, Skeleton } from "antd";
 import { useQuery } from "@tanstack/react-query";
-import { Brain, Folder, PanelRightOpen } from "lucide-react";
-import { useRef, useState } from "react";
+import {
+  Brain,
+  Folder,
+  PanelRightOpen,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { useAuth } from "../../features/auth/useAuth";
-import { ProjectAiPanel } from "../../features/ai/ProjectAiPanel";
+import {
+  ProjectAiPanel,
+  type ProjectAiPanelHandle,
+} from "../../features/ai/ProjectAiPanel";
 import { useProjectDocuments } from "../../features/documents/useProjectDocuments";
 import { WritingEditor } from "../../features/editor/WritingEditor";
 import { useEditorNavigation } from "../../features/editor/useEditorNavigation";
@@ -14,7 +26,6 @@ import { ProjectExportButton } from "../../features/planning/ProjectExportButton
 import { ProjectPlanningPanel } from "../../features/planning/ProjectPlanningPanel";
 import { getProjectRequest } from "../../features/projects/projectsApi";
 import { isApiError } from "../../shared/api/errors";
-import { resolveMediaUrl } from "../../shared/api/mediaUrl";
 
 export function ProjectDetailPage() {
   const { t } = useTranslation(["common", "projects", "ai"]);
@@ -24,6 +35,11 @@ export function ProjectDetailPage() {
   const [searchParams] = useSearchParams();
   const [planningOpen, setPlanningOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [recallOpen, setRecallOpen] = useState(false);
+  const recallTriggerRef = useRef<HTMLButtonElement>(null);
+  const [focused, setFocused] = useState(false);
+  const aiPanelRef = useRef<ProjectAiPanelHandle>(null);
+  const closeAi = useCallback(() => setAiOpen(false), []);
   const planningTriggerRef = useRef<HTMLButtonElement>(null);
   const project = useQuery({
     queryKey: ["projects", projectId],
@@ -74,73 +90,71 @@ export function ProjectDetailPage() {
     documents.data?.items.find((document) => document.id === selectedId) ??
     documents.data?.items[0];
 
+  const workspaceActions = (
+    <div className="project-workspace-actions">
+      <Button
+        ref={recallTriggerRef}
+        aria-expanded={recallOpen && !focused}
+        icon={<BookOpenText aria-hidden size={17} />}
+        onClick={() => {
+          setFocused(false);
+          setAiOpen(false);
+          setPlanningOpen(false);
+          setRecallOpen((value) => !value);
+        }}
+      >
+        {t("studio:recall")}
+      </Button>
+      <ProjectExportButton projectId={projectId} />
+      <Button
+        aria-expanded={aiOpen && !focused}
+        icon={<Brain aria-hidden size={17} />}
+        onClick={() => {
+          setFocused(false);
+          setPlanningOpen(false);
+          setRecallOpen(false);
+          setAiOpen((value) => !value);
+        }}
+      >
+        {t("ai:assistantTitle")}
+      </Button>
+      <Button
+        aria-expanded={planningOpen && !focused}
+        icon={<PanelRightOpen aria-hidden size={17} />}
+        onClick={() => {
+          setFocused(false);
+          setAiOpen(false);
+          setRecallOpen(false);
+          setPlanningOpen((value) => !value);
+        }}
+        ref={planningTriggerRef}
+      >
+        {t("projects:planningAndSettings")}
+      </Button>
+      <Button
+        aria-pressed={focused}
+        icon={
+          focused ? (
+            <Minimize2 aria-hidden size={17} />
+          ) : (
+            <Maximize2 aria-hidden size={17} />
+          )
+        }
+        onClick={() => setFocused((value) => !value)}
+      >
+        {t(focused ? "projects:exitFocus" : "projects:focusMode")}
+      </Button>
+    </div>
+  );
+
   return (
     <main
-      className="project-detail-page"
-      aria-labelledby="project-detail-title"
+      className={`project-detail-page writing-workspace ${focused ? "writing-workspace-focused" : ""}`}
+      aria-label={project.data.title}
     >
-      <Link className="back-link" to="/projects">
-        {t("projects:backToProjects")}
-      </Link>
-      <header className="page-heading project-workspace-heading">
-        <div className="project-detail-identity">
-          <div className="project-detail-cover">
-            {project.data.cover_url ? (
-              <img alt="" src={resolveMediaUrl(project.data.cover_url)} />
-            ) : null}
-          </div>
-          <div>
-            <h1 id="project-detail-title">{project.data.title}</h1>
-            <p className="page-description">
-              {project.data.description || t("projects:noDescription")}
-            </p>
-            <div className="project-row-meta">
-              <span>
-                {t("projects:author")}:{" "}
-                {project.data.author || t("projects:authorNotSet")}
-              </span>
-              <span>
-                {t("projects:bookNumber", { value: project.data.book_number })}
-              </span>
-              <span>
-                {t("projects:chapterCount", {
-                  count: project.data.chapter_count,
-                })}
-              </span>
-              <span>
-                {t("projects:wordCount", { count: project.data.word_count })}
-              </span>
-              <span>
-                {t(`projects:updateStatus.${project.data.update_status}`)}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="project-workspace-actions">
-          <ProjectExportButton projectId={projectId} />
-          <Button
-            aria-expanded={aiOpen}
-            icon={<Brain aria-hidden size={17} />}
-            onClick={() => {
-              setPlanningOpen(false);
-              setAiOpen((value) => !value);
-            }}
-          >
-            {t("ai:assistantTitle")}
-          </Button>
-          <Button
-            aria-expanded={planningOpen}
-            icon={<PanelRightOpen aria-hidden size={17} />}
-            onClick={() => {
-              setAiOpen(false);
-              setPlanningOpen((value) => !value);
-            }}
-            ref={planningTriggerRef}
-          >
-            {t("projects:planningAndSettings")}
-          </Button>
-        </div>
-      </header>
+      {!selectedDocument || selectedDocument.kind === "folder"
+        ? workspaceActions
+        : null}
       <div className="project-workspace-layout">
         <div className="project-workspace-main">
           {documents.isPending ? (
@@ -176,6 +190,17 @@ export function ProjectDetailPage() {
             </section>
           ) : selectedDocument && user ? (
             <WritingEditor
+              initialSearch={searchParams.get("find") ?? ""}
+              actions={workspaceActions}
+              onSelectionAction={(selection) => {
+                if (aiPanelRef.current) {
+                  aiPanelRef.current.prepareSelection(selection);
+                  setFocused(false);
+                  setFocused(false);
+                  setPlanningOpen(false);
+                  setAiOpen(true);
+                }
+              }}
               documentId={selectedDocument.id}
               documentTitle={selectedDocument.title}
               documentTypeLabel={t(
@@ -192,17 +217,27 @@ export function ProjectDetailPage() {
             />
           )}
         </div>
+        <RecallPanel
+          projectId={projectId}
+          documentId={selectedDocument?.id ?? ""}
+          open={recallOpen && !focused}
+          onClose={() => {
+            setRecallOpen(false);
+            requestAnimationFrame(() => recallTriggerRef.current?.focus());
+          }}
+        />
         <ProjectPlanningPanel
           document={selectedDocument}
           onClose={closePlanning}
-          open={planningOpen}
+          open={planningOpen && !focused}
           projectId={projectId}
         />
         <ProjectAiPanel
+          ref={aiPanelRef}
           document={selectedDocument}
           editorBlocked={editorBlocked}
-          onClose={() => setAiOpen(false)}
-          open={aiOpen}
+          onClose={closeAi}
+          open={aiOpen && !focused}
           projectId={projectId}
         />
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PropsWithChildren } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type {
   AuthenticatedUserData,
@@ -112,5 +113,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     },
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <AccountQueries key={user?.id ?? "anonymous"}>{children}</AccountQueries>
+    </AuthContext.Provider>
+  );
+}
+
+function AccountQueries({ children }: PropsWithChildren) {
+  const [client] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: { refetchOnWindowFocus: false, retry: 1 },
+          mutations: { retry: false },
+        },
+      }),
+  );
+  useEffect(
+    () => () => {
+      void client.cancelQueries();
+      client.clear();
+    },
+    [client],
+  );
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

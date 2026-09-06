@@ -85,11 +85,16 @@ export function ProjectListPage() {
           <h1 id="projects-title">{t("projects:titlePlural")}</h1>
           <p className="page-description">{t("projects:description")}</p>
         </div>
-        <Link to="/projects/new">
-          <Button icon={<Plus aria-hidden size={17} />} type="primary">
-            {t("projects:create")}
-          </Button>
-        </Link>
+        <div className="studio-actions">
+          <Link className="studio-link-button" to="/import">
+            {t("studio:import")}
+          </Link>
+          <Link to="/projects/new">
+            <Button icon={<Plus aria-hidden size={17} />} type="primary">
+              {t("projects:create")}
+            </Button>
+          </Link>
+        </div>
       </header>
       <Segmented<ProjectView>
         block

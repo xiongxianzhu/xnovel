@@ -5,6 +5,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { isApiError } from "../../shared/api/errors";
 import { useAuth } from "../../features/auth/useAuth";
+import { SiteBrand } from "../../features/site/SiteBrand";
+import { useSiteSettings } from "../../features/site/useSiteSettings";
 
 interface LoginValues {
   identifier: string;
@@ -27,6 +29,8 @@ function safeReturnPath(state: unknown): string {
 
 export function LoginPage() {
   const { login, status } = useAuth();
+  const { data: site } = useSiteSettings();
+  const siteName = site?.site_name || "xnovel";
   const { t } = useTranslation("auth");
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,11 +62,13 @@ export function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-panel" aria-labelledby="login-title">
-        <div className="login-brand" aria-hidden="true">
-          xnovel
+        <div className="login-brand">
+          <SiteBrand />
         </div>
-        <h1 id="login-title">{t("title")}</h1>
-        <p className="page-description">{t("description")}</p>
+        <h1 id="login-title">{t("welcomeTitle")}</h1>
+        <p className="page-description">
+          {t("welcomeDescription", { siteName })}
+        </p>
 
         {errorKey ? (
           <Alert
@@ -103,6 +109,9 @@ export function LoginPage() {
           </Button>
         </Form>
       </section>
+      <footer className="login-footer">
+        {siteName} · {t("studioLabel")}
+      </footer>
     </main>
   );
 }

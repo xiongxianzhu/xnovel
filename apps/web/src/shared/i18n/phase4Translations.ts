@@ -1,6 +1,19 @@
 export const phase4Translations = {
   "zh-CN": {
     ai: {
+      selectionBusy: "请先处理当前候选或等待任务完成。",
+      selectionScope: "正在处理选中段落",
+      selectionScopeDescription:
+        "候选只替换生成时的选区，正文改变后需重新生成。",
+      clearSelection: "清除选区",
+      applyToSelection: "应用到选区",
+      applySelectionDescription:
+        "将替换生成时选中的段落，其余正文保持不变。原文版本变化时拒绝应用。",
+      selectionInstructions: {
+        rewrite: "润色选中段落，保留原意和叙述视角，只返回修改后的正文。",
+        expand: "扩写选中段落，保持人物与情节一致，只返回扩写后的正文。",
+        compress: "精简选中段落，保留关键情节，只返回精简后的正文。",
+      },
       eyebrow: "AI 辅助",
       providersTitle: "模型连接",
       providersDescription: "密钥仅加密保存在服务端，不会返回浏览器。",
@@ -84,7 +97,9 @@ export const phase4Translations = {
     },
     skills: {
       eyebrow: "上下文工具",
-      title: "我的 Skills",
+      title: "Skills",
+      personalTab: "个人 Skills",
+      securityTab: "安全管理",
       description:
         "Skill 仅作为不可信上下文读取；上传的新版本不会改写历史版本。",
       upload: "上传 Skill",
@@ -127,6 +142,19 @@ export const phase4Translations = {
   },
   "zh-TW": {
     ai: {
+      selectionBusy: "請先處理目前候選或等待任務完成。",
+      selectionScope: "正在處理選取段落",
+      selectionScopeDescription:
+        "候選僅替換產生時的選取範圍，正文變更後需重新產生。",
+      clearSelection: "清除選取",
+      applyToSelection: "套用至選取範圍",
+      applySelectionDescription:
+        "將替換產生時選取的段落，其餘正文保持不變。版本變更時拒絕套用。",
+      selectionInstructions: {
+        rewrite: "潤色選取段落，保留原意和敘述視角，只回傳修改後的正文。",
+        expand: "擴寫選取段落，保持人物與情節一致，只回傳擴寫後的正文。",
+        compress: "精簡選取段落，保留關鍵情節，只回傳精簡後的正文。",
+      },
       eyebrow: "AI 輔助",
       providersTitle: "模型連線",
       providersDescription: "金鑰只會加密保存在伺服器，不會回傳瀏覽器。",
@@ -209,7 +237,9 @@ export const phase4Translations = {
     },
     skills: {
       eyebrow: "上下文工具",
-      title: "我的 Skills",
+      title: "Skills",
+      personalTab: "個人 Skills",
+      securityTab: "安全管理",
       description:
         "Skill 只作為不可信上下文讀取；上傳的新版本不會改寫歷史版本。",
       upload: "上傳 Skill",
@@ -251,6 +281,23 @@ export const phase4Translations = {
   },
   "en-US": {
     ai: {
+      selectionBusy:
+        "Resolve the current candidate or wait for the task to finish first.",
+      selectionScope: "Working on selected text",
+      selectionScopeDescription:
+        "Only the original selection will be replaced. Regenerate if the manuscript changes.",
+      clearSelection: "Clear selection",
+      applyToSelection: "Apply to selection",
+      applySelectionDescription:
+        "Replace only the original selection. The rest of the manuscript stays unchanged. Application is rejected if its version changed.",
+      selectionInstructions: {
+        rewrite:
+          "Polish the selected passage. Preserve its meaning and viewpoint. Return only the revised prose.",
+        expand:
+          "Expand the selected passage consistently with its characters and plot. Return only the expanded prose.",
+        compress:
+          "Shorten the selected passage while preserving key events. Return only the revised prose.",
+      },
       eyebrow: "AI assistance",
       providersTitle: "Model connections",
       providersDescription:
@@ -341,7 +388,9 @@ export const phase4Translations = {
     },
     skills: {
       eyebrow: "Context tools",
-      title: "My Skills",
+      title: "Skills",
+      personalTab: "Personal Skills",
+      securityTab: "Security",
       description:
         "Skills are read as untrusted context. Uploading a new version never rewrites history.",
       upload: "Upload Skill",

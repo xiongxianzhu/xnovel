@@ -388,11 +388,11 @@ class AIResult(TimestampMixin, table=True):
     __tablename__ = "ai_results"
     __table_args__ = (
         CheckConstraint("sequence >= 0", name="ck_ai_results_sequence"),
-        CheckConstraint("status IN ('candidate', 'applied', 'rejected')", name="ck_ai_results_status"),
+        CheckConstraint("status IN ('candidate', 'applied', 'accepted', 'rejected')", name="ck_ai_results_status"),
         CheckConstraint(
             "(status = 'candidate' AND applied_document_id IS NULL AND decided_at IS NULL) OR "
             "(status = 'applied' AND applied_document_id IS NOT NULL AND decided_at IS NOT NULL) OR "
-            "(status = 'rejected' AND applied_document_id IS NULL AND decided_at IS NOT NULL)",
+            "(status IN ('accepted', 'rejected') AND applied_document_id IS NULL AND decided_at IS NOT NULL)",
             name="ck_ai_results_state_fields",
         ),
         UniqueConstraint("task_id", "sequence", name="uq_ai_results_task_sequence"),
@@ -432,6 +432,14 @@ class AIResult(TimestampMixin, table=True):
         sa_column=Column(Integer, nullable=False, server_default=text("0"), comment="任务内候选顺序"),
     )
     content: str = Field(sa_column=Column(Text, nullable=False, comment="模型生成的候选内容"))
+    purpose: str = Field(
+        default="manuscript",
+        sa_column_kwargs={"comment": "候选用途：正文、摘要或分析", "server_default": text("'manuscript'")},
+    )
+    pinned: bool = Field(
+        default=False,
+        sa_column_kwargs={"comment": "作者收藏后不自动清理此结果所属任务", "server_default": text("false")},
+    )
     status: str = Field(
         default="candidate",
         sa_column=Column(Text, nullable=False, server_default=text("'candidate'"), comment="候选决策状态"),

@@ -1,0 +1,130 @@
+.site-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.site-settings-heading > div,
+.site-section-content,
+.site-logo-controls {
+  min-width: 0;
+}
+
+.site-preferences-link {
+  display: inline-flex;
+  min-height: var(--control-height);
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-soft);
+  font-size: 14px;
+  text-underline-offset: 4px;
+}
+
+.site-settings-section {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(0, 3fr);
+  gap: var(--space-8);
+  padding-block: var(--space-8);
+}
+
+.site-section-description p,
+.site-logo-hint {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.site-section-content {
+  width: 100%;
+  max-width: 720px;
+}
+
+.site-logo-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.site-logo-preview {
+  display: flex;
+  min-width: 0;
+  min-height: 160px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.site-logo-fallback {
+  max-width: 100%;
+  color: var(--color-accent);
+  font-family: Georgia, "Times New Roman", "Noto Serif SC", serif;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.site-logo-preview img {
+  max-width: 100%;
+  max-height: 128px;
+  object-fit: contain;
+}
+
+.site-logo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.site-file-name {
+  margin: var(--space-3) 0 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.site-feedback,
+.site-success {
+  margin: var(--space-4) 0 0;
+}
+
+.site-success {
+  color: var(--color-success);
+  font-size: 13px;
+}
+
+@media (max-width: 1023px) {
+  .site-settings-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    padding-block: var(--space-6);
+  }
+}
+
+@media (max-width: 767px) {
+  .site-settings-heading {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .site-logo-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .site-logo-preview {
+    width: 100%;
+  }
+}

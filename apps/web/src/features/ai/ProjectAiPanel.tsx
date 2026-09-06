@@ -1,7 +1,18 @@
+import { AiContextSources } from "./AiContextSources";
+import type {
+  AiTaskCreateRequest,
+  ContextPreview,
+} from "../../shared/api/generated/types.gen";
 import { Alert, Button, Checkbox, Input, Modal, Select, Skeleton } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ban, Check, Copy, Send, Square, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 import type { DocumentSummary } from "../../shared/api/generated/types.gen";
@@ -9,6 +20,7 @@ import { streamSse } from "../../shared/api/sse";
 import { documentContentQueryKey } from "../editor/editorState";
 import { listSkillsRequest } from "../skills/skillsApi";
 import {
+  previewAiContextRequest,
   applyAiResultRequest,
   cancelAiTaskRequest,
   createAiTaskRequest,
@@ -16,6 +28,15 @@ import {
   listProviderConfigsRequest,
   rejectAiResultRequest,
 } from "./aiApi";
+
+import {
+  applySelectionCandidate,
+  type SelectionAction,
+} from "../editor/selectionAction";
+
+export type ProjectAiPanelHandle = {
+  prepareSelection: (selection: SelectionAction) => boolean;
+};
 
 type PanelStatus =
   "idle" | "queued" | "running" | "succeeded" | "failed" | "cancelled";
@@ -26,17 +47,30 @@ export function ProjectAiPanel({
   onClose,
   open,
   projectId,
+  ref,
 }: {
   document?: DocumentSummary;
   editorBlocked?: boolean;
   onClose: () => void;
   open: boolean;
   projectId: string;
+  ref?: Ref<ProjectAiPanelHandle>;
 }) {
   const { t } = useTranslation("ai");
   const client = useQueryClient();
   const closeRef = useRef<HTMLButtonElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [preflight, setPreflight] = useState<{
+    key: string;
+    data: ContextPreview;
+  }>();
+  const [preparing, setPreparing] = useState(false);
+  const [resultPurpose, setResultPurpose] = useState("manuscript");
+  const [sourceSelection, setSourceSelection] = useState<{
+    documentId?: string;
+    summaries: string[];
+    facts: string[];
+  }>({ summaries: [], facts: [] });
   const [providerId, setProviderId] = useState<string>();
   const [modelId, setModelId] = useState<string>();
   const [taskType, setTaskType] = useState("brainstorm");
@@ -45,9 +79,31 @@ export function ProjectAiPanel({
   const [taskId, setTaskId] = useState<string>();
   const [resultId, setResultId] = useState<string>();
   const [generationVersion, setGenerationVersion] = useState<number>();
+  const [generationDocumentId, setGenerationDocumentId] = useState<string>();
   const [candidate, setCandidate] = useState("");
   const [status, setStatus] = useState<PanelStatus>("idle");
   const [error, setError] = useState<string>();
+  const [selection, setSelection] = useState<SelectionAction>();
+  const [generationSelection, setGenerationSelection] =
+    useState<SelectionAction>();
+  useImperativeHandle(ref, () => ({
+    prepareSelection(next) {
+      if (
+        status === "running" ||
+        status === "queued" ||
+        resultId ||
+        candidate
+      ) {
+        setError(t("selectionBusy"));
+        return false;
+      }
+      setSelection(next);
+      setTaskType(next.task);
+      setInstruction(t(`selectionInstructions.${next.task}`));
+      setError(undefined);
+      return true;
+    },
+  }));
   const providers = useQuery({
     enabled: open,
     queryKey: ["ai", "providers"],
@@ -56,7 +112,7 @@ export function ProjectAiPanel({
   const skills = useQuery({
     enabled: open,
     queryKey: ["skills"],
-    queryFn: listSkillsRequest,
+    queryFn: () => listSkillsRequest(),
   });
   const create = useMutation({ mutationFn: createAiTaskRequest });
   const cancel = useMutation({ mutationFn: cancelAiTaskRequest });
@@ -65,8 +121,17 @@ export function ProjectAiPanel({
     mutationFn: async () => {
       if (!document || !resultId) throw new Error("missing result");
       if (!generationVersion) throw new Error("missing generation version");
+      if (document.id !== generationDocumentId)
+        throw new Error("CONTENT_VERSION_CONFLICT");
       return applyAiResultRequest(resultId, {
-        content: candidate,
+        content: generationSelection
+          ? applySelectionCandidate(
+              generationSelection,
+              candidate,
+              document.id,
+              generationVersion,
+            )
+          : candidate,
         document_id: document.id,
         version: generationVersion,
       });
@@ -79,6 +144,9 @@ export function ProjectAiPanel({
       setStatus("idle");
       setResultId(undefined);
       setGenerationVersion(undefined);
+      setCandidate("");
+      setSelection(undefined);
+      setGenerationSelection(undefined);
     },
     onError: () => setError("CONTENT_VERSION_CONFLICT"),
   });
@@ -90,11 +158,98 @@ export function ProjectAiPanel({
     (item) => item.id === activeProviderId,
   );
   const activeModelId = modelId ?? selectedProvider?.default_model_id;
+  const summaryIds =
+    sourceSelection.documentId === document?.id
+      ? sourceSelection.summaries
+      : [];
+  const factIds =
+    sourceSelection.documentId === document?.id ? sourceSelection.facts : [];
+  const requestPayload: AiTaskCreateRequest = {
+    document_id: document?.kind === "folder" ? null : (document?.id ?? null),
+    instruction: instruction.trim(),
+    max_output_tokens: 2048,
+    model_id: activeModelId ?? null,
+    project_id: projectId,
+    provider_config_id: activeProviderId ?? "",
+    selected_text: selection
+      ? selection.content.slice(selection.start, selection.end)
+      : null,
+    skill_ids: skillIds,
+    summary_ids: summaryIds,
+    fact_ids: factIds,
+    task_type: taskType as AiTaskCreateRequest["task_type"],
+    expected_document_version: selection?.version,
+  };
+  const requestKey = JSON.stringify(requestPayload);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  useEffect(() => {
+    if (!open) return;
+    const previous = window.document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+      if (
+        event.key !== "Tab" ||
+        !window.matchMedia("(max-width: 1023px)").matches
+      )
+        return;
+      const elements = Array.from(
+        closeRef.current
+          ?.closest("aside")
+          ?.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex="0"]',
+          ) ?? [],
+      ).filter((element) => element.getClientRects().length > 0);
+      const first = elements[0],
+        last = elements.at(-1);
+      if (event.shiftKey && window.document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      }
+      if (!event.shiftKey && window.document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+    window.document.addEventListener("keydown", handleKey);
+    return () => {
+      window.document.removeEventListener("keydown", handleKey);
+      previous?.focus();
+    };
+  }, [open, onClose]);
+
   async function generate() {
-    if (!activeProviderId || !instruction.trim()) return;
+    if (
+      !activeProviderId ||
+      !instruction.trim() ||
+      status === "running" ||
+      status === "queued"
+    )
+      return;
+    if (selection && selection.documentId !== document?.id) {
+      setError("CONTENT_VERSION_CONFLICT");
+      return;
+    }
+    if (!preflight || preflight.key !== requestKey) {
+      setPreparing(true);
+      setError(undefined);
+      try {
+        const data = await previewAiContextRequest(requestPayload);
+        setPreflight({ key: requestKey, data });
+      } catch {
+        setError("AI_CONTEXT_PREVIEW_FAILED");
+      } finally {
+        setPreparing(false);
+      }
+      return;
+    }
+    setGenerationSelection(selection);
+    setGenerationDocumentId(document?.id);
     setCandidate("");
     setError(undefined);
     setResultId(undefined);
@@ -102,17 +257,11 @@ export function ProjectAiPanel({
     setStatus("queued");
     try {
       const task = await create.mutateAsync({
-        document_id:
-          document?.kind === "folder" ? null : (document?.id ?? null),
-        instruction: instruction.trim(),
-        max_output_tokens: 2048,
-        model_id: activeModelId ?? null,
-        project_id: projectId,
-        provider_config_id: activeProviderId,
-        selected_text: null,
-        skill_ids: skillIds,
-        task_type: taskType as "brainstorm",
+        ...requestPayload,
+        expected_document_version:
+          selection?.version ?? preflight.data.document_version ?? undefined,
       });
+      setPreflight(undefined);
       setTaskId(task.id);
       const controller = new AbortController();
       abortRef.current = controller;
@@ -132,6 +281,7 @@ export function ProjectAiPanel({
       setStatus(latest.status);
       const result = latest.results?.[0];
       setResultId(result?.id);
+      setResultPurpose(result?.purpose ?? "manuscript");
       const manifestVersion = latest.context_manifest?.document_version;
       setGenerationVersion(
         typeof manifestVersion === "number" ? manifestVersion : undefined,
@@ -159,6 +309,8 @@ export function ProjectAiPanel({
     setGenerationVersion(undefined);
     setCandidate("");
     setStatus("idle");
+    setSelection(undefined);
+    setGenerationSelection(undefined);
   }
 
   return (
@@ -183,6 +335,29 @@ export function ProjectAiPanel({
           </button>
         </header>
         <div className="planning-panel-content ai-panel-content">
+          {selection ? (
+            <Alert
+              type="info"
+              showIcon
+              title={t("selectionScope")}
+              description={t("selectionScopeDescription")}
+              action={
+                <Button
+                  disabled={
+                    status === "running" ||
+                    status === "queued" ||
+                    Boolean(resultId)
+                  }
+                  onClick={() => {
+                    setSelection(undefined);
+                    setInstruction("");
+                  }}
+                >
+                  {t("clearSelection")}
+                </Button>
+              }
+            />
+          ) : null}
           {providers.isPending || skills.isPending ? (
             <Skeleton active paragraph={{ rows: 5 }} />
           ) : providers.isError || skills.isError ? (
@@ -270,15 +445,55 @@ export function ProjectAiPanel({
                   />
                 </fieldset>
               ) : null}
+              <AiContextSources
+                projectId={projectId}
+                documentId={
+                  document?.kind !== "folder" ? document?.id : undefined
+                }
+                summaryIds={summaryIds}
+                factIds={factIds}
+                onChange={(summaries, facts) =>
+                  setSourceSelection({
+                    documentId: document?.id,
+                    summaries,
+                    facts,
+                  })
+                }
+              />
+              <p className="studio-notice">
+                {document?.title ?? ""} ·{" "}
+                {t(selection ? "applyToSelection" : "applyToDocument")}
+              </p>
+              {preflight?.key === requestKey ? (
+                <div className="studio-notice">
+                  <p>
+                    {t("studio:estimatedTokens", {
+                      count: preflight.data.estimated_input_tokens,
+                    })}
+                  </p>
+                  <p>{t("studio:costUnknown")}</p>
+                </div>
+              ) : null}
               <Button
                 block
-                disabled={!instruction.trim() || editorBlocked}
+                disabled={
+                  preparing ||
+                  !instruction.trim() ||
+                  editorBlocked ||
+                  status === "running" ||
+                  status === "queued" ||
+                  Boolean(resultId)
+                }
                 icon={<Send aria-hidden size={16} />}
-                loading={status === "queued"}
+                loading={status === "queued" || preparing}
                 onClick={() => void generate()}
                 type="primary"
               >
-                {t("generate")}
+                {t(
+                  preflight?.key === requestKey
+                    ? "studio:confirmGenerate"
+                    : "generate",
+                )}
               </Button>
               {editorBlocked ? (
                 <Alert showIcon title={t("saveBeforeAi")} type="warning" />
@@ -324,15 +539,25 @@ export function ProjectAiPanel({
                   >
                     {t("reject")}
                   </Button>
-                  {document && document.kind !== "folder" ? (
+                  {document &&
+                  document.kind !== "folder" &&
+                  resultPurpose === "manuscript" ? (
                     <Button
-                      disabled={editorBlocked || !generationVersion}
+                      disabled={
+                        editorBlocked ||
+                        !generationVersion ||
+                        document.id !== generationDocumentId
+                      }
                       icon={<Check aria-hidden size={15} />}
                       loading={apply.isPending}
                       onClick={() =>
                         Modal.confirm({
                           title: t("applyTitle"),
-                          content: t("applyDescription"),
+                          content: t(
+                            generationSelection
+                              ? "applySelectionDescription"
+                              : "applyDescription",
+                          ),
                           okText: t("applyConfirm"),
                           cancelText: t("cancel"),
                           onOk: () => apply.mutateAsync(),
@@ -340,7 +565,11 @@ export function ProjectAiPanel({
                       }
                       type="primary"
                     >
-                      {t("applyToDocument")}
+                      {t(
+                        generationSelection
+                          ? "applyToSelection"
+                          : "applyToDocument",
+                      )}
                     </Button>
                   ) : null}
                 </div>

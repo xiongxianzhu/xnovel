@@ -16,11 +16,30 @@ from app.schemas.common import (
     MediaTooLargeErrorResponse,
     MediaValidationErrorResponse,
     ServiceUnavailableErrorResponse,
+    ValidationErrorResponse,
 )
-from app.schemas.media import LogoData, LogoResponse
+from app.schemas.media import LogoData, LogoResponse, PublicSiteSettingsResponse, UpdateSiteSettingsRequest
 from app.services.media import MAX_LOGO_FILE_BYTES, clear_site_logo, read_validated_image, set_site_logo
+from app.services.site_settings import update_site_name
 
 router = APIRouter(prefix="/site-settings")
+
+
+@router.patch(
+    "",
+    operation_id="updateSiteSettings",
+    responses={
+        401: {"model": AuthenticationErrorResponse, "headers": BEARER_AUTH_RESPONSE_HEADERS},
+        403: {"model": ForbiddenErrorResponse},
+        422: {"model": ValidationErrorResponse},
+        503: {"model": ServiceUnavailableErrorResponse},
+    },
+)
+async def update_settings(
+    context: AdminContextDep, session: SessionDep, payload: UpdateSiteSettingsRequest
+) -> PublicSiteSettingsResponse:
+    data = await update_site_name(session, context=context, site_name=payload.site_name)
+    return PublicSiteSettingsResponse(code=0, msg="SUCCESS", data=data)
 
 
 @router.post(

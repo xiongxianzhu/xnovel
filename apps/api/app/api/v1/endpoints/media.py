@@ -59,6 +59,7 @@ async def public_site_settings(session: SessionDep) -> PublicSiteSettingsRespons
         code=0,
         msg="SUCCESS",
         data=PublicSiteSettingsData(
+            site_name=setting.site_name if setting else "xnovel",
             registration_enabled=setting.registration_enabled if setting else False,
             logo_url=f"/api/v1/media/{setting.logo_storage_key}" if setting and setting.logo_storage_key else None,
         ),

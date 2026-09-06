@@ -43,13 +43,21 @@ export type AiResultData = {
      */
     id: string;
     /**
+     * Pinned
+     */
+    pinned?: boolean;
+    /**
+     * Purpose
+     */
+    purpose?: 'manuscript' | 'summary' | 'analysis';
+    /**
      * Sequence
      */
     sequence: number;
     /**
      * Status
      */
-    status: 'candidate' | 'applied' | 'rejected';
+    status: 'candidate' | 'applied' | 'accepted' | 'rejected';
 };
 
 /**
@@ -87,6 +95,14 @@ export type AiTaskCreateRequest = {
      */
     document_id?: string | null;
     /**
+     * Expected Document Version
+     */
+    expected_document_version?: number | null;
+    /**
+     * Fact Ids
+     */
+    fact_ids?: Array<string>;
+    /**
      * Instruction
      */
     instruction: string;
@@ -115,9 +131,13 @@ export type AiTaskCreateRequest = {
      */
     skill_ids?: Array<string>;
     /**
+     * Summary Ids
+     */
+    summary_ids?: Array<string>;
+    /**
      * Task Type
      */
-    task_type: 'brainstorm' | 'outline' | 'rewrite' | 'expand' | 'compress' | 'consistency' | 'extract_settings';
+    task_type: 'brainstorm' | 'outline' | 'rewrite' | 'expand' | 'compress' | 'consistency' | 'extract_settings' | 'summary';
 };
 
 /**
@@ -224,6 +244,750 @@ export type AiTaskResponse = {
 };
 
 /**
+ * APIResponse[AIResultData]
+ */
+export type ApiResponseAiResultData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AiResultData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[AITaskData]
+ */
+export type ApiResponseAiTaskData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: AiTaskData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[BatchData]
+ */
+export type ApiResponseBatchData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: BatchData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[BatchPreview]
+ */
+export type ApiResponseBatchPreview = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: BatchPreview;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[CharacterData]
+ */
+export type ApiResponseCharacterData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: CharacterData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[ContextPreview]
+ */
+export type ApiResponseContextPreview = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ContextPreview;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[DeletedData]
+ */
+export type ApiResponseDeletedData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DeletedData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[DocumentContentData]
+ */
+export type ApiResponseDocumentContentData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentContentData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[DocumentSummary]
+ */
+export type ApiResponseDocumentSummary = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: DocumentSummary;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[EventData]
+ */
+export type ApiResponseEventData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: EventData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[ExportPreview]
+ */
+export type ApiResponseExportPreview = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ExportPreview;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[FactData]
+ */
+export type ApiResponseFactData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: FactData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[ImportPreview]
+ */
+export type ApiResponseImportPreview = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ImportPreview;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[ImportResult]
+ */
+export type ApiResponseImportResult = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ImportResult;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[IssueData]
+ */
+export type ApiResponseIssueData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: IssueData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[KnowledgeData]
+ */
+export type ApiResponseKnowledgeData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: KnowledgeData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[LoginAuditData]
+ */
+export type ApiResponseLoginAuditData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: LoginAuditData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[NoteData]
+ */
+export type ApiResponseNoteData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: NoteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[PlanData]
+ */
+export type ApiResponsePlanData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: PlanData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[RecallData]
+ */
+export type ApiResponseRecallData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: RecallData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[RevisionDetail]
+ */
+export type ApiResponseRevisionDetail = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: RevisionDetail;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[RevisionPage]
+ */
+export type ApiResponseRevisionPage = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: RevisionPage;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[RuleData]
+ */
+export type ApiResponseRuleData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: RuleData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[ScheduleData]
+ */
+export type ApiResponseScheduleData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ScheduleData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[BatchSummary]]
+ */
+export type ApiResponseStudioPageBatchSummary = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageBatchSummary;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[CharacterData]]
+ */
+export type ApiResponseStudioPageCharacterData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageCharacterData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[DocumentSummary]]
+ */
+export type ApiResponseStudioPageDocumentSummary = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageDocumentSummary;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[EventData]]
+ */
+export type ApiResponseStudioPageEventData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageEventData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[FactData]]
+ */
+export type ApiResponseStudioPageFactData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageFactData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[IssueData]]
+ */
+export type ApiResponseStudioPageIssueData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageIssueData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[KnowledgeData]]
+ */
+export type ApiResponseStudioPageKnowledgeData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageKnowledgeData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[NoteData]]
+ */
+export type ApiResponseStudioPageNoteData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageNoteData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[PlanData]]
+ */
+export type ApiResponseStudioPagePlanData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPagePlanData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[ResultHistoryItem]]
+ */
+export type ApiResponseStudioPageResultHistoryItem = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageResultHistoryItem;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[RuleData]]
+ */
+export type ApiResponseStudioPageRuleData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageRuleData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[SearchHit]]
+ */
+export type ApiResponseStudioPageSearchHit = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageSearchHit;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[SkillVersionData]]
+ */
+export type ApiResponseStudioPageSkillVersionData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageSkillVersionData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[SummaryData]]
+ */
+export type ApiResponseStudioPageSummaryData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageSummaryData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[TaskHistoryItem]]
+ */
+export type ApiResponseStudioPageTaskHistoryItem = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageTaskHistoryItem;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[ThreadData]]
+ */
+export type ApiResponseStudioPageThreadData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageThreadData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[ThreadUpdateData]]
+ */
+export type ApiResponseStudioPageThreadUpdateData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageThreadUpdateData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[StudioPage[WorldEntryData]]
+ */
+export type ApiResponseStudioPageWorldEntryData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: StudioPageWorldEntryData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[SummaryData]
+ */
+export type ApiResponseSummaryData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: SummaryData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[ThreadData]
+ */
+export type ApiResponseThreadData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: ThreadData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[VersionDetail]
+ */
+export type ApiResponseVersionDetail = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: VersionDetail;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[WorldEntryData]
+ */
+export type ApiResponseWorldEntryData = {
+    /**
+     * Code
+     */
+    code: 0;
+    data: WorldEntryData;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[list[ExportWarning]]
+ */
+export type ApiResponseListExportWarning = {
+    /**
+     * Code
+     */
+    code: 0;
+    /**
+     * Data
+     */
+    data: Array<ExportWarning>;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[list[ImpactHit]]
+ */
+export type ApiResponseListImpactHit = {
+    /**
+     * Code
+     */
+    code: 0;
+    /**
+     * Data
+     */
+    data: Array<ImpactHit>;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
+ * APIResponse[list[str]]
+ */
+export type ApiResponseListStr = {
+    /**
+     * Code
+     */
+    code: 0;
+    /**
+     * Data
+     */
+    data: Array<string>;
+    /**
+     * Msg
+     */
+    msg: 'SUCCESS';
+};
+
+/**
  * AccountIdentifierUnavailableErrorResponse
  */
 export type AccountIdentifierUnavailableErrorResponse = {
@@ -299,6 +1063,22 @@ export type AdminSkillListData = {
      * Items
      */
     items: Array<AdminSkillData>;
+    /**
+     * Page
+     */
+    page?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+    /**
+     * Pages
+     */
+    pages?: number;
+    /**
+     * Total
+     */
+    total?: number;
 };
 
 /**
@@ -589,6 +1369,202 @@ export type AvatarUrlRequest = {
 };
 
 /**
+ * BatchAction
+ */
+export type BatchAction = {
+    /**
+     * Action
+     */
+    action: 'cancel' | 'resume' | 'retry_failed';
+};
+
+/**
+ * BatchData
+ */
+export type BatchData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Items
+     */
+    items: Array<BatchItemData>;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Task Type
+     */
+    task_type: string;
+    /**
+     * Use Recall
+     */
+    use_recall: boolean;
+};
+
+/**
+ * BatchItemData
+ */
+export type BatchItemData = {
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Document Version
+     */
+    document_version: number;
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Position
+     */
+    position: number;
+    /**
+     * Result Id
+     */
+    result_id: string | null;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Task Id
+     */
+    task_id: string | null;
+};
+
+/**
+ * BatchPreview
+ */
+export type BatchPreview = {
+    /**
+     * Document Count
+     */
+    document_count: number;
+    /**
+     * Estimated Cost
+     */
+    estimated_cost?: null;
+    /**
+     * Estimated Input Tokens
+     */
+    estimated_input_tokens: number;
+    /**
+     * Segmented Documents
+     */
+    segmented_documents: number;
+    /**
+     * Source Titles
+     */
+    source_titles: Array<string>;
+};
+
+/**
+ * BatchRequest
+ */
+export type BatchRequest = {
+    /**
+     * Document Ids
+     */
+    document_ids: Array<string>;
+    /**
+     * Instruction
+     */
+    instruction?: string;
+    /**
+     * Model Id
+     */
+    model_id?: string | null;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Provider Config Id
+     */
+    provider_config_id: string;
+    /**
+     * Request Id
+     */
+    request_id: string;
+    /**
+     * Task Type
+     */
+    task_type?: 'summary' | 'consistency';
+    /**
+     * Use Recall
+     */
+    use_recall?: boolean;
+};
+
+/**
+ * BatchSummary
+ */
+export type BatchSummary = {
+    /**
+     * Counts
+     */
+    counts: {
+        [key: string]: number;
+    };
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Task Type
+     */
+    task_type: string;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Use Recall
+     */
+    use_recall: boolean;
+};
+
+/**
+ * Body_previewManuscriptImport
+ */
+export type BodyPreviewManuscriptImport = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * Body_uploadCurrentUserAvatar
  */
 export type BodyUploadCurrentUserAvatar = {
@@ -796,6 +1772,20 @@ export type CharacterUpdateRequest = {
 };
 
 /**
+ * CheckpointRequest
+ */
+export type CheckpointRequest = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Version
+     */
+    version: number;
+};
+
+/**
  * ConflictErrorResponse
  */
 export type ConflictErrorResponse = {
@@ -816,6 +1806,36 @@ export type ConflictErrorResponse = {
 };
 
 /**
+ * ContextPreview
+ */
+export type ContextPreview = {
+    /**
+     * Available Input Tokens
+     */
+    available_input_tokens: number;
+    /**
+     * Document Version
+     */
+    document_version?: number | null;
+    /**
+     * Estimated Cost
+     */
+    estimated_cost?: null;
+    /**
+     * Estimated Input Tokens
+     */
+    estimated_input_tokens: number;
+    /**
+     * Skill Count
+     */
+    skill_count: number;
+    /**
+     * Source Count
+     */
+    source_count: number;
+};
+
+/**
  * CurrentPasswordInvalidErrorResponse
  */
 export type CurrentPasswordInvalidErrorResponse = {
@@ -833,6 +1853,16 @@ export type CurrentPasswordInvalidErrorResponse = {
      * Msg
      */
     msg: 'CURRENT_PASSWORD_INVALID';
+};
+
+/**
+ * DeletedData
+ */
+export type DeletedData = {
+    /**
+     * Deleted
+     */
+    deleted?: true;
 };
 
 /**
@@ -1143,6 +2173,306 @@ export type DocumentUpdateRequest = {
 };
 
 /**
+ * EventData
+ */
+export type EventData = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Location
+     */
+    location?: string;
+    /**
+     * Participants
+     */
+    participants?: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Story Order
+     */
+    story_order?: number | null;
+    /**
+     * Time Label
+     */
+    time_label?: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * EventInput
+ */
+export type EventInput = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Location
+     */
+    location?: string;
+    /**
+     * Participants
+     */
+    participants?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Story Order
+     */
+    story_order?: number | null;
+    /**
+     * Time Label
+     */
+    time_label?: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * ExportDocument
+ */
+export type ExportDocument = {
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version: number;
+    /**
+     * Word Count
+     */
+    word_count: number;
+};
+
+/**
+ * ExportPreview
+ */
+export type ExportPreview = {
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Documents
+     */
+    documents: Array<ExportDocument>;
+    /**
+     * Filename
+     */
+    filename: string;
+    /**
+     * Warnings
+     */
+    warnings: Array<ExportWarning>;
+};
+
+/**
+ * ExportSelection
+ */
+export type ExportSelection = {
+    /**
+     * Document Ids
+     */
+    document_ids?: Array<string>;
+    /**
+     * Format
+     */
+    format?: 'markdown' | 'plain_text';
+    /**
+     * Include Titles
+     */
+    include_titles?: boolean;
+    /**
+     * Separator
+     */
+    separator?: string;
+};
+
+/**
+ * ExportWarning
+ */
+export type ExportWarning = {
+    /**
+     * Document Id
+     */
+    document_id?: string | null;
+    /**
+     * Kind
+     */
+    kind: string;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * FactData
+ */
+export type FactData = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Character Id
+     */
+    character_id?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind?: 'fact' | 'plan' | 'inference';
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Story Order
+     */
+    story_order?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * FactInput
+ */
+export type FactInput = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Character Id
+     */
+    character_id?: string | null;
+    /**
+     * Kind
+     */
+    kind?: 'fact' | 'plan' | 'inference';
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Story Order
+     */
+    story_order?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
  * ForbiddenErrorResponse
  */
 export type ForbiddenErrorResponse = {
@@ -1195,6 +2525,108 @@ export type HealthResponse = {
 };
 
 /**
+ * ImpactHit
+ */
+export type ImpactHit = {
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Evidence
+     */
+    evidence: string;
+    /**
+     * Explicit Reference
+     */
+    explicit_reference: boolean;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * ImportChapter
+ */
+export type ImportChapter = {
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * ImportCommit
+ */
+export type ImportCommit = {
+    /**
+     * Chapters
+     */
+    chapters: Array<ImportChapter>;
+    /**
+     * Duplicate Policy
+     */
+    duplicate_policy?: 'keep' | 'skip';
+    /**
+     * Project Id
+     */
+    project_id?: string | null;
+    /**
+     * Request Id
+     */
+    request_id: string;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * ImportPreview
+ */
+export type ImportPreview = {
+    /**
+     * Chapters
+     */
+    chapters: Array<ImportChapter>;
+    /**
+     * Duplicate Titles
+     */
+    duplicate_titles: Array<string>;
+    /**
+     * Encoding
+     */
+    encoding: string;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * ImportResult
+ */
+export type ImportResult = {
+    /**
+     * Imported
+     */
+    imported: number;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Skipped
+     */
+    skipped: number;
+};
+
+/**
  * InternalErrorResponse
  */
 export type InternalErrorResponse = {
@@ -1232,6 +2664,238 @@ export type InvalidCredentialsErrorResponse = {
      * Msg
      */
     msg: 'INVALID_CREDENTIALS';
+};
+
+/**
+ * IssueData
+ */
+export type IssueData = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Evidence
+     */
+    evidence?: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Other Document Id
+     */
+    other_document_id?: string | null;
+    /**
+     * Other Evidence
+     */
+    other_evidence?: string;
+    /**
+     * Other Version
+     */
+    other_version?: number | null;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Resolution
+     */
+    resolution?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'open' | 'resolved' | 'ignored';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * IssueInput
+ */
+export type IssueInput = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Evidence
+     */
+    evidence?: string;
+    /**
+     * Other Document Id
+     */
+    other_document_id?: string | null;
+    /**
+     * Other Evidence
+     */
+    other_evidence?: string;
+    /**
+     * Other Version
+     */
+    other_version?: number | null;
+    /**
+     * Resolution
+     */
+    resolution?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'open' | 'resolved' | 'ignored';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * KnowledgeData
+ */
+export type KnowledgeData = {
+    /**
+     * Audience
+     */
+    audience?: 'character' | 'reader' | 'author';
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Character Id
+     */
+    character_id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Story Order
+     */
+    story_order?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * KnowledgeInput
+ */
+export type KnowledgeInput = {
+    /**
+     * Audience
+     */
+    audience?: 'character' | 'reader' | 'author';
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Character Id
+     */
+    character_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Story Order
+     */
+    story_order?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
 };
 
 /**
@@ -1483,6 +3147,102 @@ export type NotFoundErrorResponse = {
 };
 
 /**
+ * NoteData
+ */
+export type NoteData = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Quote
+     */
+    quote?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'open' | 'resolved' | 'ignored';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * NoteInput
+ */
+export type NoteInput = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Quote
+     */
+    quote?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'open' | 'resolved' | 'ignored';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
  * OperationAuditData
  */
 export type OperationAuditData = {
@@ -1594,6 +3354,152 @@ export type PasswordChangedData = {
      */
     token_type?: 'Bearer';
     user: UserProfileData;
+};
+
+/**
+ * PinRequest
+ */
+export type PinRequest = {
+    /**
+     * Pinned
+     */
+    pinned: boolean;
+};
+
+/**
+ * PlanData
+ */
+export type PlanData = {
+    /**
+     * Arc
+     */
+    arc?: string;
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Conflict
+     */
+    conflict?: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Delivery Status
+     */
+    delivery_status?: 'draft' | 'revising' | 'ready' | 'published';
+    /**
+     * Hook
+     */
+    hook?: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Position
+     */
+    position?: number;
+    /**
+     * Pov
+     */
+    pov?: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Turning Point
+     */
+    turning_point?: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * PlanInput
+ */
+export type PlanInput = {
+    /**
+     * Arc
+     */
+    arc?: string;
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Conflict
+     */
+    conflict?: string;
+    /**
+     * Delivery Status
+     */
+    delivery_status?: 'draft' | 'revising' | 'ready' | 'published';
+    /**
+     * Hook
+     */
+    hook?: string;
+    /**
+     * Position
+     */
+    position?: number;
+    /**
+     * Pov
+     */
+    pov?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Turning Point
+     */
+    turning_point?: string;
+    /**
+     * Version
+     */
+    version?: number;
 };
 
 /**
@@ -2305,6 +4211,10 @@ export type PublicSiteSettingsData = {
      * Registration Enabled
      */
     registration_enabled: boolean;
+    /**
+     * Site Name
+     */
+    site_name: string;
 };
 
 /**
@@ -2340,6 +4250,32 @@ export type RateLimitedErrorResponse = {
      * Msg
      */
     msg: 'RATE_LIMITED';
+};
+
+/**
+ * RecallData
+ */
+export type RecallData = {
+    /**
+     * Boundary Document Id
+     */
+    boundary_document_id: string;
+    /**
+     * Facts
+     */
+    facts: Array<FactData>;
+    /**
+     * Stale Count
+     */
+    stale_count: number;
+    /**
+     * Summaries
+     */
+    summaries: Array<SummaryData>;
+    /**
+     * Threads
+     */
+    threads: Array<ThreadData>;
 };
 
 /**
@@ -2524,6 +4460,326 @@ export type ResourceDeleteResponse = {
 };
 
 /**
+ * RestoreRevisionRequest
+ */
+export type RestoreRevisionRequest = {
+    /**
+     * Version
+     */
+    version: number;
+};
+
+/**
+ * ResultHistoryItem
+ */
+export type ResultHistoryItem = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string | null;
+    /**
+     * Excerpt
+     */
+    excerpt: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Pinned
+     */
+    pinned: boolean;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Purpose
+     */
+    purpose: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Task Id
+     */
+    task_id: string;
+    /**
+     * Task Type
+     */
+    task_type: string;
+};
+
+/**
+ * RevisionDetail
+ */
+export type RevisionDetail = {
+    /**
+     * Checkpoint Name
+     */
+    checkpoint_name: string | null;
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Content Format
+     */
+    content_format: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version: number;
+    /**
+     * Word Count
+     */
+    word_count: number;
+};
+
+/**
+ * RevisionPage
+ */
+export type RevisionPage = {
+    /**
+     * Items
+     */
+    items: Array<RevisionSummary>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * RevisionSummary
+ */
+export type RevisionSummary = {
+    /**
+     * Checkpoint Name
+     */
+    checkpoint_name: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version: number;
+    /**
+     * Word Count
+     */
+    word_count: number;
+};
+
+/**
+ * RuleData
+ */
+export type RuleData = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind?: 'term' | 'pov' | 'tense' | 'expression';
+    /**
+     * Preferred
+     */
+    preferred?: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * RuleInput
+ */
+export type RuleInput = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Kind
+     */
+    kind?: 'term' | 'pov' | 'tense' | 'expression';
+    /**
+     * Preferred
+     */
+    preferred?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * ScheduleData
+ */
+export type ScheduleData = {
+    /**
+     * Chapters Per Week
+     */
+    chapters_per_week: number | null;
+    /**
+     * Estimated Days
+     */
+    estimated_days: number | null;
+    /**
+     * Note
+     */
+    note: string;
+    /**
+     * Ready Chapters
+     */
+    ready_chapters: number;
+};
+
+/**
+ * ScheduleInput
+ */
+export type ScheduleInput = {
+    /**
+     * Chapters Per Week
+     */
+    chapters_per_week: number;
+    /**
+     * Note
+     */
+    note?: string;
+};
+
+/**
+ * SearchHit
+ */
+export type SearchHit = {
+    /**
+     * Document Version
+     */
+    document_version?: number | null;
+    /**
+     * Excerpt
+     */
+    excerpt: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind: 'document' | 'character' | 'world';
+    /**
+     * Match Start
+     */
+    match_start?: number | null;
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
  * ServiceUnavailableErrorResponse
  */
 export type ServiceUnavailableErrorResponse = {
@@ -2670,6 +4926,22 @@ export type SkillListData = {
      * Items
      */
     items: Array<SkillData>;
+    /**
+     * Page
+     */
+    page?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+    /**
+     * Pages
+     */
+    pages?: number;
+    /**
+     * Total
+     */
+    total?: number;
 };
 
 /**
@@ -2804,6 +5076,746 @@ export type SkillVersionData = {
 };
 
 /**
+ * StudioPage[BatchSummary]
+ */
+export type StudioPageBatchSummary = {
+    /**
+     * Items
+     */
+    items: Array<BatchSummary>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[CharacterData]
+ */
+export type StudioPageCharacterData = {
+    /**
+     * Items
+     */
+    items: Array<CharacterData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[DocumentSummary]
+ */
+export type StudioPageDocumentSummary = {
+    /**
+     * Items
+     */
+    items: Array<DocumentSummary>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[EventData]
+ */
+export type StudioPageEventData = {
+    /**
+     * Items
+     */
+    items: Array<EventData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[FactData]
+ */
+export type StudioPageFactData = {
+    /**
+     * Items
+     */
+    items: Array<FactData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[IssueData]
+ */
+export type StudioPageIssueData = {
+    /**
+     * Items
+     */
+    items: Array<IssueData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[KnowledgeData]
+ */
+export type StudioPageKnowledgeData = {
+    /**
+     * Items
+     */
+    items: Array<KnowledgeData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[NoteData]
+ */
+export type StudioPageNoteData = {
+    /**
+     * Items
+     */
+    items: Array<NoteData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[PlanData]
+ */
+export type StudioPagePlanData = {
+    /**
+     * Items
+     */
+    items: Array<PlanData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[ResultHistoryItem]
+ */
+export type StudioPageResultHistoryItem = {
+    /**
+     * Items
+     */
+    items: Array<ResultHistoryItem>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[RuleData]
+ */
+export type StudioPageRuleData = {
+    /**
+     * Items
+     */
+    items: Array<RuleData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[SearchHit]
+ */
+export type StudioPageSearchHit = {
+    /**
+     * Items
+     */
+    items: Array<SearchHit>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[SkillVersionData]
+ */
+export type StudioPageSkillVersionData = {
+    /**
+     * Items
+     */
+    items: Array<SkillVersionData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[SummaryData]
+ */
+export type StudioPageSummaryData = {
+    /**
+     * Items
+     */
+    items: Array<SummaryData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[TaskHistoryItem]
+ */
+export type StudioPageTaskHistoryItem = {
+    /**
+     * Items
+     */
+    items: Array<TaskHistoryItem>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[ThreadData]
+ */
+export type StudioPageThreadData = {
+    /**
+     * Items
+     */
+    items: Array<ThreadData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[ThreadUpdateData]
+ */
+export type StudioPageThreadUpdateData = {
+    /**
+     * Items
+     */
+    items: Array<ThreadUpdateData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * StudioPage[WorldEntryData]
+ */
+export type StudioPageWorldEntryData = {
+    /**
+     * Items
+     */
+    items: Array<WorldEntryData>;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Page Size
+     */
+    page_size: number;
+    /**
+     * Pages
+     */
+    pages: number;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * SummaryData
+ */
+export type SummaryData = {
+    /**
+     * Ai Task Id
+     */
+    ai_task_id?: string | null;
+    /**
+     * Body
+     */
+    body: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id: string;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'candidate' | 'confirmed' | 'rejected';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * SummaryInput
+ */
+export type SummaryInput = {
+    /**
+     * Body
+     */
+    body: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id: string;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'candidate' | 'confirmed' | 'rejected';
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * TaskHistoryItem
+ */
+export type TaskHistoryItem = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string | null;
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Input Tokens
+     */
+    input_tokens: number | null;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Output Tokens
+     */
+    output_tokens: number | null;
+    /**
+     * Project Id
+     */
+    project_id: string | null;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Task Type
+     */
+    task_type: string;
+};
+
+/**
+ * ThreadData
+ */
+export type ThreadData = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Overdue
+     */
+    overdue?: boolean;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Missing
+     */
+    source_missing?: boolean;
+    /**
+     * Source Stale
+     */
+    source_stale?: boolean;
+    /**
+     * Source Title
+     */
+    source_title?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'open' | 'progressing' | 'resolved' | 'abandoned';
+    /**
+     * Target Document Id
+     */
+    target_document_id?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * ThreadInput
+ */
+export type ThreadInput = {
+    /**
+     * Body
+     */
+    body?: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Source Version
+     */
+    source_version?: number | null;
+    /**
+     * Status
+     */
+    status?: 'open' | 'progressing' | 'resolved' | 'abandoned';
+    /**
+     * Target Document Id
+     */
+    target_document_id?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Version
+     */
+    version?: number;
+};
+
+/**
+ * ThreadUpdateData
+ */
+export type ThreadUpdateData = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Document Id
+     */
+    document_id: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Note
+     */
+    note: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Thread Id
+     */
+    thread_id: string;
+};
+
+/**
  * UnauthorizedErrorResponse
  */
 export type UnauthorizedErrorResponse = {
@@ -2869,6 +5881,16 @@ export type UpdateProfileRequest = {
      * Username
      */
     username?: string | null;
+};
+
+/**
+ * UpdateSiteSettingsRequest
+ */
+export type UpdateSiteSettingsRequest = {
+    /**
+     * Site Name
+     */
+    site_name: string;
 };
 
 /**
@@ -3060,6 +6082,17 @@ export type ValidationErrorResponse = {
      * Msg
      */
     msg: 'VALIDATION_ERROR';
+};
+
+/**
+ * VersionDetail
+ */
+export type VersionDetail = {
+    /**
+     * Skill Md Text
+     */
+    skill_md_text: string;
+    version: SkillVersionData;
 };
 
 /**
@@ -3444,6 +6477,36 @@ export type ListAdminLoginAuditsResponses = {
 
 export type ListAdminLoginAuditsResponse = ListAdminLoginAuditsResponses[keyof ListAdminLoginAuditsResponses];
 
+export type GetAdminLoginAuditData = {
+    body?: never;
+    path: {
+        /**
+         * Session Id
+         */
+        session_id: string;
+    };
+    query?: never;
+    url: '/api/admin/v1/audit/login/{session_id}';
+};
+
+export type GetAdminLoginAuditErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAdminLoginAuditError = GetAdminLoginAuditErrors[keyof GetAdminLoginAuditErrors];
+
+export type GetAdminLoginAuditResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseLoginAuditData;
+};
+
+export type GetAdminLoginAuditResponse = GetAdminLoginAuditResponses[keyof GetAdminLoginAuditResponses];
+
 export type ListAdminOperationAuditsData = {
     body?: never;
     path?: never;
@@ -3518,6 +6581,47 @@ export type GetAdminHealthResponses = {
 };
 
 export type GetAdminHealthResponse = GetAdminHealthResponses[keyof GetAdminHealthResponses];
+
+export type UpdateSiteSettingsData = {
+    body: UpdateSiteSettingsRequest;
+    path?: never;
+    query?: never;
+    url: '/api/admin/v1/site-settings';
+};
+
+export type UpdateSiteSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthenticationErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ForbiddenErrorResponse;
+    /**
+     * Unprocessable Content
+     */
+    422: ValidationErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ServiceUnavailableErrorResponse;
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateSiteSettingsError = UpdateSiteSettingsErrors[keyof UpdateSiteSettingsErrors];
+
+export type UpdateSiteSettingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicSiteSettingsResponse;
+};
+
+export type UpdateSiteSettingsResponse = UpdateSiteSettingsResponses[keyof UpdateSiteSettingsResponses];
 
 export type DeleteSiteLogoData = {
     body?: never;
@@ -3604,7 +6708,20 @@ export type UploadSiteLogoResponse = UploadSiteLogoResponses[keyof UploadSiteLog
 export type ListAdminSkillsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+    };
     url: '/api/admin/v1/skills';
 };
 
@@ -3870,6 +6987,179 @@ export type UpdateAdminUserResponses = {
 };
 
 export type UpdateAdminUserResponse = UpdateAdminUserResponses[keyof UpdateAdminUserResponses];
+
+export type ListAiBatchesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/ai/batches';
+};
+
+export type ListAiBatchesErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAiBatchesError = ListAiBatchesErrors[keyof ListAiBatchesErrors];
+
+export type ListAiBatchesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageBatchSummary;
+};
+
+export type ListAiBatchesResponse = ListAiBatchesResponses[keyof ListAiBatchesResponses];
+
+export type CreateAiBatchData = {
+    body: BatchRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/batches';
+};
+
+export type CreateAiBatchErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateAiBatchError = CreateAiBatchErrors[keyof CreateAiBatchErrors];
+
+export type CreateAiBatchResponses = {
+    /**
+     * Successful Response
+     */
+    202: ApiResponseBatchData;
+};
+
+export type CreateAiBatchResponse = CreateAiBatchResponses[keyof CreateAiBatchResponses];
+
+export type PreviewAiBatchData = {
+    body: BatchRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/batches/preview';
+};
+
+export type PreviewAiBatchErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type PreviewAiBatchError = PreviewAiBatchErrors[keyof PreviewAiBatchErrors];
+
+export type PreviewAiBatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseBatchPreview;
+};
+
+export type PreviewAiBatchResponse = PreviewAiBatchResponses[keyof PreviewAiBatchResponses];
+
+export type GetAiBatchData = {
+    body?: never;
+    path: {
+        /**
+         * Batch Id
+         */
+        batch_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/batches/{batch_id}';
+};
+
+export type GetAiBatchErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAiBatchError = GetAiBatchErrors[keyof GetAiBatchErrors];
+
+export type GetAiBatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseBatchData;
+};
+
+export type GetAiBatchResponse = GetAiBatchResponses[keyof GetAiBatchResponses];
+
+export type ControlAiBatchData = {
+    body: BatchAction;
+    path: {
+        /**
+         * Batch Id
+         */
+        batch_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/batches/{batch_id}/actions';
+};
+
+export type ControlAiBatchErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ControlAiBatchError = ControlAiBatchErrors[keyof ControlAiBatchErrors];
+
+export type ControlAiBatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseBatchData;
+};
+
+export type ControlAiBatchResponse = ControlAiBatchResponses[keyof ControlAiBatchResponses];
+
+export type PreviewAiContextData = {
+    body: AiTaskCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/context-preview';
+};
+
+export type PreviewAiContextErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type PreviewAiContextError = PreviewAiContextErrors[keyof PreviewAiContextErrors];
+
+export type PreviewAiContextResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseContextPreview;
+};
+
+export type PreviewAiContextResponse = PreviewAiContextResponses[keyof PreviewAiContextResponses];
 
 export type ListAiProviderConfigsData = {
     body?: never;
@@ -4175,6 +7465,102 @@ export type TestAiProviderConnectionResponses = {
 
 export type TestAiProviderConnectionResponse = TestAiProviderConnectionResponses[keyof TestAiProviderConnectionResponses];
 
+export type ListAiResultHistoryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+        /**
+         * Pinned
+         */
+        pinned?: boolean | null;
+        /**
+         * Document Id
+         */
+        document_id?: string | null;
+        /**
+         * Task Type
+         */
+        task_type?: string | null;
+        /**
+         * Status
+         */
+        status?: string | null;
+        /**
+         * Created From
+         */
+        created_from?: string | null;
+        /**
+         * Created To
+         */
+        created_to?: string | null;
+    };
+    url: '/api/v1/ai/results';
+};
+
+export type ListAiResultHistoryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAiResultHistoryError = ListAiResultHistoryErrors[keyof ListAiResultHistoryErrors];
+
+export type ListAiResultHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageResultHistoryItem;
+};
+
+export type ListAiResultHistoryResponse = ListAiResultHistoryResponses[keyof ListAiResultHistoryResponses];
+
+export type GetAiResultHistoryData = {
+    body?: never;
+    path: {
+        /**
+         * Result Id
+         */
+        result_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/results/{result_id}';
+};
+
+export type GetAiResultHistoryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetAiResultHistoryError = GetAiResultHistoryErrors[keyof GetAiResultHistoryErrors];
+
+export type GetAiResultHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseAiResultData;
+};
+
+export type GetAiResultHistoryResponse = GetAiResultHistoryResponses[keyof GetAiResultHistoryResponses];
+
 export type ApplyAiResultData = {
     body: AiResultApplyRequest;
     path: {
@@ -4225,6 +7611,36 @@ export type ApplyAiResultResponses = {
 
 export type ApplyAiResultResponse = ApplyAiResultResponses[keyof ApplyAiResultResponses];
 
+export type PinAiResultData = {
+    body: PinRequest;
+    path: {
+        /**
+         * Result Id
+         */
+        result_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/results/{result_id}/pin';
+};
+
+export type PinAiResultErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type PinAiResultError = PinAiResultErrors[keyof PinAiResultErrors];
+
+export type PinAiResultResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseAiResultData;
+};
+
+export type PinAiResultResponse = PinAiResultResponses[keyof PinAiResultResponses];
+
 export type RejectAiResultData = {
     body?: never;
     path: {
@@ -4274,6 +7690,68 @@ export type RejectAiResultResponses = {
 };
 
 export type RejectAiResultResponse = RejectAiResultResponses[keyof RejectAiResultResponses];
+
+export type ListAiTaskHistoryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+        /**
+         * Document Id
+         */
+        document_id?: string | null;
+        /**
+         * Task Type
+         */
+        task_type?: string | null;
+        /**
+         * Status
+         */
+        status?: string | null;
+        /**
+         * Created From
+         */
+        created_from?: string | null;
+        /**
+         * Created To
+         */
+        created_to?: string | null;
+    };
+    url: '/api/v1/ai/tasks';
+};
+
+export type ListAiTaskHistoryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListAiTaskHistoryError = ListAiTaskHistoryErrors[keyof ListAiTaskHistoryErrors];
+
+export type ListAiTaskHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageTaskHistoryItem;
+};
+
+export type ListAiTaskHistoryResponse = ListAiTaskHistoryResponses[keyof ListAiTaskHistoryResponses];
 
 export type CreateAiTaskData = {
     body: AiTaskCreateRequest;
@@ -4464,6 +7942,36 @@ export type StreamAiTaskEventsResponses = {
     200: unknown;
 };
 
+export type RetryAiTaskData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ai/tasks/{task_id}/retry';
+};
+
+export type RetryAiTaskErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type RetryAiTaskError = RetryAiTaskErrors[keyof RetryAiTaskErrors];
+
+export type RetryAiTaskResponses = {
+    /**
+     * Successful Response
+     */
+    202: ApiResponseAiTaskData;
+};
+
+export type RetryAiTaskResponse = RetryAiTaskResponses[keyof RetryAiTaskResponses];
+
 export type LoginData = {
     body: LoginRequestWritable;
     path?: never;
@@ -4644,6 +8152,65 @@ export type GetHealthResponses = {
 };
 
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
+
+export type CommitManuscriptImportData = {
+    body: ImportCommit;
+    path?: never;
+    query?: never;
+    url: '/api/v1/manuscript-imports';
+};
+
+export type CommitManuscriptImportErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CommitManuscriptImportError = CommitManuscriptImportErrors[keyof CommitManuscriptImportErrors];
+
+export type CommitManuscriptImportResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseImportResult;
+};
+
+export type CommitManuscriptImportResponse = CommitManuscriptImportResponses[keyof CommitManuscriptImportResponses];
+
+export type PreviewManuscriptImportData = {
+    body: BodyPreviewManuscriptImport;
+    path?: never;
+    query?: {
+        /**
+         * Encoding
+         */
+        encoding?: string;
+        /**
+         * Split
+         */
+        split?: string;
+    };
+    url: '/api/v1/manuscript-imports/preview';
+};
+
+export type PreviewManuscriptImportErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type PreviewManuscriptImportError = PreviewManuscriptImportErrors[keyof PreviewManuscriptImportErrors];
+
+export type PreviewManuscriptImportResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseImportPreview;
+};
+
+export type PreviewManuscriptImportResponse = PreviewManuscriptImportResponses[keyof PreviewManuscriptImportResponses];
 
 export type GetMediaData = {
     body?: never;
@@ -5058,6 +8625,49 @@ export type ReorderProjectCharactersResponses = {
 
 export type ReorderProjectCharactersResponse = ReorderProjectCharactersResponses[keyof ReorderProjectCharactersResponses];
 
+export type SearchProjectCharactersData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/projects/{project_id}/characters/search';
+};
+
+export type SearchProjectCharactersErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SearchProjectCharactersError = SearchProjectCharactersErrors[keyof SearchProjectCharactersErrors];
+
+export type SearchProjectCharactersResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageCharacterData;
+};
+
+export type SearchProjectCharactersResponse = SearchProjectCharactersResponses[keyof SearchProjectCharactersResponses];
+
 export type DeleteProjectCharacterData = {
     body?: never;
     path: {
@@ -5111,6 +8721,40 @@ export type DeleteProjectCharacterResponses = {
 };
 
 export type DeleteProjectCharacterResponse = DeleteProjectCharacterResponses[keyof DeleteProjectCharacterResponses];
+
+export type GetProjectCharacterData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Character Id
+         */
+        character_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/characters/{character_id}';
+};
+
+export type GetProjectCharacterErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetProjectCharacterError = GetProjectCharacterErrors[keyof GetProjectCharacterErrors];
+
+export type GetProjectCharacterResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseCharacterData;
+};
+
+export type GetProjectCharacterResponse = GetProjectCharacterResponses[keyof GetProjectCharacterResponses];
 
 export type UpdateProjectCharacterData = {
     body: CharacterUpdateRequest;
@@ -5409,6 +9053,53 @@ export type ReorderProjectDocumentsResponses = {
 
 export type ReorderProjectDocumentsResponse = ReorderProjectDocumentsResponses[keyof ReorderProjectDocumentsResponses];
 
+export type SearchProjectDocumentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Include Archived
+         */
+        include_archived?: boolean;
+    };
+    url: '/api/v1/projects/{project_id}/documents/search';
+};
+
+export type SearchProjectDocumentsErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SearchProjectDocumentsError = SearchProjectDocumentsErrors[keyof SearchProjectDocumentsErrors];
+
+export type SearchProjectDocumentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageDocumentSummary;
+};
+
+export type SearchProjectDocumentsResponse = SearchProjectDocumentsResponses[keyof SearchProjectDocumentsResponses];
+
 export type DeleteProjectDocumentData = {
     body?: never;
     path: {
@@ -5462,6 +9153,40 @@ export type DeleteProjectDocumentResponses = {
 };
 
 export type DeleteProjectDocumentResponse = DeleteProjectDocumentResponses[keyof DeleteProjectDocumentResponses];
+
+export type GetProjectDocumentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}';
+};
+
+export type GetProjectDocumentErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetProjectDocumentError = GetProjectDocumentErrors[keyof GetProjectDocumentErrors];
+
+export type GetProjectDocumentResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDocumentSummary;
+};
+
+export type GetProjectDocumentResponse = GetProjectDocumentResponses[keyof GetProjectDocumentResponses];
 
 export type UpdateProjectDocumentData = {
     body: DocumentUpdateRequest;
@@ -5725,6 +9450,159 @@ export type UpdateProjectDocumentReferencesResponses = {
 
 export type UpdateProjectDocumentReferencesResponse = UpdateProjectDocumentReferencesResponses[keyof UpdateProjectDocumentReferencesResponses];
 
+export type ListDocumentRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/revisions';
+};
+
+export type ListDocumentRevisionsErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListDocumentRevisionsError = ListDocumentRevisionsErrors[keyof ListDocumentRevisionsErrors];
+
+export type ListDocumentRevisionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseRevisionPage;
+};
+
+export type ListDocumentRevisionsResponse = ListDocumentRevisionsResponses[keyof ListDocumentRevisionsResponses];
+
+export type CreateDocumentCheckpointData = {
+    body: CheckpointRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/revisions/checkpoints';
+};
+
+export type CreateDocumentCheckpointErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateDocumentCheckpointError = CreateDocumentCheckpointErrors[keyof CreateDocumentCheckpointErrors];
+
+export type CreateDocumentCheckpointResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseRevisionDetail;
+};
+
+export type CreateDocumentCheckpointResponse = CreateDocumentCheckpointResponses[keyof CreateDocumentCheckpointResponses];
+
+export type GetDocumentRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+        /**
+         * Revision Id
+         */
+        revision_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/revisions/{revision_id}';
+};
+
+export type GetDocumentRevisionErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetDocumentRevisionError = GetDocumentRevisionErrors[keyof GetDocumentRevisionErrors];
+
+export type GetDocumentRevisionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseRevisionDetail;
+};
+
+export type GetDocumentRevisionResponse = GetDocumentRevisionResponses[keyof GetDocumentRevisionResponses];
+
+export type RestoreDocumentRevisionData = {
+    body: RestoreRevisionRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Document Id
+         */
+        document_id: string;
+        /**
+         * Revision Id
+         */
+        revision_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/documents/{document_id}/revisions/{revision_id}/restore';
+};
+
+export type RestoreDocumentRevisionErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type RestoreDocumentRevisionError = RestoreDocumentRevisionErrors[keyof RestoreDocumentRevisionErrors];
+
+export type RestoreDocumentRevisionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDocumentContentData;
+};
+
+export type RestoreDocumentRevisionResponse = RestoreDocumentRevisionResponses[keyof RestoreDocumentRevisionResponses];
+
 export type ExportProjectData = {
     body?: never;
     path: {
@@ -5776,6 +9654,79 @@ export type ExportProjectResponses = {
 
 export type ExportProjectResponse = ExportProjectResponses[keyof ExportProjectResponses];
 
+export type PreviewProjectExportData = {
+    body: ExportSelection;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/export-preview';
+};
+
+export type PreviewProjectExportErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type PreviewProjectExportError = PreviewProjectExportErrors[keyof PreviewProjectExportErrors];
+
+export type PreviewProjectExportResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseExportPreview;
+};
+
+export type PreviewProjectExportResponse = PreviewProjectExportResponses[keyof PreviewProjectExportResponses];
+
+export type GetSettingImpactData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query: {
+        /**
+         * Entity Id
+         */
+        entity_id: string;
+        /**
+         * Kind
+         */
+        kind: string;
+        /**
+         * Previous Name
+         */
+        previous_name?: string;
+    };
+    url: '/api/v1/projects/{project_id}/impact';
+};
+
+export type GetSettingImpactErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetSettingImpactError = GetSettingImpactErrors[keyof GetSettingImpactErrors];
+
+export type GetSettingImpactResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseListImpactHit;
+};
+
+export type GetSettingImpactResponse = GetSettingImpactResponses[keyof GetSettingImpactResponses];
+
 export type RestoreProjectData = {
     body?: never;
     path: {
@@ -5817,6 +9768,1845 @@ export type RestoreProjectResponses = {
 };
 
 export type RestoreProjectResponse = RestoreProjectResponses[keyof RestoreProjectResponses];
+
+export type SearchProjectManuscriptData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Include Archived
+         */
+        include_archived?: boolean;
+    };
+    url: '/api/v1/projects/{project_id}/search';
+};
+
+export type SearchProjectManuscriptErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SearchProjectManuscriptError = SearchProjectManuscriptErrors[keyof SearchProjectManuscriptErrors];
+
+export type SearchProjectManuscriptResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageSearchHit;
+};
+
+export type SearchProjectManuscriptResponse = SearchProjectManuscriptResponses[keyof SearchProjectManuscriptResponses];
+
+export type ListStudioEventData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/events';
+};
+
+export type ListStudioEventErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioEventError = ListStudioEventErrors[keyof ListStudioEventErrors];
+
+export type ListStudioEventResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageEventData;
+};
+
+export type ListStudioEventResponse = ListStudioEventResponses[keyof ListStudioEventResponses];
+
+export type CreateStudioEventData = {
+    body: EventInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/events';
+};
+
+export type CreateStudioEventErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioEventError = CreateStudioEventErrors[keyof CreateStudioEventErrors];
+
+export type CreateStudioEventResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseEventData;
+};
+
+export type CreateStudioEventResponse = CreateStudioEventResponses[keyof CreateStudioEventResponses];
+
+export type DeleteStudioEventData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/events/{record_id}';
+};
+
+export type DeleteStudioEventErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioEventError = DeleteStudioEventErrors[keyof DeleteStudioEventErrors];
+
+export type DeleteStudioEventResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioEventResponse = DeleteStudioEventResponses[keyof DeleteStudioEventResponses];
+
+export type GetStudioEventData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/events/{record_id}';
+};
+
+export type GetStudioEventErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioEventError = GetStudioEventErrors[keyof GetStudioEventErrors];
+
+export type GetStudioEventResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseEventData;
+};
+
+export type GetStudioEventResponse = GetStudioEventResponses[keyof GetStudioEventResponses];
+
+export type UpdateStudioEventData = {
+    body: EventInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/events/{record_id}';
+};
+
+export type UpdateStudioEventErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioEventError = UpdateStudioEventErrors[keyof UpdateStudioEventErrors];
+
+export type UpdateStudioEventResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseEventData;
+};
+
+export type UpdateStudioEventResponse = UpdateStudioEventResponses[keyof UpdateStudioEventResponses];
+
+export type ListStudioFactData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/facts';
+};
+
+export type ListStudioFactErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioFactError = ListStudioFactErrors[keyof ListStudioFactErrors];
+
+export type ListStudioFactResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageFactData;
+};
+
+export type ListStudioFactResponse = ListStudioFactResponses[keyof ListStudioFactResponses];
+
+export type CreateStudioFactData = {
+    body: FactInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/facts';
+};
+
+export type CreateStudioFactErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioFactError = CreateStudioFactErrors[keyof CreateStudioFactErrors];
+
+export type CreateStudioFactResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseFactData;
+};
+
+export type CreateStudioFactResponse = CreateStudioFactResponses[keyof CreateStudioFactResponses];
+
+export type DeleteStudioFactData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/facts/{record_id}';
+};
+
+export type DeleteStudioFactErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioFactError = DeleteStudioFactErrors[keyof DeleteStudioFactErrors];
+
+export type DeleteStudioFactResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioFactResponse = DeleteStudioFactResponses[keyof DeleteStudioFactResponses];
+
+export type GetStudioFactData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/facts/{record_id}';
+};
+
+export type GetStudioFactErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioFactError = GetStudioFactErrors[keyof GetStudioFactErrors];
+
+export type GetStudioFactResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseFactData;
+};
+
+export type GetStudioFactResponse = GetStudioFactResponses[keyof GetStudioFactResponses];
+
+export type UpdateStudioFactData = {
+    body: FactInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/facts/{record_id}';
+};
+
+export type UpdateStudioFactErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioFactError = UpdateStudioFactErrors[keyof UpdateStudioFactErrors];
+
+export type UpdateStudioFactResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseFactData;
+};
+
+export type UpdateStudioFactResponse = UpdateStudioFactResponses[keyof UpdateStudioFactResponses];
+
+export type ListStudioIssueData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/issues';
+};
+
+export type ListStudioIssueErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioIssueError = ListStudioIssueErrors[keyof ListStudioIssueErrors];
+
+export type ListStudioIssueResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageIssueData;
+};
+
+export type ListStudioIssueResponse = ListStudioIssueResponses[keyof ListStudioIssueResponses];
+
+export type CreateStudioIssueData = {
+    body: IssueInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/issues';
+};
+
+export type CreateStudioIssueErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioIssueError = CreateStudioIssueErrors[keyof CreateStudioIssueErrors];
+
+export type CreateStudioIssueResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseIssueData;
+};
+
+export type CreateStudioIssueResponse = CreateStudioIssueResponses[keyof CreateStudioIssueResponses];
+
+export type DeleteStudioIssueData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/issues/{record_id}';
+};
+
+export type DeleteStudioIssueErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioIssueError = DeleteStudioIssueErrors[keyof DeleteStudioIssueErrors];
+
+export type DeleteStudioIssueResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioIssueResponse = DeleteStudioIssueResponses[keyof DeleteStudioIssueResponses];
+
+export type GetStudioIssueData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/issues/{record_id}';
+};
+
+export type GetStudioIssueErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioIssueError = GetStudioIssueErrors[keyof GetStudioIssueErrors];
+
+export type GetStudioIssueResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseIssueData;
+};
+
+export type GetStudioIssueResponse = GetStudioIssueResponses[keyof GetStudioIssueResponses];
+
+export type UpdateStudioIssueData = {
+    body: IssueInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/issues/{record_id}';
+};
+
+export type UpdateStudioIssueErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioIssueError = UpdateStudioIssueErrors[keyof UpdateStudioIssueErrors];
+
+export type UpdateStudioIssueResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseIssueData;
+};
+
+export type UpdateStudioIssueResponse = UpdateStudioIssueResponses[keyof UpdateStudioIssueResponses];
+
+export type ListStudioKnowledgeData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/knowledge';
+};
+
+export type ListStudioKnowledgeErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioKnowledgeError = ListStudioKnowledgeErrors[keyof ListStudioKnowledgeErrors];
+
+export type ListStudioKnowledgeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageKnowledgeData;
+};
+
+export type ListStudioKnowledgeResponse = ListStudioKnowledgeResponses[keyof ListStudioKnowledgeResponses];
+
+export type CreateStudioKnowledgeData = {
+    body: KnowledgeInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/knowledge';
+};
+
+export type CreateStudioKnowledgeErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioKnowledgeError = CreateStudioKnowledgeErrors[keyof CreateStudioKnowledgeErrors];
+
+export type CreateStudioKnowledgeResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseKnowledgeData;
+};
+
+export type CreateStudioKnowledgeResponse = CreateStudioKnowledgeResponses[keyof CreateStudioKnowledgeResponses];
+
+export type DeleteStudioKnowledgeData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/knowledge/{record_id}';
+};
+
+export type DeleteStudioKnowledgeErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioKnowledgeError = DeleteStudioKnowledgeErrors[keyof DeleteStudioKnowledgeErrors];
+
+export type DeleteStudioKnowledgeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioKnowledgeResponse = DeleteStudioKnowledgeResponses[keyof DeleteStudioKnowledgeResponses];
+
+export type GetStudioKnowledgeData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/knowledge/{record_id}';
+};
+
+export type GetStudioKnowledgeErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioKnowledgeError = GetStudioKnowledgeErrors[keyof GetStudioKnowledgeErrors];
+
+export type GetStudioKnowledgeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseKnowledgeData;
+};
+
+export type GetStudioKnowledgeResponse = GetStudioKnowledgeResponses[keyof GetStudioKnowledgeResponses];
+
+export type UpdateStudioKnowledgeData = {
+    body: KnowledgeInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/knowledge/{record_id}';
+};
+
+export type UpdateStudioKnowledgeErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioKnowledgeError = UpdateStudioKnowledgeErrors[keyof UpdateStudioKnowledgeErrors];
+
+export type UpdateStudioKnowledgeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseKnowledgeData;
+};
+
+export type UpdateStudioKnowledgeResponse = UpdateStudioKnowledgeResponses[keyof UpdateStudioKnowledgeResponses];
+
+export type ListStudioNoteData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/notes';
+};
+
+export type ListStudioNoteErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioNoteError = ListStudioNoteErrors[keyof ListStudioNoteErrors];
+
+export type ListStudioNoteResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageNoteData;
+};
+
+export type ListStudioNoteResponse = ListStudioNoteResponses[keyof ListStudioNoteResponses];
+
+export type CreateStudioNoteData = {
+    body: NoteInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/notes';
+};
+
+export type CreateStudioNoteErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioNoteError = CreateStudioNoteErrors[keyof CreateStudioNoteErrors];
+
+export type CreateStudioNoteResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseNoteData;
+};
+
+export type CreateStudioNoteResponse = CreateStudioNoteResponses[keyof CreateStudioNoteResponses];
+
+export type DeleteStudioNoteData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/notes/{record_id}';
+};
+
+export type DeleteStudioNoteErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioNoteError = DeleteStudioNoteErrors[keyof DeleteStudioNoteErrors];
+
+export type DeleteStudioNoteResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioNoteResponse = DeleteStudioNoteResponses[keyof DeleteStudioNoteResponses];
+
+export type GetStudioNoteData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/notes/{record_id}';
+};
+
+export type GetStudioNoteErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioNoteError = GetStudioNoteErrors[keyof GetStudioNoteErrors];
+
+export type GetStudioNoteResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseNoteData;
+};
+
+export type GetStudioNoteResponse = GetStudioNoteResponses[keyof GetStudioNoteResponses];
+
+export type UpdateStudioNoteData = {
+    body: NoteInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/notes/{record_id}';
+};
+
+export type UpdateStudioNoteErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioNoteError = UpdateStudioNoteErrors[keyof UpdateStudioNoteErrors];
+
+export type UpdateStudioNoteResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseNoteData;
+};
+
+export type UpdateStudioNoteResponse = UpdateStudioNoteResponses[keyof UpdateStudioNoteResponses];
+
+export type ListStudioPlanData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/plans';
+};
+
+export type ListStudioPlanErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioPlanError = ListStudioPlanErrors[keyof ListStudioPlanErrors];
+
+export type ListStudioPlanResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPagePlanData;
+};
+
+export type ListStudioPlanResponse = ListStudioPlanResponses[keyof ListStudioPlanResponses];
+
+export type CreateStudioPlanData = {
+    body: PlanInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/plans';
+};
+
+export type CreateStudioPlanErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioPlanError = CreateStudioPlanErrors[keyof CreateStudioPlanErrors];
+
+export type CreateStudioPlanResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponsePlanData;
+};
+
+export type CreateStudioPlanResponse = CreateStudioPlanResponses[keyof CreateStudioPlanResponses];
+
+export type DeleteStudioPlanData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/plans/{record_id}';
+};
+
+export type DeleteStudioPlanErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioPlanError = DeleteStudioPlanErrors[keyof DeleteStudioPlanErrors];
+
+export type DeleteStudioPlanResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioPlanResponse = DeleteStudioPlanResponses[keyof DeleteStudioPlanResponses];
+
+export type GetStudioPlanData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/plans/{record_id}';
+};
+
+export type GetStudioPlanErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioPlanError = GetStudioPlanErrors[keyof GetStudioPlanErrors];
+
+export type GetStudioPlanResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponsePlanData;
+};
+
+export type GetStudioPlanResponse = GetStudioPlanResponses[keyof GetStudioPlanResponses];
+
+export type UpdateStudioPlanData = {
+    body: PlanInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/plans/{record_id}';
+};
+
+export type UpdateStudioPlanErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioPlanError = UpdateStudioPlanErrors[keyof UpdateStudioPlanErrors];
+
+export type UpdateStudioPlanResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponsePlanData;
+};
+
+export type UpdateStudioPlanResponse = UpdateStudioPlanResponses[keyof UpdateStudioPlanResponses];
+
+export type GetWritingRecallData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query: {
+        /**
+         * Document Id
+         */
+        document_id: string;
+        /**
+         * Chapters
+         */
+        chapters?: number;
+        /**
+         * Story Order
+         */
+        story_order?: number | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/recall';
+};
+
+export type GetWritingRecallErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetWritingRecallError = GetWritingRecallErrors[keyof GetWritingRecallErrors];
+
+export type GetWritingRecallResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseRecallData;
+};
+
+export type GetWritingRecallResponse = GetWritingRecallResponses[keyof GetWritingRecallResponses];
+
+export type ListStudioRuleData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/rules';
+};
+
+export type ListStudioRuleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioRuleError = ListStudioRuleErrors[keyof ListStudioRuleErrors];
+
+export type ListStudioRuleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageRuleData;
+};
+
+export type ListStudioRuleResponse = ListStudioRuleResponses[keyof ListStudioRuleResponses];
+
+export type CreateStudioRuleData = {
+    body: RuleInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/rules';
+};
+
+export type CreateStudioRuleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioRuleError = CreateStudioRuleErrors[keyof CreateStudioRuleErrors];
+
+export type CreateStudioRuleResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseRuleData;
+};
+
+export type CreateStudioRuleResponse = CreateStudioRuleResponses[keyof CreateStudioRuleResponses];
+
+export type DeleteStudioRuleData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/rules/{record_id}';
+};
+
+export type DeleteStudioRuleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioRuleError = DeleteStudioRuleErrors[keyof DeleteStudioRuleErrors];
+
+export type DeleteStudioRuleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioRuleResponse = DeleteStudioRuleResponses[keyof DeleteStudioRuleResponses];
+
+export type GetStudioRuleData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/rules/{record_id}';
+};
+
+export type GetStudioRuleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioRuleError = GetStudioRuleErrors[keyof GetStudioRuleErrors];
+
+export type GetStudioRuleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseRuleData;
+};
+
+export type GetStudioRuleResponse = GetStudioRuleResponses[keyof GetStudioRuleResponses];
+
+export type UpdateStudioRuleData = {
+    body: RuleInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/rules/{record_id}';
+};
+
+export type UpdateStudioRuleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioRuleError = UpdateStudioRuleErrors[keyof UpdateStudioRuleErrors];
+
+export type UpdateStudioRuleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseRuleData;
+};
+
+export type UpdateStudioRuleResponse = UpdateStudioRuleResponses[keyof UpdateStudioRuleResponses];
+
+export type GetReleaseScheduleData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/schedule';
+};
+
+export type GetReleaseScheduleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetReleaseScheduleError = GetReleaseScheduleErrors[keyof GetReleaseScheduleErrors];
+
+export type GetReleaseScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseScheduleData;
+};
+
+export type GetReleaseScheduleResponse = GetReleaseScheduleResponses[keyof GetReleaseScheduleResponses];
+
+export type SetReleaseScheduleData = {
+    body: ScheduleInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/schedule';
+};
+
+export type SetReleaseScheduleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SetReleaseScheduleError = SetReleaseScheduleErrors[keyof SetReleaseScheduleErrors];
+
+export type SetReleaseScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseScheduleData;
+};
+
+export type SetReleaseScheduleResponse = SetReleaseScheduleResponses[keyof SetReleaseScheduleResponses];
+
+export type ListStudioSummaryData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/summaries';
+};
+
+export type ListStudioSummaryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioSummaryError = ListStudioSummaryErrors[keyof ListStudioSummaryErrors];
+
+export type ListStudioSummaryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageSummaryData;
+};
+
+export type ListStudioSummaryResponse = ListStudioSummaryResponses[keyof ListStudioSummaryResponses];
+
+export type CreateStudioSummaryData = {
+    body: SummaryInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/summaries';
+};
+
+export type CreateStudioSummaryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioSummaryError = CreateStudioSummaryErrors[keyof CreateStudioSummaryErrors];
+
+export type CreateStudioSummaryResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseSummaryData;
+};
+
+export type CreateStudioSummaryResponse = CreateStudioSummaryResponses[keyof CreateStudioSummaryResponses];
+
+export type DeleteStudioSummaryData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/summaries/{record_id}';
+};
+
+export type DeleteStudioSummaryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioSummaryError = DeleteStudioSummaryErrors[keyof DeleteStudioSummaryErrors];
+
+export type DeleteStudioSummaryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioSummaryResponse = DeleteStudioSummaryResponses[keyof DeleteStudioSummaryResponses];
+
+export type GetStudioSummaryData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/summaries/{record_id}';
+};
+
+export type GetStudioSummaryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioSummaryError = GetStudioSummaryErrors[keyof GetStudioSummaryErrors];
+
+export type GetStudioSummaryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseSummaryData;
+};
+
+export type GetStudioSummaryResponse = GetStudioSummaryResponses[keyof GetStudioSummaryResponses];
+
+export type UpdateStudioSummaryData = {
+    body: SummaryInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/summaries/{record_id}';
+};
+
+export type UpdateStudioSummaryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioSummaryError = UpdateStudioSummaryErrors[keyof UpdateStudioSummaryErrors];
+
+export type UpdateStudioSummaryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseSummaryData;
+};
+
+export type UpdateStudioSummaryResponse = UpdateStudioSummaryResponses[keyof UpdateStudioSummaryResponses];
+
+export type ListStudioThreadData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Source Document Id
+         */
+        source_document_id?: string | null;
+    };
+    url: '/api/v1/projects/{project_id}/studio/threads';
+};
+
+export type ListStudioThreadErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListStudioThreadError = ListStudioThreadErrors[keyof ListStudioThreadErrors];
+
+export type ListStudioThreadResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageThreadData;
+};
+
+export type ListStudioThreadResponse = ListStudioThreadResponses[keyof ListStudioThreadResponses];
+
+export type CreateStudioThreadData = {
+    body: ThreadInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/threads';
+};
+
+export type CreateStudioThreadErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CreateStudioThreadError = CreateStudioThreadErrors[keyof CreateStudioThreadErrors];
+
+export type CreateStudioThreadResponses = {
+    /**
+     * Successful Response
+     */
+    201: ApiResponseThreadData;
+};
+
+export type CreateStudioThreadResponse = CreateStudioThreadResponses[keyof CreateStudioThreadResponses];
+
+export type DeleteStudioThreadData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/threads/{record_id}';
+};
+
+export type DeleteStudioThreadErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type DeleteStudioThreadError = DeleteStudioThreadErrors[keyof DeleteStudioThreadErrors];
+
+export type DeleteStudioThreadResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseDeletedData;
+};
+
+export type DeleteStudioThreadResponse = DeleteStudioThreadResponses[keyof DeleteStudioThreadResponses];
+
+export type GetStudioThreadData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/threads/{record_id}';
+};
+
+export type GetStudioThreadErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetStudioThreadError = GetStudioThreadErrors[keyof GetStudioThreadErrors];
+
+export type GetStudioThreadResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseThreadData;
+};
+
+export type GetStudioThreadResponse = GetStudioThreadResponses[keyof GetStudioThreadResponses];
+
+export type UpdateStudioThreadData = {
+    body: ThreadInput;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/studio/threads/{record_id}';
+};
+
+export type UpdateStudioThreadErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type UpdateStudioThreadError = UpdateStudioThreadErrors[keyof UpdateStudioThreadErrors];
+
+export type UpdateStudioThreadResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseThreadData;
+};
+
+export type UpdateStudioThreadResponse = UpdateStudioThreadResponses[keyof UpdateStudioThreadResponses];
+
+export type ListThreadUpdatesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/projects/{project_id}/studio/threads/{record_id}/updates';
+};
+
+export type ListThreadUpdatesErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListThreadUpdatesError = ListThreadUpdatesErrors[keyof ListThreadUpdatesErrors];
+
+export type ListThreadUpdatesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageThreadUpdateData;
+};
+
+export type ListThreadUpdatesResponse = ListThreadUpdatesResponses[keyof ListThreadUpdatesResponses];
+
+export type CheckProjectStyleData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query: {
+        /**
+         * Document Id
+         */
+        document_id: string;
+    };
+    url: '/api/v1/projects/{project_id}/style-check';
+};
+
+export type CheckProjectStyleErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type CheckProjectStyleError = CheckProjectStyleErrors[keyof CheckProjectStyleErrors];
+
+export type CheckProjectStyleResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseListExportWarning;
+};
+
+export type CheckProjectStyleResponse = CheckProjectStyleResponses[keyof CheckProjectStyleResponses];
 
 export type ListProjectWorldEntriesData = {
     body?: never;
@@ -5964,6 +11754,49 @@ export type ReorderProjectWorldEntriesResponses = {
 
 export type ReorderProjectWorldEntriesResponse = ReorderProjectWorldEntriesResponses[keyof ReorderProjectWorldEntriesResponses];
 
+export type SearchProjectWorldEntriesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/projects/{project_id}/world-entries/search';
+};
+
+export type SearchProjectWorldEntriesErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type SearchProjectWorldEntriesError = SearchProjectWorldEntriesErrors[keyof SearchProjectWorldEntriesErrors];
+
+export type SearchProjectWorldEntriesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageWorldEntryData;
+};
+
+export type SearchProjectWorldEntriesResponse = SearchProjectWorldEntriesResponses[keyof SearchProjectWorldEntriesResponses];
+
 export type DeleteProjectWorldEntryData = {
     body?: never;
     path: {
@@ -6017,6 +11850,40 @@ export type DeleteProjectWorldEntryResponses = {
 };
 
 export type DeleteProjectWorldEntryResponse = DeleteProjectWorldEntryResponses[keyof DeleteProjectWorldEntryResponses];
+
+export type GetProjectWorldEntryData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Entry Id
+         */
+        entry_id: string;
+    };
+    query?: never;
+    url: '/api/v1/projects/{project_id}/world-entries/{entry_id}';
+};
+
+export type GetProjectWorldEntryErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetProjectWorldEntryError = GetProjectWorldEntryErrors[keyof GetProjectWorldEntryErrors];
+
+export type GetProjectWorldEntryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseWorldEntryData;
+};
+
+export type GetProjectWorldEntryResponse = GetProjectWorldEntryResponses[keyof GetProjectWorldEntryResponses];
 
 export type UpdateProjectWorldEntryData = {
     body: WorldEntryUpdateRequest;
@@ -6133,7 +12000,24 @@ export type GetPublicSiteSettingsResponse = GetPublicSiteSettingsResponses[keyof
 export type ListSkillsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Enabled
+         */
+        enabled?: boolean | null;
+    };
     url: '/api/v1/skills';
 };
 
@@ -6358,6 +12242,36 @@ export type SetSkillEnabledResponses = {
 
 export type SetSkillEnabledResponse = SetSkillEnabledResponses[keyof SetSkillEnabledResponses];
 
+export type ListSkillFilesData = {
+    body?: never;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: never;
+    url: '/api/v1/skills/{skill_id}/files';
+};
+
+export type ListSkillFilesErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListSkillFilesError = ListSkillFilesErrors[keyof ListSkillFilesErrors];
+
+export type ListSkillFilesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseListStr;
+};
+
+export type ListSkillFilesResponse = ListSkillFilesResponses[keyof ListSkillFilesResponses];
+
 export type GetSkillResourceData = {
     body?: never;
     path: {
@@ -6462,6 +12376,83 @@ export type UpdateSkillMarkdownResponses = {
 };
 
 export type UpdateSkillMarkdownResponse = UpdateSkillMarkdownResponses[keyof UpdateSkillMarkdownResponses];
+
+export type ListSkillVersionsData = {
+    body?: never;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Q
+         */
+        q?: string;
+    };
+    url: '/api/v1/skills/{skill_id}/versions';
+};
+
+export type ListSkillVersionsErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type ListSkillVersionsError = ListSkillVersionsErrors[keyof ListSkillVersionsErrors];
+
+export type ListSkillVersionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseStudioPageSkillVersionData;
+};
+
+export type ListSkillVersionsResponse = ListSkillVersionsResponses[keyof ListSkillVersionsResponses];
+
+export type GetSkillVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Skill Id
+         */
+        skill_id: string;
+        /**
+         * Version Id
+         */
+        version_id: string;
+    };
+    query?: never;
+    url: '/api/v1/skills/{skill_id}/versions/{version_id}';
+};
+
+export type GetSkillVersionErrors = {
+    /**
+     * Default Response
+     */
+    default: HttpErrorResponse;
+};
+
+export type GetSkillVersionError = GetSkillVersionErrors[keyof GetSkillVersionErrors];
+
+export type GetSkillVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiResponseVersionDetail;
+};
+
+export type GetSkillVersionResponse = GetSkillVersionResponses[keyof GetSkillVersionResponses];
 
 export type GetCurrentUserProfileData = {
     body?: never;

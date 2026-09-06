@@ -56,10 +56,11 @@ def test_upgrade_from_empty_database_seeds_disabled_site_settings(
         with engine.connect() as connection:
             revision = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
             row = connection.execute(
-                text("SELECT id, registration_enabled, created_at, updated_at FROM site_settings")
+                text("SELECT id, site_name, registration_enabled, created_at, updated_at FROM site_settings")
             ).one()
         assert row.id == 1
-        assert revision == "20260830_0010"
+        assert revision == "20260906_0015"
+        assert row.site_name == "xnovel"
         assert row.registration_enabled == 0
         assert row.created_at is not None
         assert row.updated_at is not None
@@ -76,16 +77,20 @@ def test_author_migration_preserves_existing_projects(tmp_path: Path, monkeypatc
     try:
         command.upgrade(config, "20260830_0009")
         with engine.begin() as connection:
-            connection.execute(text(
-                "INSERT INTO users(id,username,password_hash,nickname,created_at,updated_at) "
-                "VALUES ('00000000000000000000000000000001','legacy','hash','旧账号',"
-                "CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)"
-            ))
-            connection.execute(text(
-                "INSERT INTO projects(id,owner_id,title,description,created_at,updated_at) "
-                "VALUES ('00000000000000000000000000000002','00000000000000000000000000000001',"
-                "'旧作品','保留简介',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)"
-            ))
+            connection.execute(
+                text(
+                    "INSERT INTO users(id,username,password_hash,nickname,created_at,updated_at) "
+                    "VALUES ('00000000000000000000000000000001','legacy','hash','旧账号',"
+                    "CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)"
+                )
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO projects(id,owner_id,title,description,created_at,updated_at) "
+                    "VALUES ('00000000000000000000000000000002','00000000000000000000000000000001',"
+                    "'旧作品','保留简介',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)"
+                )
+            )
         command.upgrade(config, "head")
         with engine.connect() as connection:
             row = connection.execute(text("SELECT title,description,author FROM projects")).one()
@@ -93,6 +98,36 @@ def test_author_migration_preserves_existing_projects(tmp_path: Path, monkeypatc
         command.downgrade(config, "20260830_0009")
         with engine.connect() as connection:
             assert connection.execute(text("SELECT title FROM projects")).scalar_one() == "旧作品"
+    finally:
+        engine.dispose()
+        get_settings.cache_clear()
+
+
+def test_site_name_migration_preserves_brand_and_registration(tmp_path: Path, monkeypatch) -> None:
+    database_path = tmp_path / "site-migration.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{database_path.as_posix()}")
+    get_settings.cache_clear()
+    config = Config("alembic.ini")
+    engine = create_engine(f"sqlite:///{database_path.as_posix()}")
+    try:
+        command.upgrade(config, "20260830_0010")
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "UPDATE site_settings SET registration_enabled = true, logo_storage_key = 'logos/old.png', "
+                    "logo_original_name = 'old.png', logo_mime_type = 'image/png', logo_size_bytes = 128 WHERE id = 1"
+                )
+            )
+        command.upgrade(config, "head")
+        with engine.connect() as connection:
+            row = connection.execute(
+                text("SELECT site_name, registration_enabled, logo_storage_key FROM site_settings")
+            ).one()
+            assert tuple(row) == ("xnovel", 1, "logos/old.png")
+        command.downgrade(config, "20260830_0010")
+        with engine.connect() as connection:
+            logo = connection.execute(text("SELECT logo_storage_key FROM site_settings")).scalar_one()
+            assert logo == "logos/old.png"
     finally:
         engine.dispose()
         get_settings.cache_clear()

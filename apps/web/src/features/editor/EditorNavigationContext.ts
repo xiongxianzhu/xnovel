@@ -1,6 +1,7 @@
 import { createContext } from "react";
 
 export type EditorLeaveGuard = {
+  kind?: "manuscript" | "form";
   isBlocked: () => boolean;
   save: () => Promise<boolean>;
   stash: () => void;

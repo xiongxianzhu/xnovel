@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { App } from "./App";
 import { AppProviders } from "./providers/AppProviders";
 
 vi.mock("../features/auth/authApi", () => ({
@@ -13,14 +12,10 @@ vi.mock("../features/auth/authApi", () => ({
 
 describe("App", () => {
   it("routes an anonymous visitor to login", async () => {
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    );
+    render(<AppProviders />);
 
     expect(
-      await screen.findByRole("heading", { level: 1, name: "登录 xnovel" }),
+      await screen.findByRole("heading", { level: 1, name: "回到你的故事" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("用户名、邮箱或手机号")).toBeInTheDocument();
   });

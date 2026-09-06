@@ -1,4 +1,6 @@
-import { Alert, Button, Input, Modal, Skeleton } from "antd";
+import { useSearchParams } from "react-router-dom";
+import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
+import { Alert, Button, Input, Modal, Pagination, Skeleton } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -13,16 +15,24 @@ import {
 export function AdminSkillsPage() {
   const { t } = useTranslation("skills");
   const client = useQueryClient();
+  const [params, setParams] = useSearchParams();
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const q = params.get("q") ?? "";
+  const debouncedQ = useDebouncedValue(q);
   const [target, setTarget] = useState<{ id: string; name: string } | null>(
     null,
   );
   const [reason, setReason] = useState("POLICY_REVIEW");
   const query = useQuery({
-    queryKey: ["admin", "skills"],
-    queryFn: listAdminSkillsRequest,
+    queryKey: ["admin", "skills", page, debouncedQ],
+    queryFn: () =>
+      listAdminSkillsRequest({ page, page_size: 50, q: debouncedQ }),
   });
   const refresh = () =>
-    client.invalidateQueries({ queryKey: ["admin", "skills"] });
+    Promise.all([
+      client.invalidateQueries({ queryKey: ["admin", "skills"] }),
+      client.invalidateQueries({ queryKey: ["skills"] }),
+    ]);
   const quarantine = useMutation({
     mutationFn: ({ id, code }: { id: string; code: string }) =>
       quarantineSkillRequest(id, code),
@@ -44,6 +54,20 @@ export function AdminSkillsPage() {
           <p>{t("adminDescription")}</p>
         </div>
       </header>
+      <div className="studio-filter">
+        <label>
+          {t("studio:keyword")}
+          <input
+            value={q}
+            onChange={(event) =>
+              setParams(
+                { tab: "security", q: event.target.value, page: "1" },
+                { replace: true },
+              )
+            }
+          />
+        </label>
+      </div>
       {query.isPending ? (
         <Skeleton active paragraph={{ rows: 5 }} />
       ) : query.isError ? (
@@ -111,6 +135,17 @@ export function AdminSkillsPage() {
           ))}
         </div>
       )}
+      <div className="studio-pagination">
+        <Pagination
+          current={page}
+          pageSize={50}
+          total={query.data?.total ?? 0}
+          showSizeChanger={false}
+          onChange={(value) =>
+            setParams({ tab: "security", q, page: String(value) })
+          }
+        />
+      </div>
       <Modal
         onCancel={() => setTarget(null)}
         onOk={() =>

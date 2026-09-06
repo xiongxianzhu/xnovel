@@ -1,3 +1,5 @@
+import { RevisionHistory } from "./RevisionHistory";
+import { useDialogKeyboard } from "./useDialogKeyboard";
 import {
   BookOpenText,
   Archive,
@@ -106,6 +108,7 @@ export function App() {
   const [providers, setProviders] = useState<ProviderSummary[]>([]);
   const [error, setError] = useState<string>();
   const [draftCandidate, setDraftCandidate] = useState<DesktopDraft>();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction>();
   const [titleRequest, setTitleRequest] = useState<TitleRequest>();
   const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest>();
@@ -907,6 +910,12 @@ export function App() {
               }}
               onSave={() => void saveDraft()}
               onAi={() => requestChange(() => setAiOpen(true), false)}
+              onHistory={() =>
+                requestChange(() => {
+                  setAiOpen(false);
+                  setHistoryOpen(true);
+                }, false)
+              }
               onCreate={requestCreateProject}
               draftCandidate={draftCandidate}
               onDiscardDraft={async () => {
@@ -948,6 +957,21 @@ export function App() {
             />
           )}
         </main>
+        {historyOpen && content ? (
+          <RevisionHistory
+            current={content}
+            onClose={() => setHistoryOpen(false)}
+            onRestored={(next) => {
+              setContent(next);
+              contentRef.current = next;
+              setDraft(next.content);
+              draftRef.current = next.content;
+              setSaveState("saved");
+              setDraftCandidate(undefined);
+              void window.xnovelDesktop.drafts.remove(next.documentId);
+            }}
+          />
+        ) : null}
         <AiPanel
           blocked={Boolean(content && draft !== content.content)}
           open={aiOpen}
@@ -1024,39 +1048,6 @@ export function App() {
       </div>
     </div>
   );
-}
-
-function useDialogKeyboard(
-  ref: { current: HTMLElement | null },
-  onClose: () => void,
-): void {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = Array.from(
-        ref.current?.querySelectorAll<HTMLElement>(
-          "input, button:not([disabled])",
-        ) ?? [],
-      );
-      if (!focusable.length) return;
-      const first = focusable[0]!;
-      const last = focusable.at(-1)!;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose, ref]);
 }
 
 function ConfirmDialog({
@@ -1304,6 +1295,7 @@ function WritingView({
   onDraft,
   onSave,
   onAi,
+  onHistory,
   onCreate,
   draftCandidate,
   onDiscardDraft,
@@ -1317,6 +1309,7 @@ function WritingView({
   onDraft(value: string): void;
   onSave(): void;
   onAi(): void;
+  onHistory(): void;
   onCreate(): void;
   draftCandidate?: DesktopDraft;
   onDiscardDraft(): Promise<void>;
@@ -1411,6 +1404,9 @@ function WritingView({
           >
             <Save aria-hidden size={16} />
             保存
+          </button>
+          <button onClick={onHistory} disabled={!content}>
+            版本历史
           </button>
           <button onClick={onAi}>
             <Sparkles aria-hidden size={16} />

@@ -1,3 +1,5 @@
+import { useContext } from "react";
+import { EditorNavigationContext } from "../editor/EditorNavigationContext";
 import { KeyRound, LogOut, Settings, UserRound } from "lucide-react";
 import { Avatar, Button, Dropdown, type MenuProps } from "antd";
 import { useTranslation } from "react-i18next";
@@ -9,6 +11,7 @@ import { useAuth } from "./useAuth";
 
 export function UserMenu() {
   const { logout, user } = useAuth();
+  const editorNavigation = useContext(EditorNavigationContext);
   const { appearance } = usePreferences();
   const { t } = useTranslation(["auth", "settings"]);
   const navigate = useNavigate();
@@ -50,7 +53,13 @@ export function UserMenu() {
       icon: <LogOut aria-hidden size={18} strokeWidth={1.8} />,
       key: "logout",
       label: t("auth:signOut"),
-      onClick: () => void logout(),
+      onClick: async () => {
+        if (
+          !editorNavigation ||
+          (await editorNavigation.requestDocumentChange())
+        )
+          await logout();
+      },
     },
   ];
 
@@ -58,24 +67,31 @@ export function UserMenu() {
   const avatarUrl = resolveMediaUrl(user?.avatar_url);
 
   return (
-    <Dropdown menu={{ items }} placement="bottomRight" trigger={["click"]}>
-      <Button
-        aria-label={user?.nickname ?? "账户"}
-        className="account-trigger"
-        type="text"
-      >
-        <Avatar
-          size={32}
-          src={
-            avatarUrl ? (
-              <img alt="" referrerPolicy="no-referrer" src={avatarUrl} />
-            ) : undefined
-          }
+    <Dropdown
+      align={{ offset: [0, 1] }}
+      menu={{ items }}
+      placement="bottomRight"
+      trigger={["click"]}
+    >
+      <div className="account-menu-anchor">
+        <Button
+          aria-label={user?.nickname ?? "账户"}
+          className="account-trigger"
+          type="text"
         >
-          {initial}
-        </Avatar>
-        <span className="account-name">{user?.nickname}</span>
-      </Button>
+          <Avatar
+            size={32}
+            src={
+              avatarUrl ? (
+                <img alt="" referrerPolicy="no-referrer" src={avatarUrl} />
+              ) : undefined
+            }
+          >
+            {initial}
+          </Avatar>
+          <span className="account-name">{user?.nickname}</span>
+        </Button>
+      </div>
     </Dropdown>
   );
 }

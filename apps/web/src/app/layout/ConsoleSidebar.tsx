@@ -1,4 +1,11 @@
-import { ChevronDown, ChevronLeft, ChevronRight, List, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  List,
+  ClipboardList,
+  X,
+} from "lucide-react";
 import { Button, Popover, Tooltip } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -136,7 +143,9 @@ export function ConsoleSidebar() {
         <nav className="console-sidebar-content">
           <NavigationGroup
             collapsed={collapsed}
-            items={workspaceNavigation}
+            items={workspaceNavigation.filter(
+              (item) => item.key !== "settings",
+            )}
             onNavigate={go}
           />
 
@@ -158,6 +167,16 @@ export function ConsoleSidebar() {
               />
             </section>
           ) : null}
+          {workspaceNavigation
+            .filter((item) => item.key === "settings")
+            .map((item) => (
+              <NavItem
+                collapsed={collapsed}
+                item={item}
+                key={item.key}
+                onNavigate={go}
+              />
+            ))}
         </nav>
       </aside>
       {mobileOpen ? (
@@ -264,7 +283,6 @@ function AuditNavigation({
 }) {
   const { t } = useTranslation("console");
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const AuditIcon = items[0]?.icon;
   const open = expanded || active;
   const trigger = (
     <button
@@ -279,7 +297,7 @@ function AuditNavigation({
       onClick={collapsed ? undefined : onToggle}
       type="button"
     >
-      {AuditIcon ? <AuditIcon aria-hidden size={19} strokeWidth={1.8} /> : null}
+      <ClipboardList aria-hidden size={19} strokeWidth={1.8} />
       {!collapsed ? (
         <>
           <span>{t("audit")}</span>

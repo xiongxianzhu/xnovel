@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,6 +37,14 @@ import {
 } from "./draftStorage";
 import { useEditorNavigation } from "./useEditorNavigation";
 
+import type { SelectionAction } from "./selectionAction";
+
+type EditorExtras = {
+  initialSearch?: string;
+  actions?: ReactNode;
+  onSelectionAction?: (action: SelectionAction) => void;
+};
+
 type SaveState = "clean" | "conflict" | "dirty" | "failed" | "saved" | "saving";
 
 type ConflictState = {
@@ -47,6 +56,9 @@ export function WritingEditor({
   documentId,
   documentTitle,
   documentTypeLabel,
+  actions,
+  onSelectionAction,
+  initialSearch = "",
   projectId,
   userId,
 }: {
@@ -55,7 +67,7 @@ export function WritingEditor({
   documentTypeLabel?: string;
   projectId: string;
   userId: string;
-}) {
+} & EditorExtras) {
   const { t } = useTranslation(["common", "projects"]);
   const contentQuery = useQuery({
     queryFn: () => getDocumentContentRequest(projectId, documentId),
@@ -93,6 +105,9 @@ export function WritingEditor({
       documentId={documentId}
       documentTitle={documentTitle}
       documentTypeLabel={documentTypeLabel}
+      actions={actions}
+      onSelectionAction={onSelectionAction}
+      initialSearch={initialSearch}
       initial={contentQuery.data}
       key={documentId}
       projectId={projectId}
@@ -105,6 +120,9 @@ function WritingEditorSession({
   documentId,
   documentTitle,
   documentTypeLabel,
+  actions,
+  onSelectionAction,
+  initialSearch = "",
   initial,
   projectId,
   userId,
@@ -115,7 +133,7 @@ function WritingEditorSession({
   initial: DocumentContentData;
   projectId: string;
   userId: string;
-}) {
+} & EditorExtras) {
   const { t } = useTranslation(["common", "projects"]);
   const queryClient = useQueryClient();
   const { registerGuard, setBlocked } = useEditorNavigation();
@@ -132,9 +150,9 @@ function WritingEditorSession({
   );
   const [conflict, setConflict] = useState<ConflictState | null>(null);
   const [conflictVisible, setConflictVisible] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(Boolean(initialSearch));
   const [replaceOpen, setReplaceOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(initialSearch);
   const [replacementText, setReplacementText] = useState("");
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const contentRef = useRef(initial.content);
@@ -445,21 +463,10 @@ function WritingEditorSession({
   return (
     <section className="writing-editor" aria-labelledby="writing-editor-title">
       <header className="writing-editor-toolbar">
-        <div className="writing-editor-title">
-          <h2 id="writing-editor-title">{documentTitle}</h2>
-          <span>{documentTypeLabel ?? t("projects:plainText")}</span>
-        </div>
+        <span className="writing-document-kind">
+          {documentTypeLabel ?? t("projects:plainText")}
+        </span>
         <div className="writing-editor-meta">
-          <span className="writing-word-count">
-            {t("projects:wordCount", { count: displayedWordCount })}
-            {selection.end > selection.start
-              ? ` · ${t("projects:selectedWordCount", {
-                  count: estimateDocumentWords(
-                    content.slice(selection.start, selection.end),
-                  ),
-                })}`
-              : ""}
-          </span>
           <Button
             aria-pressed={searchOpen}
             icon={<Search aria-hidden size={17} />}
@@ -470,21 +477,12 @@ function WritingEditorSession({
           >
             {t("projects:find")}
           </Button>
-          <SaveStatus state={saveState} />
-          <Button
-            disabled={
-              saveState === "clean" ||
-              saveState === "saving" ||
-              saveState === "conflict"
-            }
-            icon={<Save aria-hidden size={17} />}
-            loading={saveState === "saving"}
-            onClick={() => void saveNow()}
-          >
-            {t("common:save")}
-          </Button>
+          {actions}
         </div>
       </header>
+      <div className="manuscript-heading">
+        <h2 id="writing-editor-title">{documentTitle}</h2>
+      </div>
       {searchOpen ? (
         <div className="editor-find-bar" role="search">
           <Input
@@ -618,6 +616,68 @@ function WritingEditorSession({
         spellCheck
         value={content}
       />
+      {onSelectionAction && selection.end > selection.start ? (
+        <div
+          className="selection-actions"
+          role="group"
+          aria-label={t("projects:selectionActions")}
+        >
+          {(["rewrite", "expand", "compress"] as const).map((task) => (
+            <Button
+              key={task}
+              aria-label={t(`projects:selectionTasks.${task}`)}
+              disabled={
+                content !== confirmedContent ||
+                saveState === "saving" ||
+                Boolean(draftCandidate) ||
+                saveState === "conflict"
+              }
+              onClick={() =>
+                onSelectionAction({
+                  documentId,
+                  content,
+                  start: selection.start,
+                  end: selection.end,
+                  version: versionRef.current,
+                  task,
+                })
+              }
+            >
+              {t(`projects:selectionTasks.${task}`)}
+            </Button>
+          ))}
+          {content !== confirmedContent ? (
+            <span>{t("projects:selectionSaveFirst")}</span>
+          ) : null}
+        </div>
+      ) : null}
+      <footer className="writing-editor-status">
+        <div className="writing-status-actions">
+          <SaveStatus state={saveState} />
+          <Button
+            disabled={
+              saveState === "clean" ||
+              saveState === "saving" ||
+              saveState === "conflict"
+            }
+            icon={<Save aria-hidden size={17} />}
+            loading={saveState === "saving"}
+            onClick={() => void saveNow()}
+          >
+            {t("common:save")}
+          </Button>
+        </div>
+        <span className="writing-word-count">
+          {t("projects:wordCount", { count: displayedWordCount })}
+          {selection.end > selection.start
+            ? ` · ${t("projects:selectedWordCount", {
+                count: estimateDocumentWords(
+                  content.slice(selection.start, selection.end),
+                ),
+              })}`
+            : ""}
+        </span>
+      </footer>
       <ConflictPanel
         conflict={conflictVisible ? conflict : null}
         onBack={() => setConflictVisible(false)}

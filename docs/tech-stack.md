@@ -10,6 +10,7 @@
 
 - 只采用 stable / LTS 版本，不使用 alpha、beta、rc 或 nightly。
 - API 以 apps/api/uv.lock 为可复现安装来源，Web 以 apps/web/pnpm-lock.yaml 为准。
+- 根目录 pnpm 工作区包含 `apps/web` 和 `packages/theme`，支持 `pnpm -F web dev`；设置 `sharedWorkspaceLockfile: false` 保留应用独立锁文件。Desktop 继续使用自己的工作区配置。
 - Desktop 直接依赖以 `apps/desktop/package.json` 和独立 `pnpm-lock.yaml` 为准。
 - 主版本升级必须单独验证类型检查、测试、构建、安装包和自动更新。
 - 生产数据库跟随 PostgreSQL 当前受支持的最新大版本，并及时升级该大版本的补丁版本。
@@ -29,27 +30,27 @@
 
 ### 运行时与业务依赖
 
-| 类别         | 技术              | 当前基线 | 状态     | 用途                         |
-| ------------ | ----------------- | -------- | -------- | ---------------------------- |
-| 语言与运行时 | Python            | 3.14.6   | 已验证   | API 运行时                   |
-| 包管理       | uv                | 0.11.26  | 已验证   | 虚拟环境、锁定依赖与命令执行 |
-| Web 框架     | FastAPI           | 0.141.1  | 已锁定   | REST API 与 OpenAPI          |
-| ASGI Server  | Uvicorn           | 0.52.3   | 已锁定   | 开发和生产进程入口           |
-| 配置         | Pydantic Settings | 2.15.0   | 已锁定   | 环境变量解析与校验           |
-| ORM          | SQLModel          | 0.0.39   | 已锁定   | 领域模型与 SQLAlchemy 集成   |
-| 数据库       | PostgreSQL        | 18.6     | 部署基线 | 业务数据持久化               |
-| 异步驱动     | asyncpg           | 0.31.0   | 已锁定   | PostgreSQL 异步连接          |
-| 迁移         | Alembic           | 1.19.1   | 已锁定   | 数据库结构迁移               |
-| 模板         | Jinja2            | 3.1.6    | 已锁定   | 服务端模板能力               |
-| 环境文件     | python-dotenv     | 1.2.2    | 已锁定   | 本地环境变量加载             |
-| 异步桥接     | greenlet          | 3.5.5    | 已锁定   | SQLAlchemy 异步上下文支持    |
-| 密码哈希     | pwdlib[argon2]    | 0.3.1    | 已锁定   | Argon2id 密码哈希与校验      |
-| JWT          | PyJWT             | 2.13.0   | 已锁定   | Access Token 签发与验证      |
-| 邮箱校验     | email-validator   | 2.3.0    | 已锁定   | 邮箱语法与规范化校验         |
-| 手机号       | phonenumbers      | 9.0.37   | 已锁定   | 完整 E.164 解析与有效性校验  |
-| 图片处理     | Pillow            | 12.3.0   | 已锁定   | 头像与 Logo 类型和像素校验   |
-| YAML         | PyYAML            | 6.0.3    | 已锁定   | 安全解析 Skill frontmatter   |
-| 加密         | cryptography      | 50.0.1   | 已锁定   | AES-256-GCM Provider 凭据    |
+| 类别          | 技术              | 当前基线 | 状态     | 用途                         |
+| ------------- | ----------------- | -------- | -------- | ---------------------------- |
+| 语言与运行时  | Python            | 3.14.6   | 已验证   | API 运行时                   |
+| 包管理        | uv                | 0.11.26  | 已验证   | 虚拟环境、锁定依赖与命令执行 |
+| Web 框架      | FastAPI           | 0.141.1  | 已锁定   | REST API 与 OpenAPI          |
+| ASGI Server   | Uvicorn           | 0.52.3   | 已锁定   | 开发和生产进程入口           |
+| 配置          | Pydantic Settings | 2.15.0   | 已锁定   | 环境变量解析与校验           |
+| ORM           | SQLModel          | 0.0.39   | 已锁定   | 领域模型与 SQLAlchemy 集成   |
+| 数据库        | PostgreSQL        | 18.6     | 部署基线 | 业务数据持久化               |
+| 异步驱动      | asyncpg           | 0.31.0   | 已锁定   | PostgreSQL 异步连接          |
+| 迁移          | Alembic           | 1.19.1   | 已锁定   | 数据库结构迁移               |
+| 模板          | Jinja2            | 3.1.6    | 已锁定   | 服务端模板能力               |
+| 环境文件      | python-dotenv     | 1.2.2    | 已锁定   | 本地环境变量加载             |
+| 异步桥接      | greenlet          | 3.5.5    | 已锁定   | SQLAlchemy 异步上下文支持    |
+| 密码哈希      | pwdlib[argon2]    | 0.3.1    | 已锁定   | Argon2id 密码哈希与校验      |
+| JWT           | PyJWT             | 2.13.0   | 已锁定   | Access Token 签发与验证      |
+| 邮箱校验      | email-validator   | 2.3.0    | 已锁定   | 邮箱语法与规范化校验         |
+| 手机号        | phonenumbers      | 9.0.37   | 已锁定   | 完整 E.164 解析与有效性校验  |
+| 图片处理      | Pillow            | 12.3.0   | 已锁定   | 头像与 Logo 类型和像素校验   |
+| YAML          | PyYAML            | 6.0.3    | 已锁定   | 安全解析 Skill frontmatter   |
+| 加密          | cryptography      | 50.0.1   | 已锁定   | AES-256-GCM Provider 凭据    |
 | Provider HTTP | HTTPX             | 0.28.1   | 已锁定   | 异步流式 Provider 调用       |
 
 PyJWT、Pillow、PyYAML、cryptography 与 HTTPX 已写入 `pyproject.toml` 和 `uv.lock`。Skill ZIP 使用 Python 标准库 `zipfile` 配合自定义路径、条目类型、累计大小和碰撞校验，不调用 `extractall()`。
@@ -123,20 +124,20 @@ Ant Design、React Router、Lucide React、i18next 和 react-i18next 已写入 W
 
 ### 运行时、构建与发布
 
-| 类别       | 技术                            | 已锁定版本 | 用途                                     |
-| ---------- | ------------------------------- | ---------- | ---------------------------------------- |
-| 桌面运行时 | Electron                        | 44.0.0     | 主进程、窗口、系统能力和 Chromium 运行时 |
-| 桌面构建   | electron-vite                   | 5.0.0      | 分别构建 main、preload 和 renderer       |
-| UI 与类型  | React + TypeScript              | 19.2.8 / 6.0.3 | 复用 React 交互与领域契约             |
-| 前端构建   | Vite + React Plugin             | 7.3.6 / 5.2.0 | renderer 构建                         |
-| 打包发布   | electron-builder                | 26.15.7    | Windows / macOS 安装包、签名与发布元数据 |
-| 自动更新   | electron-updater                | 6.8.9      | 检查已签名更新                           |
-| 公证       | @electron/notarize              | 3.1.1      | macOS Developer ID 公证                  |
-| UUID       | uuid                            | 13.0.0     | 本地 UUID v7 主键                        |
-| 受限桥接   | contextBridge + preload         | Electron 内置 | 只暴露经过校验的最小 IPC API          |
-| 本地数据库 | Node.js `node:sqlite`            | Electron Node 24.18.1 | SQLite 持久化与一致性快照     |
-| 凭据加密   | safeStorage                     | Electron 内置 | 使用操作系统密码学加解密本地凭据密文  |
-| 本地文件   | Node.js 文件系统 API            | Electron 内置 | Skill、凭据文件和数据库备份            |
+| 类别       | 技术                    | 已锁定版本            | 用途                                     |
+| ---------- | ----------------------- | --------------------- | ---------------------------------------- |
+| 桌面运行时 | Electron                | 44.0.0                | 主进程、窗口、系统能力和 Chromium 运行时 |
+| 桌面构建   | electron-vite           | 5.0.0                 | 分别构建 main、preload 和 renderer       |
+| UI 与类型  | React + TypeScript      | 19.2.8 / 6.0.3        | 复用 React 交互与领域契约                |
+| 前端构建   | Vite + React Plugin     | 7.3.6 / 5.2.0         | renderer 构建                            |
+| 打包发布   | electron-builder        | 26.15.7               | Windows / macOS 安装包、签名与发布元数据 |
+| 自动更新   | electron-updater        | 6.8.9                 | 检查已签名更新                           |
+| 公证       | @electron/notarize      | 3.1.1                 | macOS Developer ID 公证                  |
+| UUID       | uuid                    | 13.0.0                | 本地 UUID v7 主键                        |
+| 受限桥接   | contextBridge + preload | Electron 内置         | 只暴露经过校验的最小 IPC API             |
+| 本地数据库 | Node.js `node:sqlite`   | Electron Node 24.18.1 | SQLite 持久化与一致性快照                |
+| 凭据加密   | safeStorage             | Electron 内置         | 使用操作系统密码学加解密本地凭据密文     |
+| 本地文件   | Node.js 文件系统 API    | Electron 内置         | Skill、凭据文件和数据库备份              |
 
 Desktop 使用 Electron 内置 Node 24 的 `node:sqlite`，没有原生扩展 ABI 或额外 SQLite 驱动。`DatabaseSync` 只在主进程运行；单向 SQL 迁移、事务、`VACUUM INTO` 一致性快照和恢复校验由应用实现并测试。
 
@@ -276,3 +277,10 @@ Desktop 发布门槛还包括：Windows x64 安装、卸载和升级测试；mac
 - [Lucide React on npm](https://www.npmjs.com/package/lucide-react)
 - [Axios on npm](https://www.npmjs.com/package/axios)
 - [Hey API OpenAPI TypeScript](https://www.npmjs.com/package/@hey-api/openapi-ts)
+
+## 长篇工作台依赖补充
+
+- PostgreSQL 复用 `pg_trgm` 扩展和 GIN 文本索引提供中文子串检索；不增加搜索守护进程、向量数据库或消息队列。
+- Web 使用现有 React Router 数据路由阻断能力处理跨页与浏览器后退保护；继续使用 TanStack Query、Ant Design 和现有主题令牌。
+- `packages/text-diff` 为 Web/Desktop 已共同使用的有界行差异比较纯函数包。计算量超过 100 万行组合时回退为完整原文比较，不引入第三方差异渲染依赖。
+- API 和 Desktop 分别在已有异步生命周期及主进程中定期清理历史；当前 API 仍为单进程部署，不能以增加 worker 数代替持久化调度设计。

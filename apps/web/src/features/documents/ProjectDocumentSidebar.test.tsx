@@ -5,12 +5,13 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DocumentSummary } from "../../shared/api/generated/types.gen";
-import "../../shared/i18n";
+import { i18n } from "../../shared/i18n";
 import { EditorNavigationProvider } from "../editor/EditorNavigationProvider";
 import { ProjectDocumentSidebar } from "./ProjectDocumentSidebar";
 
@@ -62,6 +63,7 @@ function renderSidebar() {
       <QueryClientProvider client={queryClient}>
         <EditorNavigationProvider>
           <ProjectDocumentSidebar projectId="project-1" userId="user-1" />
+          <LocationProbe />
         </EditorNavigationProvider>
       </QueryClientProvider>
     </MemoryRouter>,
@@ -98,10 +100,43 @@ describe("ProjectDocumentSidebar", () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     cleanup();
+    await i18n.changeLanguage("zh-CN");
     vi.clearAllMocks();
   });
+
+  it.each([
+    ["zh-CN", "删除文档", "删除", /删\s*除/],
+    ["zh-TW", "刪除文件", "刪除", /刪\s*除/],
+    ["en-US", "Delete document", "Delete", /^Delete$/],
+  ] as const)(
+    "translates the delete confirmation button in %s",
+    async (locale, dialogTitle, menuLabel, buttonLabel) => {
+      await i18n.changeLanguage(locale);
+      renderSidebar();
+      await screen.findByText("第一章");
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: i18n.t("projects:documentActions", { title: "第一章" }),
+        }),
+      );
+      fireEvent.click(await screen.findByRole("menuitem", { name: menuLabel }));
+
+      const dialog = await screen.findByRole("dialog", { name: dialogTitle });
+      expect(api.deleteProjectDocumentRequest).not.toHaveBeenCalled();
+      fireEvent.click(
+        within(dialog).getByRole("button", { name: buttonLabel }),
+      );
+      await waitFor(() =>
+        expect(api.deleteProjectDocumentRequest).toHaveBeenCalledWith(
+          "project-1",
+          "chapter-one",
+        ),
+      );
+    },
+  );
 
   it("renders a hierarchical tree and switches to archived documents", async () => {
     renderSidebar();
@@ -120,29 +155,17 @@ describe("ProjectDocumentSidebar", () => {
     );
   });
 
-  it("creates a normalized folder through the accessible dialog", async () => {
+  it("opens a dedicated folder creation page without submitting on navigation", async () => {
     renderSidebar();
     await screen.findByText("第一卷");
-
     fireEvent.click(screen.getByRole("button", { name: "新建" }));
     fireEvent.click(
       await screen.findByRole("menuitem", { name: "新建文件夹" }),
     );
-    fireEvent.change(screen.getByLabelText("文档标题"), {
-      target: { value: "  第二卷  " },
-    });
-    fireEvent.click(screen.getByRole("button", { name: /保\s*存/ }));
-
-    await waitFor(() =>
-      expect(api.createProjectDocumentRequest).toHaveBeenCalledWith(
-        "project-1",
-        {
-          kind: "folder",
-          parent_id: null,
-          title: "第二卷",
-        },
-      ),
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/projects/project-1/documents/new?kind=folder",
     );
+    expect(api.createProjectDocumentRequest).not.toHaveBeenCalled();
   });
 
   it("moves a document upward from the keyboard-accessible action menu", async () => {
@@ -172,3 +195,13 @@ describe("ProjectDocumentSidebar", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 });
+
+function LocationProbe() {
+  const location = useLocation();
+  return (
+    <output data-testid="route-location">
+      {location.pathname}
+      {location.search}
+    </output>
+  );
+}

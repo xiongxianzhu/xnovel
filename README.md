@@ -13,7 +13,7 @@
 
 xnovel 统一管理灵感、故事大纲、人物与世界设定、正文草稿和 AI 辅助流程。项目采用 Monorepo：Web 通过本地账号、FastAPI 和 PostgreSQL 提供登录后的云端工作区；Electron 复用稳定的前端能力，并通过本地 SQLite 提供无需登录的离线工作区。
 
-> **当前状态**：早期可用版本。Web 已覆盖写作、规划、AI Provider 与私有 Skill；Desktop 已覆盖离线写作、本地 Skill、加密 Provider 凭据、备份恢复与安装包配置。
+> **当前状态**：早期可用版本。Web 已覆盖写作、规划、AI Provider、私有 Skill 和长篇工作台（回顾、检索、批量摘要、连续性资料、导入及交稿）；Web/Desktop 均提供正文版本比较与恢复。Desktop 其余长篇功能后续实施。[本轮验收范围与限制](docs/studio-validation.md)。
 
 ## 项目方向
 
@@ -32,7 +32,7 @@ xnovel/
 │  ├─ api/                 # FastAPI 后端
 │  ├─ web/                 # Vite + React 网页端
 │  └─ desktop/             # Electron + SQLite 离线桌面端
-├─ packages/               # Web/Desktop 稳定共享包（当前含主题契约）
+├─ packages/               # Web/Desktop 稳定共享包（当前含主题契约与文本比较）
 ├─ docs/                   # 产品、架构、接口与交付文档
 ├─ scripts/                # 构建、发布和开发脚本
 └─ .github/                # GitHub 工作流与仓库配置
@@ -133,10 +133,9 @@ Health:  http://127.0.0.1:8000/api/v1/health
 需要 Node.js 24+ 和 pnpm 11+。
 
 ```bash
-cd apps/web
-pnpm install
-cp .env.example .env
-pnpm dev
+pnpm -F web install
+cp apps/web/.env.example apps/web/.env
+pnpm -F web dev
 ```
 
 输出：

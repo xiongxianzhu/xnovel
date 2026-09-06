@@ -59,6 +59,10 @@ describe("ConsoleSidebar", () => {
     renderSidebar("admin");
     expect(screen.getByText("用户")).toBeInTheDocument();
     expect(screen.getByText("审计日志")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Skills" })).toHaveLength(1);
+    expect(
+      screen.queryByRole("link", { name: "Skill 安全" }),
+    ).not.toBeInTheDocument();
   });
 
   it("omits redundant sidebar and group headings", () => {
@@ -100,7 +104,9 @@ describe("ConsoleSidebar", () => {
     const dashboard = screen.getByRole("link", { name: "仪表盘" });
     expect(dashboard.querySelector("span")).not.toBeInTheDocument();
     fireEvent.mouseEnter(dashboard);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("仪表盘");
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveTextContent("仪表盘");
+    expect(getComputedStyle(tooltip).borderRadius).toBe("0px");
     expect(localStorage.getItem("xnovel:console-sidebar:v1:user-1")).toBe(
       "collapsed",
     );
@@ -116,6 +122,10 @@ describe("ConsoleSidebar", () => {
     const loginLogs = await screen.findByRole("link", { name: "登录日志" });
     expect(loginLogs.closest(".console-sidebar-content")).toBeNull();
     expect(document.body).toContainElement(loginLogs);
+    expect(
+      getComputedStyle(loginLogs.closest(".ant-popover-container")!)
+        .borderRadius,
+    ).toBe("0px");
     expect(auditButton).toHaveAttribute("aria-expanded", "true");
   });
 

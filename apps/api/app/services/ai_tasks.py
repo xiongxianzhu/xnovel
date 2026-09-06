@@ -55,6 +55,10 @@ class TaskEventHub:
         self._events: dict[UUID, list[dict[str, object]]] = {}
         self._conditions: dict[UUID, asyncio.Condition] = {}
 
+    def forget(self, task_id: UUID) -> None:
+        self._events.pop(task_id, None)
+        self._conditions.pop(task_id, None)
+
     async def publish(self, task_id: UUID, event: dict[str, object]) -> None:
         condition = self._conditions.setdefault(task_id, asyncio.Condition())
         async with condition:
@@ -120,6 +124,8 @@ def _result_data(result: AIResult) -> AIResultData:
         id=result.id,
         sequence=result.sequence,
         content=result.content,
+        purpose=result.purpose,  # type: ignore[arg-type]
+        pinned=result.pinned,
         status=result.status,  # type: ignore[arg-type]
         applied_document_id=result.applied_document_id,
         decided_at=result.decided_at,
@@ -327,10 +333,11 @@ async def run_provider_connection_test(
     )
 
 
-def schedule_ai_task(execution: ExecutionInput) -> None:
+def schedule_ai_task(execution: ExecutionInput) -> asyncio.Task[None]:
     task = asyncio.create_task(execute_ai_task(execution))
     _RUNNING[execution.task_id] = task
     task.add_done_callback(lambda _: _RUNNING.pop(execution.task_id, None))
+    return task
 
 
 async def _claim_task(session: AsyncSession, execution: ExecutionInput, settings: Settings) -> AITask | None:
@@ -450,6 +457,7 @@ async def execute_ai_task(execution: ExecutionInput) -> None:
             await EVENT_HUB.publish(task.id, {"type": "error", "code": "AI_PROVIDER_UNAVAILABLE"})
         finally:
             await EVENT_HUB.publish(task.id, {"type": "done"})
+            asyncio.get_running_loop().call_later(300, EVENT_HUB.forget, task.id)
 
 
 async def _finish_success(
@@ -472,7 +480,14 @@ async def _finish_success(
     task.reasoning_tokens = usage.get("reasoning_tokens")
     session.add(task)
     if create_result and task.project_id is not None:
-        session.add(AIResult(project_id=task.project_id, task_id=task.id, content=content, sequence=0))
+        purpose = (
+            "summary"
+            if task.task_type == "summary"
+            else "analysis"
+            if task.task_type in {"consistency", "extract_settings"}
+            else "manuscript"
+        )
+        session.add(AIResult(project_id=task.project_id, task_id=task.id, content=content, sequence=0, purpose=purpose))
     await session.commit()
 
 
@@ -584,6 +599,8 @@ async def apply_ai_result(
 ) -> AIResultDecisionData:
     try:
         result, task = await _owned_result(session, owner_id, result_id, lock=True)
+        if result.purpose != "manuscript":
+            raise _conflict("ai_result_not_manuscript")
         if result.status != "candidate" or task.project_id is None:
             raise _conflict("ai_result_already_decided")
         generated_version = task.context_manifest.get("document_version")
@@ -608,6 +625,10 @@ async def apply_ai_result(
         ).one_or_none()
         if content is None or content.version != payload.version:
             raise _conflict("content_version_conflict")
+        if content.content != payload.content:
+            from app.services.document_revisions import capture_revision
+
+            await capture_revision(session, content)
         now = datetime.now(UTC)
         content.content = payload.content
         content.version += 1

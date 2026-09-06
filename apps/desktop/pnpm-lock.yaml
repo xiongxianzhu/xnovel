@@ -10,12 +10,15 @@ overrides:
 importers:
   .:
     dependencies:
+      "@xnovel/text-diff":
+        specifier: link:../../packages/text-diff
+        version: link:../../packages/text-diff
       "@xnovel/theme":
         specifier: link:../../packages/theme
         version: link:../../packages/theme
       electron-updater:
         specifier: 6.8.9
-        version: 6.8.9
+        version: 6.8.9(supports-color@7.1.0)
       lucide-react:
         specifier: 1.33.0
         version: 1.33.0(react@19.2.8)
@@ -31,7 +34,7 @@ importers:
     devDependencies:
       "@electron/notarize":
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.1(supports-color@7.1.0)
       "@eslint/js":
         specifier: 10.0.1
         version: 10.0.1(eslint@10.8.1(jiti@2.7.0))
@@ -55,7 +58,7 @@ importers:
         version: 5.2.0(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0))
       electron:
         specifier: 44.0.0
-        version: 44.0.0
+        version: 44.0.0(supports-color@7.1.0)
       electron-builder:
         specifier: 26.15.7
         version: 26.15.7(electron-builder-squirrel-windows@26.15.7)
@@ -337,14 +340,6 @@ packages:
         integrity: sha512-+bqFCP98pLI0Tt0XQo1TmlXtwjWchISndDOxCkEcIuUgXWpBnLyRI+2DU+mesvnMMX6L1XDqYNA0lXNDHd/yiA==,
       }
     engines: { node: ">=22.12.0" }
-
-  "@electron/asar@3.2.1":
-    resolution:
-      {
-        integrity: sha512-hE2cQMZ5+4o7+6T2lUaVbxIzrOjZZfX7dB02xuapyYFJZEAiWTelq6J3mMoxzd0iONDvYLPVKecB5tyjIoVDVA==,
-      }
-    engines: { node: ">=10.12.0" }
-    hasBin: true
 
   "@electron/asar@3.4.1":
     resolution:
@@ -1503,12 +1498,6 @@ packages:
         integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==,
       }
 
-  "@types/glob@7.2.0":
-    resolution:
-      {
-        integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==,
-      }
-
   "@types/http-cache-semantics@4.2.0":
     resolution:
       {
@@ -1544,13 +1533,6 @@ packages:
       {
         integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==,
       }
-
-  "@types/minimatch@6.0.0":
-    resolution:
-      {
-        integrity: sha512-zmPitbQ8+6zNutpwgcQuLcsEpn/Cj54Kbn7L5pX0Os5kdWplB7xPgEh/g+SWOB/qmows2gpuCaPyduq8ZZRnxA==,
-      }
-    deprecated: This is a stub types definition. minimatch provides its own type definitions, so you do not need this installed.
 
   "@types/ms@2.1.0":
     resolution:
@@ -4761,7 +4743,7 @@ snapshots:
       "@babel/types": 7.29.8
       "@jridgewell/remapping": 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -4850,7 +4832,7 @@ snapshots:
       "@babel/parser": 7.29.8
       "@babel/template": 7.29.7
       "@babel/types": 7.29.8
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -4889,15 +4871,6 @@ snapshots:
 
   "@electron-internal/extract-zip@1.0.5": {}
 
-  "@electron/asar@3.2.1":
-    dependencies:
-      chromium-pickle-js: 0.2.0
-      commander: 5.0.0
-      glob: 7.2.0
-      minimatch: 3.1.5
-    optionalDependencies:
-      "@types/glob": 7.2.0
-
   "@electron/asar@3.4.1":
     dependencies:
       commander: 5.0.0
@@ -4910,52 +4883,52 @@ snapshots:
       fs-extra: 9.0.1
       minimist: 1.2.8
 
-  "@electron/get@3.1.0":
+  "@electron/get@3.1.0(supports-color@7.1.0)":
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       env-paths: 2.2.0
       fs-extra: 8.1.0
       got: 11.8.5
       progress: 2.0.3
       semver: 6.2.0
-      sumchecker: 3.0.1
+      sumchecker: 3.0.1(supports-color@7.1.0)
     optionalDependencies:
       global-agent: 3.0.0
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/get@5.1.0":
+  "@electron/get@5.1.0(supports-color@7.1.0)":
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       env-paths: 3.0.0
       graceful-fs: 4.2.11
       progress: 2.0.3
       semver: 7.8.5
-      sumchecker: 3.0.1
+      sumchecker: 3.0.1(supports-color@7.1.0)
     optionalDependencies:
       undici: 7.29.0
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/notarize@2.5.0":
+  "@electron/notarize@2.5.0(supports-color@7.1.0)":
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       fs-extra: 9.0.1
       promise-retry: 2.0.1
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/notarize@3.1.1":
+  "@electron/notarize@3.1.1(supports-color@7.1.0)":
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       promise-retry: 2.0.1
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/osx-sign@1.3.3":
+  "@electron/osx-sign@1.3.3(supports-color@7.1.0)":
     dependencies:
       compare-version: 0.1.2
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       fs-extra: 10.1.0
       isbinaryfile: 4.0.10
       minimist: 1.2.8
@@ -4963,22 +4936,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/rebuild@4.2.0":
+  "@electron/rebuild@4.2.0(supports-color@7.1.0)":
     dependencies:
       "@malept/cross-spawn-promise": 2.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       node-abi: 4.34.0
       node-api-version: 0.2.1
       node-gyp: 12.4.0
-      read-binary-file-arch: 1.0.6
+      read-binary-file-arch: 1.0.6(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/universal@2.0.3":
+  "@electron/universal@2.0.3(supports-color@7.1.0)":
     dependencies:
       "@electron/asar": 3.4.1
       "@malept/cross-spawn-promise": 2.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       dir-compare: 4.2.0
       fs-extra: 11.4.0
       minimatch: 9.0.9
@@ -4986,10 +4959,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  "@electron/windows-sign@1.2.2":
+  "@electron/windows-sign@1.2.2(supports-color@7.1.0)":
     dependencies:
       cross-dirname: 0.1.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       fs-extra: 11.4.0
       minimist: 1.2.8
       postject: 1.0.0-alpha.6
@@ -5163,7 +5136,7 @@ snapshots:
   "@eslint/config-array@0.23.5":
     dependencies:
       "@eslint/object-schema": 3.0.5
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       minimatch: 10.2.6
     transitivePeerDependencies:
       - supports-color
@@ -5226,7 +5199,7 @@ snapshots:
       "@types/istanbul-reports": 3.0.4
       "@types/node": 24.13.3
       "@types/yargs": 16.0.11
-      chalk: 4.1.0
+      chalk: 4.1.2
 
   "@jridgewell/gen-mapping@0.3.12":
     dependencies:
@@ -5265,9 +5238,9 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  "@malept/flatpak-bundler@0.4.0":
+  "@malept/flatpak-bundler@0.4.0(supports-color@7.1.0)":
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       fs-extra: 9.0.0
       lodash: 4.18.1
       tmp-promise: 3.0.3
@@ -5473,12 +5446,6 @@ snapshots:
     dependencies:
       "@types/node": 24.13.3
 
-  "@types/glob@7.2.0":
-    dependencies:
-      "@types/minimatch": 6.0.0
-      "@types/node": 24.13.3
-    optional: true
-
   "@types/http-cache-semantics@4.2.0": {}
 
   "@types/istanbul-lib-coverage@2.0.6": {}
@@ -5496,11 +5463,6 @@ snapshots:
   "@types/keyv@3.1.4":
     dependencies:
       "@types/node": 24.13.3
-
-  "@types/minimatch@6.0.0":
-    dependencies:
-      minimatch: 10.2.6
-    optional: true
 
   "@types/ms@2.1.0": {}
 
@@ -5548,7 +5510,7 @@ snapshots:
       "@typescript-eslint/types": 8.67.0
       "@typescript-eslint/typescript-estree": 8.67.0(typescript@6.0.3)
       "@typescript-eslint/visitor-keys": 8.67.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       eslint: 10.8.1(jiti@2.7.0)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -5558,7 +5520,7 @@ snapshots:
     dependencies:
       "@typescript-eslint/tsconfig-utils": 8.67.0(typescript@6.0.3)
       "@typescript-eslint/types": 8.67.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
@@ -5577,7 +5539,7 @@ snapshots:
       "@typescript-eslint/types": 8.67.0
       "@typescript-eslint/typescript-estree": 8.67.0(typescript@6.0.3)
       "@typescript-eslint/utils": 8.67.0(eslint@10.8.1(jiti@2.7.0))(typescript@6.0.3)
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       eslint: 10.8.1(jiti@2.7.0)
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
@@ -5592,7 +5554,7 @@ snapshots:
       "@typescript-eslint/tsconfig-utils": 8.67.0(typescript@6.0.3)
       "@typescript-eslint/types": 8.67.0
       "@typescript-eslint/visitor-keys": 8.67.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       minimatch: 10.2.6
       semver: 7.8.5
       tinyglobby: 0.2.17
@@ -5682,15 +5644,15 @@ snapshots:
 
   acorn@8.18.0: {}
 
-  agent-base@7.0.2:
+  agent-base@7.0.2(supports-color@7.1.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
-  agent-base@7.1.0:
+  agent-base@7.1.0(supports-color@7.1.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -5724,33 +5686,33 @@ snapshots:
 
   ansi-styles@6.1.0: {}
 
-  app-builder-lib@26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7):
+  app-builder-lib@26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)(supports-color@7.1.0):
     dependencies:
       "@electron/asar": 3.4.1
       "@electron/fuses": 1.8.0
-      "@electron/get": 3.1.0
-      "@electron/notarize": 2.5.0
-      "@electron/osx-sign": 1.3.3
-      "@electron/rebuild": 4.2.0
-      "@electron/universal": 2.0.3
-      "@malept/flatpak-bundler": 0.4.0
+      "@electron/get": 3.1.0(supports-color@7.1.0)
+      "@electron/notarize": 2.5.0(supports-color@7.1.0)
+      "@electron/osx-sign": 1.3.3(supports-color@7.1.0)
+      "@electron/rebuild": 4.2.0(supports-color@7.1.0)
+      "@electron/universal": 2.0.3(supports-color@7.1.0)
+      "@malept/flatpak-bundler": 0.4.0(supports-color@7.1.0)
       "@noble/hashes": 2.3.0
       "@peculiar/webcrypto": 1.7.1
       "@types/fs-extra": 9.0.13
       ajv: 8.20.0
       asn1js: 3.0.10
       async-exit-hook: 2.0.1
-      builder-util: 26.15.3
-      builder-util-runtime: 9.7.0
+      builder-util: 26.15.3(supports-color@7.1.0)
+      builder-util-runtime: 9.7.0(supports-color@7.1.0)
       chromium-pickle-js: 0.2.0
       ci-info: 4.3.1
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       dmg-builder: 26.15.7(electron-builder-squirrel-windows@26.15.7)
       dotenv: 16.4.5
       dotenv-expand: 11.0.6
       ejs: 3.1.8
-      electron-builder-squirrel-windows: 26.15.7(dmg-builder@26.15.7)
-      electron-publish: 26.15.3
+      electron-builder-squirrel-windows: 26.15.7(dmg-builder@26.15.7)(supports-color@7.1.0)
+      electron-publish: 26.15.3(supports-color@7.1.0)
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       isbinaryfile: 5.0.7
@@ -5838,23 +5800,23 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  builder-util-runtime@9.7.0:
+  builder-util-runtime@9.7.0(supports-color@7.1.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       sax: 1.6.1
     transitivePeerDependencies:
       - supports-color
 
-  builder-util@26.15.3:
+  builder-util@26.15.3(supports-color@7.1.0):
     dependencies:
       "@types/debug": 4.1.13
-      builder-util-runtime: 9.7.0
+      builder-util-runtime: 9.7.0(supports-color@7.1.0)
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       fs-extra: 10.1.0
-      http-proxy-agent: 7.0.0
-      https-proxy-agent: 7.0.0
+      http-proxy-agent: 7.0.0(supports-color@7.1.0)
+      https-proxy-agent: 7.0.0(supports-color@7.1.0)
       js-yaml: 4.3.1
       sanitize-filename: 1.6.4
       source-map-support: 0.5.21
@@ -5970,9 +5932,11 @@ snapshots:
     transitivePeerDependencies:
       - "@noble/hashes"
 
-  debug@4.4.3:
+  debug@4.4.3(supports-color@7.1.0):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 7.1.0
 
   decimal.js@10.6.0: {}
 
@@ -6015,8 +5979,8 @@ snapshots:
 
   dmg-builder@26.15.7(electron-builder-squirrel-windows@26.15.7):
     dependencies:
-      app-builder-lib: 26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)
-      builder-util: 26.15.3
+      app-builder-lib: 26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)(supports-color@7.1.0)
+      builder-util: 26.15.3(supports-color@7.1.0)
       fs-extra: 10.1.0
       js-yaml: 4.3.1
     transitivePeerDependencies:
@@ -6049,20 +6013,20 @@ snapshots:
     dependencies:
       jake: 10.8.5
 
-  electron-builder-squirrel-windows@26.15.7(dmg-builder@26.15.7):
+  electron-builder-squirrel-windows@26.15.7(dmg-builder@26.15.7)(supports-color@7.1.0):
     dependencies:
-      app-builder-lib: 26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)
-      builder-util: 26.15.3
-      electron-winstaller: 5.4.0
+      app-builder-lib: 26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)(supports-color@7.1.0)
+      builder-util: 26.15.3(supports-color@7.1.0)
+      electron-winstaller: 5.4.0(supports-color@7.1.0)
     transitivePeerDependencies:
       - dmg-builder
       - supports-color
 
   electron-builder@26.15.7(electron-builder-squirrel-windows@26.15.7):
     dependencies:
-      app-builder-lib: 26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)
-      builder-util: 26.15.3
-      builder-util-runtime: 9.7.0
+      app-builder-lib: 26.15.7(dmg-builder@26.15.7)(electron-builder-squirrel-windows@26.15.7)(supports-color@7.1.0)
+      builder-util: 26.15.3(supports-color@7.1.0)
+      builder-util-runtime: 9.7.0(supports-color@7.1.0)
       chalk: 4.1.2
       ci-info: 4.4.0
       dmg-builder: 26.15.7(electron-builder-squirrel-windows@26.15.7)
@@ -6074,12 +6038,12 @@ snapshots:
       - electron-builder-squirrel-windows
       - supports-color
 
-  electron-publish@26.15.3:
+  electron-publish@26.15.3(supports-color@7.1.0):
     dependencies:
       "@types/fs-extra": 9.0.13
       aws4: 1.13.2
-      builder-util: 26.15.3
-      builder-util-runtime: 9.7.0
+      builder-util: 26.15.3(supports-color@7.1.0)
+      builder-util-runtime: 9.7.0(supports-color@7.1.0)
       chalk: 4.1.2
       form-data: 4.0.6
       fs-extra: 10.1.0
@@ -6090,9 +6054,9 @@ snapshots:
 
   electron-to-chromium@1.5.415: {}
 
-  electron-updater@6.8.9:
+  electron-updater@6.8.9(supports-color@7.1.0):
     dependencies:
-      builder-util-runtime: 9.7.0
+      builder-util-runtime: 9.7.0(supports-color@7.1.0)
       fs-extra: 10.1.0
       js-yaml: 4.3.1
       lazy-val: 1.0.5
@@ -6115,22 +6079,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron-winstaller@5.4.0:
+  electron-winstaller@5.4.0(supports-color@7.1.0):
     dependencies:
-      "@electron/asar": 3.2.1
-      debug: 4.4.3
+      "@electron/asar": 3.4.1
+      debug: 4.4.3(supports-color@7.1.0)
       fs-extra: 7.0.1
       lodash: 4.18.1
       temp: 0.9.4
     optionalDependencies:
-      "@electron/windows-sign": 1.2.2
+      "@electron/windows-sign": 1.2.2(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
-  electron@44.0.0:
+  electron@44.0.0(supports-color@7.1.0):
     dependencies:
       "@electron-internal/extract-zip": 1.0.5
-      "@electron/get": 5.1.0
+      "@electron/get": 5.1.0(supports-color@7.1.0)
       "@types/node": 24.13.3
     transitivePeerDependencies:
       - supports-color
@@ -6273,7 +6237,7 @@ snapshots:
       "@types/estree": 1.0.9
       ajv: 6.15.0
       cross-spawn: 7.0.6
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
       escape-string-regexp: 4.0.0
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
@@ -6538,10 +6502,10 @@ snapshots:
 
   http-cache-semantics@4.2.0: {}
 
-  http-proxy-agent@7.0.0:
+  http-proxy-agent@7.0.0(supports-color@7.1.0):
     dependencies:
-      agent-base: 7.1.0
-      debug: 4.4.3
+      agent-base: 7.1.0(supports-color@7.1.0)
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -6550,10 +6514,10 @@ snapshots:
       quick-lru: 5.1.1
       resolve-alpn: 1.2.1
 
-  https-proxy-agent@7.0.0:
+  https-proxy-agent@7.0.0(supports-color@7.1.0):
     dependencies:
-      agent-base: 7.0.2
-      debug: 4.4.3
+      agent-base: 7.0.2(supports-color@7.1.0)
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7002,9 +6966,9 @@ snapshots:
 
   react@19.2.8: {}
 
-  read-binary-file-arch@1.0.6:
+  read-binary-file-arch@1.0.6(supports-color@7.1.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7189,9 +7153,9 @@ snapshots:
     dependencies:
       min-indent: 1.0.1
 
-  sumchecker@3.0.1:
+  sumchecker@3.0.1(supports-color@7.1.0):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.1.0)
     transitivePeerDependencies:
       - supports-color
 

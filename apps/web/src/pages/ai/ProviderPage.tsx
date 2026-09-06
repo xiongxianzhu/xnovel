@@ -74,11 +74,16 @@ export function ProviderPage() {
           <h1 id="provider-title">{t("providersTitle")}</h1>
           <p>{t("providersDescription")}</p>
         </div>
-        <Link to="/ai-models/new">
-          <Button icon={<Plus aria-hidden size={17} />} type="primary">
-            {t("addConnection")}
-          </Button>
-        </Link>
+        <div className="studio-actions">
+          <Link className="studio-link-button" to="/ai/history">
+            {t("studio:aiHistory")}
+          </Link>
+          <Link to="/ai-models/new">
+            <Button icon={<Plus aria-hidden size={17} />} type="primary">
+              {t("addConnection")}
+            </Button>
+          </Link>
+        </div>
       </header>
       <Input.Search
         allowClear

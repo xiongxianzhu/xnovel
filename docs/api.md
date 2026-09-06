@@ -717,16 +717,18 @@ T-107 已实现以下端点。所有受保护请求使用 `Authorization: Bearer
 
 ### 8.4 头像、Logo 与媒体
 
-| 方法     | 路径                               | 上行参数                       | 成功 `data`                        | 主要失败                                             | 缓存与幂等                                           |
-| -------- | ---------------------------------- | ------------------------------ | ---------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| `POST`   | `/api/v1/users/me/avatar`          | Bearer；multipart `file`       | `source=upload`、`url`             | `10002`、`11006`、`12001`、`12002`、`10007`          | 替换头像，不幂等                                     |
-| `PUT`    | `/api/v1/users/me/avatar-url`      | Bearer；JSON `url`             | `source=url`、`url`                | `10002`、`11006`、`12001`、`10007`                   | 同一 URL 可重复设置                                  |
-| `DELETE` | `/api/v1/users/me/avatar`          | Bearer                         | `source=none`、`url=null`          | `10002`、`11006`、`10007`                            | 幂等                                                 |
-| `GET`    | `/api/v1/site-settings/public`     | 无                             | `registration_enabled`、`logo_url` | `10007`                                              | 可公开读取                                           |
-| `GET`    | `/api/v1/media/{storage_key}`      | Path：`storage_key`            | 图片二进制                         | `10004`、`12001`                                     | `Cache-Control: public, max-age=31536000`；`nosniff` |
-| `POST`   | `/api/admin/v1/site-settings/logo` | Admin Bearer；multipart `file` | `url`                              | `10002`、`10003`、`11006`、`12001`、`12002`、`10007` | 替换 Logo，不幂等并写管理员审计                      |
-| `DELETE` | `/api/admin/v1/site-settings/logo` | Admin Bearer                   | `url=null`                         | `10002`、`10003`、`11006`、`10007`                   | 幂等并写管理员审计                                   |
+| 方法     | 路径                               | 上行参数                       | 成功 `data`                                     | 主要失败                                             | 缓存与幂等                                           |
+| -------- | ---------------------------------- | ------------------------------ | ----------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| `POST`   | `/api/v1/users/me/avatar`          | Bearer；multipart `file`       | `source=upload`、`url`                          | `10002`、`11006`、`12001`、`12002`、`10007`          | 替换头像，不幂等                                     |
+| `PUT`    | `/api/v1/users/me/avatar-url`      | Bearer；JSON `url`             | `source=url`、`url`                             | `10002`、`11006`、`12001`、`10007`                   | 同一 URL 可重复设置                                  |
+| `DELETE` | `/api/v1/users/me/avatar`          | Bearer                         | `source=none`、`url=null`                       | `10002`、`11006`、`10007`                            | 幂等                                                 |
+| `GET`    | `/api/v1/site-settings/public`     | 无                             | `site_name`、`registration_enabled`、`logo_url` | `10007`                                              | 可公开读取                                           |
+| `GET`    | `/api/v1/media/{storage_key}`      | Path：`storage_key`            | 图片二进制                                      | `10004`、`12001`                                     | `Cache-Control: public, max-age=31536000`；`nosniff` |
+| `POST`   | `/api/admin/v1/site-settings/logo` | Admin Bearer；multipart `file` | `url`                                           | `10002`、`10003`、`11006`、`12001`、`12002`、`10007` | 替换 Logo，不幂等并写管理员审计                      |
+| `DELETE` | `/api/admin/v1/site-settings/logo` | Admin Bearer                   | `url=null`                                      | `10002`、`10003`、`11006`、`10007`                   | 幂等并写管理员审计                                   |
 
+- `PATCH /api/admin/v1/site-settings`（`updateSiteSettings`）要求 Admin Bearer，请求为 `{ "site_name": "墨雨写作室" }`；去除首尾空白后长度为 1–100，拒绝空白、null、超长和额外字段。成功返回与公开设置接口相同的 `data`；未认证为 `401 / 10002`、非管理员为 `403 / 10003`、字段非法为 `422 / 10001`、数据库不可用或单例缺失为 `503 / 10007`。仅修改名称，不修改注册开关和 Logo；重复设置相同名称不追加审计。
+- 公开配置 `site_name` 默认 `xnovel`；名称变更记录 `site.name_changed` 管理员审计，摘要仅包含 `site_name_changed: true`，不记录名称全文。前端保存后更新共享配置缓存；其他页面刷新或配置过期后重新聚焦时读取新值。
 - 上传头像和 Web 全局 Logo 使用 `multipart/form-data`；头像单文件最大 10 MiB，Logo 最大 5 MiB，仅接受解码确认的 PNG、JPEG 或 WebP。Logo 只允许管理员修改。
 - 上传头像最大宽高为 2048×2048，总像素不超过 4,194,304；Web Logo 最大宽高为 4096×4096，总像素不超过 16,777,216。API 必须实际解码后校验，不能只信任文件头或尺寸声明。
 - URL 头像只接受 HTTPS 绝对 URL，并拒绝 userinfo、`localhost`、环回地址和字面量私网 IP。API 不抓取远程文件，也不承诺检查其大小；上传文件与 URL 字段互斥。
@@ -886,7 +888,7 @@ Web 使用当前用户自己的 Provider 配置和密钥。内置目录、自定
 
 导出在内存中生成 UTF-8 文件，Markdown 默认扩展名 `.md`，纯文本为 `.txt`。只导出活动文件夹与正文，保留树顺序；大纲、笔记和归档节点不进入文件。响应使用安全 `Content-Disposition` 与 `nosniff`，不把正文写入日志或临时文件。
 
-### 8.12 其他尚未实现领域
+### 8.12 Desktop 本地边界
 
 Desktop 不调用本 HTTP API，也不提供本地 HTTP 端点。renderer 通过安全 preload 使用领域级 IPC；SQLite、只读 Skill、凭据与 Provider 调用由 Electron 主进程持有，契约以 `apps/desktop/src/shared/contracts.ts` 和测试为准。
 
@@ -894,6 +896,7 @@ Desktop 不调用本 HTTP API，也不提供本地 HTTP 端点。renderer 通过
 
 | 日期       | 版本  | 变更                                                          |
 | ---------- | ----- | ------------------------------------------------------------- |
+| 2026-09-06 | 1.5.0 | 增加长篇资料、批量任务、正文历史、导入预检及独立管理查询      |
 | 2026-08-28 | 1.4.0 | 实现 Provider、流式 AI 任务、候选决策与 Web 私有 Skill API    |
 | 2026-08-28 | 1.3.0 | 实现大纲、人物、世界设定、正文引用和 Markdown/纯文本导出      |
 | 2026-08-27 | 1.2.0 | 实现纯文本正文读取、乐观锁保存、服务端字数与冲突响应          |
@@ -909,3 +912,47 @@ Desktop 不调用本 HTTP API，也不提供本地 HTTP 端点。renderer 通过
 | 2026-08-15 | 0.3.0 | 确认本地账号、资料、媒体、偏好、站点设置和 Web Skill 规划契约 |
 | 2026-08-15 | 0.2.0 | 增加统一响应、页码分页和游标分页规则，区分当前行为与目标契约  |
 | 2026-08-15 | 0.1.0 | 记录健康检查、当前错误结构和基础契约规则                      |
+
+## 长篇工作台与独立管理接口
+
+以下相对路径均位于 `/api/v1`，登录会话详情例外位于 `/api/admin/v1`。统一 `{code,msg,data}`，默认 `page=1&page_size=50`、最大 100，页码分页返回 `items/total/page/page_size/pages`。所有作品资源校验所有权，跨用户/跨作品返回 404；管理接口仍要求管理员，不能借助前端路由绕过权限。完整字段与枚举以生成的 OpenAPI 为准。
+
+### 管理查询
+
+- `GET /skills` 新增 `q/page/page_size`；`GET /skills/{id}/versions` 提供版本分页，`GET /skills/{id}/versions/{version_id}` 只允许所有者读取版本内容。`GET /skills/{id}/files` 返回当前版本的文本文件供只读浏览。
+- `GET /projects/{id}/documents/search`、`characters/search`、`world-entries/search` 提供独立页列表；三个集合均增加单项 GET 详情。既有文档树与关联列表继续兼容。
+- `GET /api/admin/v1/audit/login/{session_id}` 返回脱敏会话详情；管理员用户继续沿用既有 `offset/limit` 接口，删除操作在产品上仍是停用，不物理删除账号。
+
+### 长篇资料与回顾
+
+`/projects/{project_id}/studio/{collection}` 支持 GET 分页和 POST 创建；其下 `/{record_id}` 支持 GET、PUT、DELETE。collection 为 `summaries/facts/threads/events/knowledge/issues/plans/notes/rules`。
+
+公共字段包括 `title/body/source_document_id/source_version/version`；返回增加 `source_stale/source_missing/source_title`。更新提交记录版本，来源提供版本时也必须匹配，冲突为 409。摘要必填正文来源和非空内容。事实的 `kind` 区分 fact/inference/plan；故事顺序独立存储。问题可设置 open/resolved/ignored，忽略时必须填写 resolution；原文证据必须出现在指定来源版本。
+
+`GET .../studio/recall?document_id=...&chapters=5&story_order=...` 返回最近 1～20 章已确认摘要、此前事实、未完成线索和失效计数。默认排除当前章及未来章节，事实可无来源并明确标为手工记录；未知故事时间仍显示，不能推断成已发生状态。读取不调用模型。
+
+`GET .../studio/threads/{id}/updates` 分页读取状态沿革。`GET/PUT .../studio/schedule` 查询/保存更新频率，返回可交付章数与估计天数；未设置频率时天数为空，统计按最新卡片去重并排除空章、过期来源和已发布章。
+
+### 正文版本
+
+前缀 `/projects/{project_id}/documents/{document_id}/revisions`：GET 分页；`POST /checkpoints` 输入 `name/version`；`GET /{revision_id}` 返回完整快照；`POST /{revision_id}/restore` 输入当前正文 `version`。恢复生成新版本并先保留当前稿；冲突 409 不覆盖。自动历史保留 90 天，命名检查点不自动清理。
+
+### AI 历史与批量
+
+- `GET /ai/tasks` 和 `GET /ai/results` 支持作品、文档、任务类型、状态、日期范围和关键词分页；结果列表另外支持 `pinned`。沿用 `GET /ai/tasks/{id}`，新增 `GET /ai/results/{id}` 独立详情。
+- `PATCH /ai/results/{id}/pin` 输入 `{pinned:true|false}`；`POST /ai/tasks/{id}/retry` 由作者显式触发，用当前配置和正文重新调用。选区任务不保存原选区，不能在历史页自动重试。
+- `POST /ai/context-preview` 使用生成请求的来源字段，返回清单、文档版本、保守 Token 估算和未知成本；生成提交 `expected_document_version`。`summary_ids/fact_ids` 仅接受同作品、已确认、来源有效且位于此前章节的资料。
+- `POST /ai/batches/preview` 和 `POST /ai/batches` 使用 `request_id/project_id/document_ids/provider_config_id/model_id/task_type/instruction/use_recall`；task_type 为 summary/consistency，最多 1000 个去重文档。
+- `GET /ai/batches` 返回分页摘要与状态计数；`GET /ai/batches/{id}` 返回逐章状态；`POST /ai/batches/{id}/actions` 输入 action=cancel/resume/retry_failed。已完成子项不重复生成；服务重启后暂停，作者决定继续。
+- AIResult 增加 purpose=manuscript/summary/analysis 与 pinned，已审核摘要可为 accepted。非正文用途不能调用正文应用接口。普通历史 30 天清理，收藏与已确认结果保留。
+
+### 检索、导入与交稿
+
+- `GET /projects/{id}/search?q=...&page=1&page_size=50&include_archived=false` 搜索正文、大纲、人物及别名、世界设定；返回 kind/id/title/excerpt 来源条目。
+- `POST /manuscript-imports/preview` 为 multipart file，查询参数 encoding=auto/utf-8/utf-8-sig/utf-16/utf-16-le/utf-16-be/gb18030 与 split=auto/none。最大 20 MiB、1000 章，返回可修改章名和正文预览。
+- `POST /manuscript-imports` 提交 request_id、可选 project_id、title、chapters 和 duplicate_policy=keep/skip；省略作品创建新作品，同名默认新增而不覆盖。请求整体事务提交，幂等标识内容不一致返回 409。
+- `GET /projects/{id}/impact` 使用 kind、record_id 及可选 previous_name，返回显式引用与文本命中候选；不自动改稿。
+- `GET /projects/{id}/style-check?document_id=...` 根据术语约定逐字匹配，返回建议；创建修订待办仍需要作者单独确认。
+- `POST /projects/{id}/export-preview` 输入 document_ids 的明确顺序、format=markdown/plain_text、include_titles 和 separator，返回预警、文件名和仅含所选正文的 content。未指定辅助资料不会出现在导出中，浏览器下载不发布到平台。
+
+来源失效、无出处证据、旧记录或旧正文版本都须保留界面输入，让作者核对再重试；不要自动重发可能计费的批量或 AI 请求。

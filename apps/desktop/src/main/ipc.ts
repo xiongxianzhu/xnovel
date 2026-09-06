@@ -143,6 +143,32 @@ export function registerIpc(
   handle("projects:content", (documentId) =>
     services.store.getContent(stringValue(documentId, 64)),
   );
+  handle("projects:revisions", (documentId, page) =>
+    services.store.listRevisions(
+      stringValue(documentId, 64),
+      integerValue(page),
+    ),
+  );
+  handle("projects:revision", (documentId, revisionId) =>
+    services.store.getRevision(
+      stringValue(documentId, 64),
+      stringValue(revisionId, 64),
+    ),
+  );
+  handle("projects:checkpoint", (documentId, name, version) =>
+    services.store.createCheckpoint(
+      stringValue(documentId, 64),
+      stringValue(name, 100),
+      integerValue(version),
+    ),
+  );
+  handle("projects:revision-restore", (documentId, revisionId, version) =>
+    services.store.restoreRevision(
+      stringValue(documentId, 64),
+      stringValue(revisionId, 64),
+      integerValue(version),
+    ),
+  );
   handle("projects:save", (documentId, content, version) =>
     services.store.saveContent(
       stringValue(documentId, 64),

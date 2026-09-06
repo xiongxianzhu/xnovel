@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -13,14 +14,23 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.db.session import engine
+from app.services.ai_batches import recover_batches, stop_batch_runners
 from app.services.ai_tasks import recover_interrupted_ai_tasks
+from app.services.studio_maintenance import maintenance_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await recover_interrupted_ai_tasks()
-    yield
-    await engine.dispose()
+    await recover_batches()
+    maintenance = asyncio.create_task(maintenance_loop())
+    try:
+        yield
+    finally:
+        maintenance.cancel()
+        await asyncio.gather(maintenance, return_exceptions=True)
+        await stop_batch_runners()
+        await engine.dispose()
 
 
 def create_app() -> FastAPI:

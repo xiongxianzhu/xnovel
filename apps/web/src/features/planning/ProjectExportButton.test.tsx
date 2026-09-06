@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom";
 import {
   cleanup,
   fireEvent,
@@ -29,7 +30,11 @@ describe("ProjectExportButton", () => {
       .mockImplementation(() => undefined);
     vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:export");
     vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
-    render(<ProjectExportButton projectId="project-1" />);
+    render(
+      <MemoryRouter>
+        <ProjectExportButton projectId="project-1" />
+      </MemoryRouter>,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "导出" }));
     fireEvent.click(await screen.findByRole("menuitem", { name: /Markdown/ }));

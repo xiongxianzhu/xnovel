@@ -75,7 +75,7 @@
 | 扩展属性   | `jsonb`，写入前由 Pydantic Schema 校验                 |
 | 金额       | `numeric`，不得使用浮点数                              |
 
-所有 PostgreSQL 与 Desktop SQLite 表都必须包含 `created_at` 和 `updated_at`，不为追加表或关联表设置例外。两个字段都非空，并在插入时使用同一个 UTC 当前时间；可变记录每次持久化变更时更新 `updated_at`。`admin_audit_events`、`skill_versions` 和 `document_revisions` 等不可变追加表将 `updated_at` 初始化为 `created_at`，之后禁止修改。
+所有 PostgreSQL 与 Desktop SQLite 表都必须包含 `created_at` 和 `updated_at`，不为追加表或关联表设置例外。两个字段都非空，并在插入时使用同一个 UTC 当前时间；可变记录每次持久化变更时更新 `updated_at`。`admin_audit_events`、`skill_versions` 和 `document_revisions` 等不可变正文或追加表将 `updated_at` 初始化为 `created_at`，之后禁止修改。
 
 所有持久化表和字段都必须提供简体中文注释。表注释说明数据职责和关键边界，字段注释说明用途、枚举值或隐私约束。PostgreSQL 在 SQLModel 元数据和 Alembic 迁移中保存同一组注释，并通过集成测试逐项比较数据库目录；Desktop SQLite 不保证持久化原生注释，至少在模型和迁移元数据中保留并校验。约束和索引不纳入本规则。
 
@@ -83,7 +83,7 @@
 
 - `projects`、`documents`、`characters` 和 `world_entries` 使用 `deleted_at` 软删除。
 - 普通 API 不执行硬删除。恢复操作在保留期内清除 `deleted_at`。
-- 自动清理周期尚未进入首版；在产品确认保留周期前，不运行自动硬删除任务。
+- 正文回收站不自动硬删除。独立历史执行已确认的保留策略：自动快照 90 天、普通 AI 终态历史 30 天，例外见第 7 节。
 - 执行最终清除时，作品的业务子表按外键级联删除。
 - AI 审计与用量数据的保留策略独立于正文回收站策略。
 
@@ -190,31 +190,31 @@ erDiagram
 
 ## 5. 表清单
 
-| 表                           | 阶段 | 职责                              |
-| ---------------------------- | ---- | --------------------------------- |
-| `users`                      | P0   | Web 本地登录身份、角色与个人资料  |
-| `user_sessions`              | P0   | 可撤销的 Web 多设备登录会话       |
-| `user_session_tokens`        | P0   | Refresh Token 哈希与轮换历史      |
-| `auth_tokens`                | 后续 | 验证和密码找回的一次性令牌哈希    |
-| `user_preferences`           | P0   | 用户语言与主题偏好                |
-| `site_settings`              | P0   | 动态注册开关与 Web 全局 Logo      |
-| `admin_audit_events`         | P0   | 管理员敏感操作审计                |
-| `auth_rate_limit_buckets`    | P0   | 认证入口的隐私固定窗口计数        |
-| `skills`                     | P1   | Web 私有 Skill 当前状态与版本指针 |
-| `skill_versions`             | P1   | Web Skill 不可变版本与存储元数据  |
-| `projects`                   | P0   | 作品聚合根与归档状态              |
-| `documents`                  | P0   | 作品内可排序的文档树              |
-| `document_contents`          | P0   | 文档当前正文与并发版本号          |
-| `characters`                 | P0   | 人物资料与扩展属性                |
-| `world_entries`              | P0   | 世界设定分类与层级内容            |
-| `document_character_links`   | P0   | 正文与同作品人物的显式引用        |
-| `document_world_entry_links` | P0   | 正文与同作品世界设定的显式引用    |
-| `ai_credentials`             | P0   | Web 用户 Provider 加密凭据        |
-| `ai_provider_configs`        | P0   | Provider 连接、协议与凭据引用     |
-| `ai_provider_models`         | P0   | Provider 下的模型与能力边界       |
-| `ai_tasks`                   | P0   | AI 请求状态、上下文清单与用量     |
-| `ai_results`                 | P0   | AI 候选结果及作者决策             |
-| `document_revisions`         | P1   | 不可变正文快照与恢复来源          |
+| 表                           | 阶段 | 职责                                   |
+| ---------------------------- | ---- | -------------------------------------- |
+| `users`                      | P0   | Web 本地登录身份、角色与个人资料       |
+| `user_sessions`              | P0   | 可撤销的 Web 多设备登录会话            |
+| `user_session_tokens`        | P0   | Refresh Token 哈希与轮换历史           |
+| `auth_tokens`                | 后续 | 验证和密码找回的一次性令牌哈希         |
+| `user_preferences`           | P0   | 用户语言与主题偏好                     |
+| `site_settings`              | P0   | 动态注册开关、站点名称与 Web 全局 Logo |
+| `admin_audit_events`         | P0   | 管理员敏感操作审计                     |
+| `auth_rate_limit_buckets`    | P0   | 认证入口的隐私固定窗口计数             |
+| `skills`                     | P1   | Web 私有 Skill 当前状态与版本指针      |
+| `skill_versions`             | P1   | Web Skill 不可变版本与存储元数据       |
+| `projects`                   | P0   | 作品聚合根与归档状态                   |
+| `documents`                  | P0   | 作品内可排序的文档树                   |
+| `document_contents`          | P0   | 文档当前正文与并发版本号               |
+| `characters`                 | P0   | 人物资料与扩展属性                     |
+| `world_entries`              | P0   | 世界设定分类与层级内容                 |
+| `document_character_links`   | P0   | 正文与同作品人物的显式引用             |
+| `document_world_entry_links` | P0   | 正文与同作品世界设定的显式引用         |
+| `ai_credentials`             | P0   | Web 用户 Provider 加密凭据             |
+| `ai_provider_configs`        | P0   | Provider 连接、协议与凭据引用          |
+| `ai_provider_models`         | P0   | Provider 下的模型与能力边界            |
+| `ai_tasks`                   | P0   | AI 请求状态、上下文清单与用量          |
+| `ai_results`                 | P0   | AI 候选结果及作者决策                  |
+| `document_revisions`         | P1   | 不可变正文快照与恢复来源               |
 
 ## 6. 表设计
 
@@ -333,17 +333,20 @@ T-108 已实现本人偏好读取与部分更新 API。更新事务只修改请�
 
 站点设置是固定单例。`id` 是主键并使用 `CHECK (id = 1)`；迁移幂等插入该行，缺行时注册接口按关闭处理。
 
-| 字段                   | 类型        | 必填 | 默认值  | 说明                     |
-| ---------------------- | ----------- | ---- | ------- | ------------------------ |
-| `id`                   | smallint    | 是   | `1`     | 固定单例键               |
-| `registration_enabled` | boolean     | 是   | `false` | 是否允许公开注册         |
-| `logo_storage_key`     | text        | 否   | `null`  | Web 全局 Logo 随机存储键 |
-| `logo_original_name`   | text        | 否   | `null`  | 清理后的原始文件名       |
-| `logo_mime_type`       | text        | 否   | `null`  | 解码确认后的 MIME        |
-| `logo_size_bytes`      | bigint      | 否   | `null`  | 文件大小                 |
-| `updated_by`           | uuid        | 否   | `null`  | 最近修改管理员           |
-| `created_at`           | timestamptz | 是   | `now()` | 单例创建时间             |
-| `updated_at`           | timestamptz | 是   | `now()` | 最近修改时间             |
+| 字段                   | 类型        | 必填 | 默认值   | 说明                                        |
+| ---------------------- | ----------- | ---- | -------- | ------------------------------------------- |
+| `id`                   | smallint    | 是   | `1`      | 固定单例键                                  |
+| `site_name`            | text        | 是   | `xnovel` | 公开站点名称，去除首尾空白后为 1–100 个字符 |
+| `registration_enabled` | boolean     | 是   | `false`  | 是否允许公开注册                            |
+| `logo_storage_key`     | text        | 否   | `null`   | Web 全局 Logo 随机存储键                    |
+| `logo_original_name`   | text        | 否   | `null`   | 清理后的原始文件名                          |
+| `logo_mime_type`       | text        | 否   | `null`   | 解码确认后的 MIME                           |
+| `logo_size_bytes`      | bigint      | 否   | `null`   | 文件大小                                    |
+| `updated_by`           | uuid        | 否   | `null`   | 最近修改管理员                              |
+| `created_at`           | timestamptz | 是   | `now()`  | 单例创建时间                                |
+| `updated_at`           | timestamptz | 是   | `now()`  | 最近修改时间                                |
+
+迁移 `20260905_0011` 新增非空 `site_name`，数据库约束 `length(trim(site_name)) BETWEEN 1 AND 100`，旧单例名称补为 `xnovel`，保留原 Logo、注册状态和时间字段；降级仅移除名称字段及其约束。名称更新同步 `updated_by`、`updated_at`，审计与设置变更在同一事务中提交。
 
 Logo 四个媒体字段必须同时为空或同时有值；文件最大 5 MiB。管理员更新固定主键 `1` 并写审计事件，数据库不可用时不能回退为开放注册。
 
@@ -774,23 +777,43 @@ AI 输出与作者正文分离。只有显式“应用”操作才能把候选�
 
 注册限流使用独立短事务执行 `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`，并在注册业务校验和写入前提交。来源桶限制为 10 次/10 分钟，来源与规范化用户名、邮箱组合桶限制为 3 次/10 分钟；任一桶超限都保留递增结果。
 
-## 7. P1 版本历史
+## 7. 正文历史与长篇资料
 
-`document_revisions` 保存不可变正文快照。P1 实施前必须先在 `docs/prd.md` 确认保留周期和恢复体验。
+### 7.1 正文历史
 
-| 字段             | 类型        | 必填 | 默认值   | 说明                                          |
-| ---------------- | ----------- | ---- | -------- | --------------------------------------------- |
-| `id`             | uuid        | 是   | 应用生成 | 主键                                          |
-| `document_id`    | uuid        | 是   | -        | 外键 → `documents.id`                         |
-| `version`        | bigint      | 是   | -        | 对应正文版本                                  |
-| `content`        | text        | 是   | -        | 不可变正文快照                                |
-| `content_format` | text        | 是   | -        | 快照格式                                      |
-| `source`         | text        | 是   | `manual` | `manual`、`autosave`、`ai_apply` 或 `restore` |
-| `actor_id`       | uuid        | 否   | `null`   | 触发变更的用户                                |
-| `created_at`     | timestamptz | 是   | `now()`  | 快照创建时间                                  |
-| `updated_at`     | timestamptz | 是   | `now()`  | 固定等于创建时间                              |
+Web `document_revisions` 已实施，字段为 `id`、`document_id`、`version`、`content`、`content_format`、`word_count`、`checksum`、`checkpoint_name`、`created_at`、`updated_at`。`(document_id, version)` 唯一，所属文档删除时级联清理；正文、格式、字数与校验值创建后不再修改，只有检查点名称可以追加或更新。
 
-唯一约束：`(document_id, version)`。为 `actor_id` 建立索引，支持用户引用检查。快照只允许插入和读取，不允许更新；`updated_at` 固定等于 `created_at`。
+自动快照保留 90 天，非空命名检查点不自动清理。保存及 AI 应用在同一事务捕获变更前正文；相同正文的普通保存不新增快照。恢复先保存当前版本，再复制选中快照内容形成新版本，仍受作品锁和正文版本校验保护。
+
+### 7.2 长篇业务资料
+
+| 表                    | 主要业务字段                                                                        |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| `chapter_summaries`   | 来源正文必填；`status` 为 candidate/confirmed/rejected，`ai_task_id` 为生成任务线索 |
+| `story_facts`         | `kind` 为 fact/inference/plan；可关联人物与 `story_order`                           |
+| `plot_threads`        | open/progressing/resolved/abandoned，目标章节与来源                                 |
+| `plot_thread_updates` | 追加式状态沿革、说明和关联章节；创建后两个时间相等                                  |
+| `story_events`        | 独立故事顺序、时间标签、地点、参与者                                                |
+| `character_knowledge` | 人物、character/reader/author 信息视角、故事顺序                                    |
+| `continuity_issues`   | 两处来源及版本、两段原文证据、解释与 open/resolved/ignored 状态                     |
+| `chapter_plans`       | 卡片位置、视角、冲突、转折、悬念、故事线、交付状态                                  |
+| `revision_notes`      | 来源原句及 open/resolved/ignored 状态                                               |
+| `style_rules`         | term/pov/tense/expression 约定与 preferred 表达                                     |
+| `release_schedules`   | 每作品一条更新频率和备注                                                            |
+
+上述资料复用 `TimestampMixin`。可编辑资料有记录版本号、作品外键、来源章节标识、`source_version` 和 `source_order`（截至来源的叙述顺序指纹）。来源被删除仍保留资料和 UUID 以显示“来源不可用”；API 校验写入时的同作品归属。记录版本冲突返回 409；原句或两处证据不存在时拒绝绑定。模型与迁移逐字段保存中文注释。
+
+### 7.3 批量任务与导入
+
+`ai_batches` 保存所有者、作品、幂等请求标识、所选模型、用途、指令和批次状态；`ai_batch_items` 保存每章位置、正文版本、来源顺序、状态、任务及业务结果线索。批次有所有者/请求唯一约束，子项有批次/文档唯一约束。已完成项目不会因恢复而重复调度。
+
+`import_receipts` 保存所有者、请求标识、请求内容指纹与导入结果，同一请求在同一事务内只写入一次；幂等标识复用但正文不同返回冲突。完整导入原文不另存到回执。
+
+`ai_results` 新增 `purpose`（manuscript/summary/analysis）和 `pinned`，状态增加 `accepted`。普通终态任务及结果 30 天后清理；收藏或已确认结果保留。业务资料独立持久化，审计与有效 Skill 版本不参与这项清理。
+
+### 7.4 迁移与索引
+
+迁移链在已有 `20260905_0011` 之后追加：`0012` 正文历史、`0013` 长篇资料、`0014` 批次/回执/AI 历史及 PostgreSQL `pg_trgm` 文本索引、`0015` 补齐既有可选邮箱的 PostgreSQL 列注释。`0015` 不改变账号行为。升级前备份，迁移角色需要创建扩展和索引的权限。真实 PostgreSQL 集成测试比对所有模型表及字段注释。
 
 ## 8. 关键事务与一致性
 
@@ -813,7 +836,7 @@ AI 输出与作者正文分离。只有显式“应用”操作才能把候选�
 
 字数算法固定为：每个中日韩统一表意文字计一个字，连续 Unicode 字母或数字计一个词，空白和纯标点不计数。Web 可以在输入期间显示同算法的本地估算值，但持久化值始终由 API 计算。
 
-P1 启用历史后，在相同事务中先插入新版本快照，再提交当前正文。
+在同一事务中先捕获变更前的正文快照，再更新当前正文；恢复同样保留恢复前稿件。
 
 ### 8.3 应用 AI 结果
 
@@ -889,7 +912,7 @@ make migrate
 
 Desktop 使用独立的单向版本迁移链。主进程在开放写入前读取 Schema 版本，并在事务中按顺序升级。破坏性迁移前先创建数据库备份；迁移失败时回滚事务、保留原文件并停止写入。
 
-当前 Desktop Schema v3 包含 `schema_migrations`、`projects`、`documents`、`document_contents`、`document_revisions`、`editor_drafts`、`app_settings`、`local_skill_preferences`、`ai_provider_configs`、`ai_tasks` 和 `ai_results`。所有表与字段在迁移元数据 `SCHEMA_COMMENTS` 中保存简体中文注释，并由测试逐表逐字段比对。v2 增加不可变正文历史表；v3 增加独立编辑草稿。每次正文保存和 AI 候选应用都在同一事务先写入旧版本快照。
+当前 Desktop Schema v4 包含 `schema_migrations`、`projects`、`documents`、`document_contents`、`document_revisions`、`editor_drafts`、`app_settings`、`local_skill_preferences`、`ai_provider_configs`、`ai_tasks` 、`ai_results` 和 `document_checkpoints`。所有表与字段在迁移元数据 `SCHEMA_COMMENTS` 中保存简体中文注释，并由测试逐表逐字段比对。v2 增加不可变正文历史表；v3 增加独立编辑草稿；v4 增加检查点名称元数据，快照正文保持不可变。正文变更和 AI 候选应用在同一事务先写入旧版快照，重复正文不新增快照。Desktop 每小时清理超过 90 天的自动快照，命名检查点保留；恢复使用当前版本校验。
 
 `editor_drafts` 以 `document_id` 为主键并级联引用文档，保存 `base_version`、未保存 `content`、`created_at` 和 `updated_at`。草稿只用于崩溃恢复和显式“保留草稿并继续”，不能自动覆盖 `document_contents`；正式保存成功后删除对应草稿。
 
@@ -946,7 +969,7 @@ Desktop `app_settings` 至少保存 `theme_palette` 与 `theme_mode`。`local_sk
 3. 实现 `characters` 与 `world_entries`。
 4. 按已确认的 BYOK、AES-256-GCM、Provider 目录、模型与用量契约实现 AI 配置、任务和候选结果。
 5. 实现 Web Skill 当前记录、不可变版本、存储事务和任务快照。
-6. 确认版本保留策略后实现 `document_revisions`。
+6. 已实现 `document_revisions`；按确定的 90 天策略运行清理并保护命名检查点。
 7. Desktop 已实现独立 SQLite Schema、主题设置、本地 Skill 偏好、迁移、备份和平台存储适配器；后续 Schema 变化继续追加单向版本。
 
 Web 阶段同时提交 SQLModel、Alembic 迁移、约束测试和对应 API 文档。Desktop 阶段同时提交本地迁移、主进程存储测试、恢复测试和对应架构文档。
